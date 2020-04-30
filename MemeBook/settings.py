@@ -24,7 +24,7 @@ SECRET_KEY = 'sjdzq5cl^c4j!0!xi-gow^qv1n!^we-p$73cd1hb&4mom+^c)i'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -141,6 +141,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
 COMPRESS_PRECOMPILERS = (
 	('text/x-scss', 'django_libsass.SassCompiler'),

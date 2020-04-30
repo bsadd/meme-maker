@@ -20,7 +20,7 @@ urlpatterns = [
 	# path('menuEntryForRestaurant/', views.RestaurantMenuEntryList.as_view()),
 	# path('branchListForRestaurant/', views.RestaurantBranchList.as_view())
 	path('browse/raw/', views.Index),
-	path('browse/upload/', views.AddMenuView.as_view()),
+	path('browse/upload/', views.AddMemeView.as_view()),
 
 	path('browse/item/<int:id>/', views.Index.as_view(), name='package-details'),
 	path('browse/item/<int:id>/submitReview/', views.Index),

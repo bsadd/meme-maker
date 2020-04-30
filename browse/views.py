@@ -12,6 +12,7 @@ from browse.models import *
 
 # from browse.utils import *
 # from browse.utils_db import *
+from browse.utils import pretty_request
 
 
 class Index(TemplateView):
@@ -268,7 +269,7 @@ class AddMenuView(TemplateView):
 		return super(self.__class__, self).get(request, *args, **kwargs)
 
 	def get_context_data(self, *args, **kwargs):
-		context = super(AddMenuView, self).get_context_data()
+		context = super(AddMemeView, self).get_context_data()
 		# context['ingredient_list'] = Ingredient.objects.all()
 		return context
 
@@ -290,9 +291,6 @@ class AddMenuView(TemplateView):
 			return render(request, 'manager/message_page.html',
 			              {'header': "Done !", 'details': 'Menu added succcessfully'})
 
-		else:
-			return render(request, 'manager/message_page.html',
-			              {'header': "Sorry !", 'details': 'Couldnot add up menu'})
 
 
 class ViewMenusView(TemplateView):

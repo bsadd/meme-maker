@@ -6,10 +6,10 @@
     <link rel="stylesheet" href="{% static 'browse/css/awesomplete.css' %}"/>
     <script src="{% static 'browse/js/awesomplete.js' %}" async></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-{#editor css#}
+    {#editor css#}
     <link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/v2.2.0/tui-color-picker.css">
     <link rel="stylesheet" href="https://uicdn.toast.com/tui-image-editor/v3.3.0/tui-image-editor.css">
-{#    editor cs#}
+    {#    editor cs#}
     <title>Add Item | FoodSquare</title>
 {% endblock %}
 
@@ -28,40 +28,20 @@
                     <div class="row">
                         <!-- left column -->
 
-                        {#                        <div class="col-md-3">#}
-                        {#                            <div class="text-center">#}
-                        {#                                <img id="current_image" src="" class="avatar " name style="width : 100%;height: 100%"#}
-                        {#                                     alt="Meme Tempalte">#}
-                        {#                                <br>#}
-                        {#                                <br>#}
-                        {#                                <h5>Upload a template...</h5>#}
-                        {##}
-                        {#                                <input type="file" name="image" id="selected_image" class="form-control"#}
-                        {#                                       onchange="updateImg()">#}
-                        {#                                <script>#}
-                        {#                                    function updateImg() {#}
-                        {#                                        var fReader = new FileReader();#}
-                        {#                                        fReader.readAsDataURL(document.getElementById("selected_image").files[0]);#}
-                        {#                                        fReader.onloadend = function (event) {#}
-                        {#                                            document.getElementById("current_image").src = event.target.result;#}
-                        {#                                        }#}
-                        {#                                    }#}
-                        {#                                </script>#}
-                        {#                            </div>#}
-                        {#                        </div>#}
 
+                        <input type="file" name="image" id="selected_image" class="form-control" hidden>
                         <div id="tui-image-editor-container" style=" height: 50vh "></div>
 
                         {#                    </div>#}
                         {#                    <div class="row">#}
                         <!-- edit form column -->
                         <div class="col-md-1"></div>
-                        <div class="col-md-3 personal-info" >
+                        <div class="col-md-3 personal-info">
                             <h3>Template info</h3>
 
                             <div class="form-group w-75">
                                 <label class=" control-label">Template Caption:</label>
-                                <input class="form-control" type="text" name="tmplt_caption">
+                                <input class="form-control" type="text" name="tmplt_caption" id="tmplt_caption">
                                 <small id="emailHelp" class="form-text text-muted">We'll never share your email with
                                     anyone else.
                                 </small>
@@ -70,7 +50,7 @@
 
                             <div class="form-group w-75">
                                 <label class=" control-label">Categoy name:</label>
-                                <input class="form-control" type="text" name="category">
+                                <input class="form-control" type="text" name="category" id="category">
                                 <small class="form-text text-muted">like Bangla Movies, English Serial</small>
 
                             </div>
@@ -116,18 +96,6 @@
                                         $("ol").on('click', '.remove', function () {
                                             $(this).parents('li').remove();
                                         });
-                                        $("#submitForm").click(function () {
-                                            var str = ''
-                                            $('#added_ingrdList').each(function () {// id of ul
-                                                var li = $(this).find('li')//get each li in ul
-                                                li.each(function () {// id of ul
-                                                    str += '\'' + $(this).text().trim().slice(0, -1).trim() + '\','
-                                                })
-                                                $('#ingrds').val(str.slice(0, -1))
-
-
-                                            })
-                                        });
 
                                     });
                                 </script>
@@ -137,7 +105,9 @@
                             <div class="form-group">
                                 <label class="col-md-3 control-label"></label>
                                 <div class="col-md-8">
-                                    <input type="submit" class="btn btn-primary" value="Upload id="submitForm">
+                                    {#                                    <button  type="button"  class="btn btn-primary" id="confirm_upload">Upload#}
+                                    {#                                            </button>#}
+                                    <input type="submit" class="btn btn-primary" value="Upload" id="confirm_upload">
                                     <span></span>
                                     <input type="reset" class="btn btn-danger" value="Cancel">
                                 </div>
@@ -154,7 +124,7 @@
 
     <!-- </div>Page Inner -->
 
-{#editor js#}
+    {#editor js#}
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.7/fabric.js"></script>
     <script type="text/javascript"
             src="https://uicdn.toast.com/tui.code-snippet/v1.5.0/tui-code-snippet.min.js"></script>
@@ -244,5 +214,66 @@
         });
     </script>
 
-{#    editor js#}
+    <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
+
+    <script>
+
+        function dataURLtoBlob(dataurl) {
+            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], {type: mime});
+        }
+
+        var csrftoken = getCookie('csrftoken');
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+
+        $("#confirm_upload").on('click', function (e) {
+            e.preventDefault();
+            var category = $('#category').val();
+            var blob = dataURLtoBlob(imageEditor.toDataURL());
+            var caption = $('#tmplt_caption').val();
+            var keywords = '';
+            $('#added_keywords').each(function () {// id of ul
+                var li = $(this).find('li')//get each li in ul
+                li.each(function () {// id of ul
+                    keywords += '\'' + $(this).text().trim().slice(0, -1).trim() + '\','
+                })
+                $('#ingrds').val(keywords.slice(0, -1))
+
+
+            });
+
+            console.log(keywords);
+            $.ajax({
+                type: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken
+                },
+                url: '/browse/upload/',
+                data: {
+                    'category': category,
+                    {#'image': imageEditor.toDataURL(),#},
+
+                    'keywords': keywords
+                },
+                dataType: 'json',
+                success: function (data) {
+
+
+                }
+            });
+
+        });
+    </script>
+    {#    editor js#}
 {% endblock %}
