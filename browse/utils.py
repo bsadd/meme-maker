@@ -1,5 +1,7 @@
 from math import sin, atan2, sqrt, cos
 
+
+
 def pretty_request(request):
 	headers = ''
 	for header, value in request.META.items():

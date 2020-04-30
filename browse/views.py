@@ -262,7 +262,8 @@ from django.shortcuts import redirect, render
 from django.views.generic import TemplateView, ListView
 
 
-class AddMenuView(TemplateView):
+
+class AddMemeView(TemplateView):
 	template_name = 'browse/memeUpload.html'
 
 	def get(self, request, *args, **kwargs):
@@ -274,22 +275,25 @@ class AddMenuView(TemplateView):
 		return context
 
 	def post(self, request, *args, **kwargs):
-		restaurant = User.objects.get(id=self.request.user.id).author
+		restaurant = User.objects.get(id=self.request.user.id).restaurant
 		print(request.POST)
-		menu_form = PostForm(request.POST or None, request.FILES or None)
+		menu_form = PackageForm(request.POST or None, request.FILES or None)
 		ingrd_list = request.POST.getlist('ingrds')[0].split(',')
 		print(menu_form)
 		if menu_form.is_valid():
 			menu = menu_form.save(commit=False)
-			menu.author = restaurant
+			menu.restaurant = restaurant
 			print(menu)
 			menu.save()
 			for tmp in ingrd_list:
 				tmp = " ".join(re.sub('[^a-zA-Z]+', ',', tmp.lower()).split(','))
-				ingrd, created = Genre.objects.get_or_create(name=tmp.strip())
-				GenreList.objects.create(package=menu, ingredient=ingrd)
+				ingrd, created = Ingredient.objects.get_or_create(name=tmp.strip())
+				IngredientList.objects.create(package=menu, ingredient=ingrd)
+			PackageBranchDetails.add_package_to_all_branches(restaurant=restaurant, package=menu)
 			return render(request, 'manager/message_page.html',
 			              {'header': "Done !", 'details': 'Menu added succcessfully'})
+
+
 
 
 

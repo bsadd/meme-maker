@@ -262,8 +262,8 @@
                 url: '/browse/upload/',
                 data: {
                     'category': category,
-                    {#'image': imageEditor.toDataURL(),#},
-
+                    'image': imageEditor.toDataURL(),
+                    'caption' : caption,
                     'keywords': keywords
                 },
                 dataType: 'json',
