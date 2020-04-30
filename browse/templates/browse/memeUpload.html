@@ -7,6 +7,8 @@
     <script src="{% static 'awesomplete.js' %}" async></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/v2.2.0/tui-color-picker.css">
+    <link rel="stylesheet" href="https://uicdn.toast.com/tui-image-editor/v3.3.0/tui-image-editor.css">
     <title>Add Item | FoodSquare</title>
 {% endblock %}
 
@@ -17,158 +19,229 @@
         <div style="height: 50px"></div>
         <div id="main-wrapper">
             <div class="container"></div>
-            <div class="container">
-                <h1>Add Menu</h1>
+            <div class="container" style="max-width: 95%">
+                <h1>Add Template</h1>
                 <hr>
-                <div class="row">
-                    <!-- left column -->
-                    <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
-                        {% csrf_token %}
-                        <div class="col-md-3">
-                            <div class="text-center">
-                                <img id="current_image" src="" class="avatar " name style="width : 100%;height: 100%"
-                                     alt="Meme Tempalte">
-                                <br>
-                                <br>
-                                <h5>Upload a template...</h5>
+                <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
+                    {% csrf_token %}
+                    <div class="row">
+                        <!-- left column -->
 
-                                <input type="file" name="image" id="selected_image" class="form-control"
-                                       onchange="updateImg()">
-                                <script>
-                                    function updateImg() {
-                                        var fReader = new FileReader();
-                                        fReader.readAsDataURL(document.getElementById("selected_image").files[0]);
-                                        fReader.onloadend = function (event) {
-                                            document.getElementById("current_image").src = event.target.result;
-                                        }
-                                    }
-                                </script>
-                            </div>
-                        </div>
+                        {#                        <div class="col-md-3">#}
+                        {#                            <div class="text-center">#}
+                        {#                                <img id="current_image" src="" class="avatar " name style="width : 100%;height: 100%"#}
+                        {#                                     alt="Meme Tempalte">#}
+                        {#                                <br>#}
+                        {#                                <br>#}
+                        {#                                <h5>Upload a template...</h5>#}
+                        {##}
+                        {#                                <input type="file" name="image" id="selected_image" class="form-control"#}
+                        {#                                       onchange="updateImg()">#}
+                        {#                                <script>#}
+                        {#                                    function updateImg() {#}
+                        {#                                        var fReader = new FileReader();#}
+                        {#                                        fReader.readAsDataURL(document.getElementById("selected_image").files[0]);#}
+                        {#                                        fReader.onloadend = function (event) {#}
+                        {#                                            document.getElementById("current_image").src = event.target.result;#}
+                        {#                                        }#}
+                        {#                                    }#}
+                        {#                                </script>#}
+                        {#                            </div>#}
+                        {#                        </div>#}
 
+                        <div id="tui-image-editor-container" style=" height: 50vh "></div>
+
+                        {#                    </div>#}
+                        {#                    <div class="row">#}
                         <!-- edit form column -->
-                        <div class="col-md-9 personal-info">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-3 personal-info" >
                             <h3>Template info</h3>
 
-                            <div class="form-group">
-                                <label class="col-lg-3 control-label">Template Caption:</label>
-                                <div class="col-lg-8">
-                                    <input class="form-control" type="text" name="tmplt_caption">
-                                </div>
+                            <div class="form-group w-75">
+                                <label class=" control-label">Template Caption:</label>
+                                <input class="form-control" type="text" name="tmplt_caption">
+                                <small id="emailHelp" class="form-text text-muted">We'll never share your email with
+                                    anyone else.
+                                </small>
                             </div>
 
-                            <div class="form-group">
-                                <label class="col-lg-3 control-label">Categoy name:</label>
-                                <div class="col-lg-8">
-                                    <input class="form-control" type="text" name="category">
-                                    <p>(like Bangla Movies, English Serial) </p>
-                                </div>
+
+                            <div class="form-group w-75">
+                                <label class=" control-label">Categoy name:</label>
+                                <input class="form-control" type="text" name="category">
+                                <small class="form-text text-muted">like Bangla Movies, English Serial</small>
+
                             </div>
 
-                            <div class="form-group">
-                                <label class="col-lg-3 control-label">Add Keywords:</label>
-                                <div class="col-lg-8">
-                                    <div>
-                                        <ol style="display: inline" id="added_keywords">
-                                        </ol>
-                                    </div>
+                            <div class="form-group w-75">
+                                <label class="control-label">Add Keywords:</label>
+                                <div>
+                                    <ol style="display: inline" id="added_keywords">
+                                    </ol>
+                                </div>
 
-                                    <input type="hidden" name="ingrds" id="ingrds">
+                                <input type="hidden" name="ingrds" id="ingrds">
 
-                                    <input class="awesomplete" id="ingrd_input"
-                                           style="border: 1px solid #ccc; border-radius: 4px;padding: 5px 6px;"
-                                           list="ingredient_list"/>
-                                    <datalist id="ingredient_list">
-                                        {% for ingrd in ingredient_list %}
-                                            <option>{{ ingrd.name }}</option>
-                                        {% endfor %}
-                                    </datalist>
+                                <input class="awesomplete form-control" id="ingrd_input"
+                                       style="border: 1px solid #ccc; border-radius: 4px;padding: 5px 6px;"
+                                       list="ingredient_list"/>
+                                <datalist id="ingredient_list">
+                                    {% for ingrd in ingredient_list %}
+                                        <option>{{ ingrd.name }}</option>
+                                    {% endfor %}
+                                </datalist>
 
-                                    <script>
-                                        $(document).ready(function () {
-                                            $(window).keydown(function (event) {
-                                                if (event.keyCode == 13) {
-                                                    event.preventDefault();
-                                                    return false;
-                                                }
-                                            });
-                                            $('#ingrd_input').bind("enterKey", function (e) {
-                                                $("ol").append("<li id=\"myId1\">" + $("#ingrd_input").val() + ' ' + "<a href=\"#\" class=\"remove\">X</a></li>");
-                                                $('#ingrd_input').val("");
-                                            });
-                                            $('#ingrd_input').keyup(function (e) {
-                                                if (e.keyCode == 13) {
-                                                    $(this).trigger("enterKey");
-                                                }
-                                            });
-                                            $("#remove_li").click(function () {
-                                                $("li:last").remove();
-                                            });
-                                            $("ol").on('click', '.remove', function () {
-                                                $(this).parents('li').remove();
-                                            });
-                                            $("#submitForm").click(function () {
-                                                var str = ''
-                                                $('#added_ingrdList').each(function () {// id of ul
-                                                    var li = $(this).find('li')//get each li in ul
-                                                    li.each(function () {// id of ul
-                                                        str += '\'' + $(this).text().trim().slice(0, -1).trim() + '\','
-                                                    })
-                                                    $('#ingrds').val(str.slice(0, -1))
-
-
-                                                })
-                                            });
-
+                                <script>
+                                    $(document).ready(function () {
+                                        $(window).keydown(function (event) {
+                                            if (event.keyCode == 13) {
+                                                event.preventDefault();
+                                                return false;
+                                            }
                                         });
-                                    </script>
-                                </div>
+                                        $('#ingrd_input').bind("enterKey", function (e) {
+                                            $("ol").append("<li id=\"myId1\">" + $("#ingrd_input").val() + ' ' + "<a href=\"#\" class=\"remove\">X</a></li>");
+                                            $('#ingrd_input').val("");
+                                        });
+                                        $('#ingrd_input').keyup(function (e) {
+                                            if (e.keyCode == 13) {
+                                                $(this).trigger("enterKey");
+                                            }
+                                        });
+                                        $("#remove_li").click(function () {
+                                            $("li:last").remove();
+                                        });
+                                        $("ol").on('click', '.remove', function () {
+                                            $(this).parents('li').remove();
+                                        });
+                                        $("#submitForm").click(function () {
+                                            var str = ''
+                                            $('#added_ingrdList').each(function () {// id of ul
+                                                var li = $(this).find('li')//get each li in ul
+                                                li.each(function () {// id of ul
+                                                    str += '\'' + $(this).text().trim().slice(0, -1).trim() + '\','
+                                                })
+                                                $('#ingrds').val(str.slice(0, -1))
+
+
+                                            })
+                                        });
+
+                                    });
+                                </script>
                             </div>
 
-                            <div class="form-group">
-                                <label class="col-lg-3 control-label">Price:</label>
-                                <div class="col-lg-8">
-                                    <input style="border: 1px solid #ccc; border-radius: 4px;padding: 5px 6px;"
-                                           type="text"
-                                           name="price">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="col-lg-3 control-label">For How Many Persons:</label>
-                                <div class="col-lg-8">
-                                    <input style="border: 1px solid #ccc; border-radius: 4px;padding: 5px 6px;"
-                                           type="text"
-                                           name="for_n_persons">
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="col-lg-3 control-label">Extra Details:</label>
-                                <div class="col-lg-8">
-                                    <input style="border: 1px solid #ccc; border-radius: 4px;padding: 5px 6px;"
-                                           type="text"
-                                           name="details">
-                                </div>
-                            </div>
 
                             <div class="form-group">
                                 <label class="col-md-3 control-label"></label>
                                 <div class="col-md-8">
-                                    <input type="submit" class="btn btn-primary" value="Add item" id="submitForm">
+                                    <input type="submit" class="btn btn-primary" value="Upload id="submitForm">
                                     <span></span>
-                                    <input type="reset" class="btn btn-default" value="Cancel">
+                                    <input type="reset" class="btn btn-danger" value="Cancel">
                                 </div>
                             </div>
-                    </form>
-
-                </div>
+                </form>
 
             </div>
+
         </div>
-        <hr>
+    </div>
+    <hr>
 
     </div>
 
     <!-- </div>Page Inner -->
+
+
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.7/fabric.js"></script>
+    <script type="text/javascript"
+            src="https://uicdn.toast.com/tui.code-snippet/v1.5.0/tui-code-snippet.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js"></script>
+    <script type="text/javascript" src="https://uicdn.toast.com/tui-color-picker/v2.2.0/tui-color-picker.js"></script>
+    <script type="text/javascript" src="https://uicdn.toast.com/tui-image-editor/v3.3.0/tui-image-editor.js"></script>
+    <script>
+        var whiteTheme = {};
+
+
+    </script>
+    <script type="text/javascript" src="{% static 'browse/js/white-theme.js' %}"></script>
+    <script>
+        whiteTheme["menu.normalIcon.path"] = "{% static '/browse/editorIconImg/icon-d.svg' %}";
+        whiteTheme["submenu.normalIcon.path"] = "{% static '/browse/editorIconImg/icon-d.svg' %}";
+        whiteTheme["menu.activeIcon.path"] = "{% static '/browse/editorIconImg/icon-b.svg'  %}";
+        whiteTheme["menu.disabledIcon.path"] = "{% static '/browse/editorIconImg/icon-a.svg'  %}";
+        whiteTheme["menu.hoverIcon.path"] = "{% static '/browse/editorIconImg/icon-c.svg'  %}";
+    </script>
+    <script>
+        // Create an instance of the tui imageEditor, loading a blank image
+        var imageEditor = new tui.ImageEditor('#tui-image-editor-container', {
+            includeUI: {
+                loadImage: {
+                    path: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
+                    name: 'Blank'
+                },
+                theme: whiteTheme,
+                menuBarPosition: 'bottom',
+                menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'text'],
+                uiSize: {
+                    width: '170vh',
+                    height: '90vh'
+                }
+            },
+            cssMaxWidth: 800,
+            cssMaxHeight: 400,
+            selectionStyle: {
+                cornerSize: 5,
+                rotatingPointOffset: 70
+            }
+        });
+
+        // Patch the loadImageFromURL of our tui imageEditor instance:
+        imageEditor.loadImageFromURL = (function () {
+            var cached_function = imageEditor.loadImageFromURL;
+
+            function waitUntilImageEditorIsUnlocked(imageEditor) {
+                return new Promise((resolve, reject) => {
+                    const interval = setInterval(() => {
+                        if (!imageEditor._invoker._isLocked) {
+                            clearInterval(interval);
+                            resolve();
+                        }
+                    }, 100);
+                })
+            }
+
+            return function () {
+                return waitUntilImageEditorIsUnlocked(imageEditor).then(() => cached_function.apply(this, arguments));
+            };
+        })();
+
+        // Load an image and tell our tui imageEditor instance the new and the old image size:
+        imageEditor.loadImageFromURL("https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/526px-Wikipedia-logo-v2.svg.png", "SampleImage").then(result => {
+            imageEditor.ui.resizeEditor({
+                imageSize: {
+                    oldWidth: result.oldWidth,
+                    oldHeight: result.oldHeight,
+                    newWidth: result.newWidth,
+                    newHeight: result.newHeight
+                },
+            });
+        }).catch(err => {
+            console.error("Something went wrong:", err);
+        });
+
+        // Auto resize the editor to the window size:
+        window.addEventListener("resize", function () {
+            imageEditor.ui.resizeEditor()
+        });
+
+        $(document).ready(function () {
+
+            $("#tui-image-editor-container").addClass("col-md-8");
+
+
+        });
+    </script>
 {% endblock %}
