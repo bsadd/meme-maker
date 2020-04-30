@@ -29,19 +29,18 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.sites',
-	'django.contrib.staticfiles',
-	'django.contrib.messages',
+	'django.contrib.admin',
+	'django.contrib.auth',
 	'django.contrib.contenttypes',
 	'django.contrib.sessions',
-	'django.contrib.auth',
-	'django.contrib.admin',
-
+	'django.contrib.messages',
+	'django.contrib.staticfiles',
+	'django.contrib.sites',
 	'sass_processor',
 
 	'accounts',
 	'browse',
-	'tagconstants', #template const.
+
 	'django_extensions',
 
 	'allauth',
@@ -50,6 +49,8 @@ INSTALLED_APPS = [
 	'allauth.socialaccount.providers.facebook',
 	'allauth.socialaccount.providers.google',
 	'sslserver',
+
+	'tagconstants',  # template const.
 
 ]
 
@@ -207,5 +208,5 @@ SITE_ID = 3
 
 # Template Constant
 TAG_CONSTANTS = {
-    'Website_Name': 'MemeMaker',
+	'Website_Name': 'MemeMaker',
 }

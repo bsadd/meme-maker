@@ -6,7 +6,8 @@ app_name = 'accounts'
 
 
 urlpatterns = [
-	path('login/', views.LoginView.as_view(), name='login'),
+	# path('login/', views.LoginView.as_view(), name='login'),
+	path('login/', views.SignupLoginView.as_view(), name='login'),
 
 	path('manager_login/', views.LoginView.as_view(), name='manger_login'),
 	path('delivery_login/', views.LoginView.as_view(), name='delivery_login'),
@@ -16,7 +17,7 @@ urlpatterns = [
 
 	path('admin_login/', views.LoginView.as_view(), name='admin_login'),
 
-	path('register/', views.RegisterView.as_view(), name='register'),
+	path('register/', views.SignupLoginView.as_view(),name='register'),
 	path(r'register/facebook-signUp/', include('allauth.urls'), name='facebook-signUp'),
 
 	path('recovery/', views.LoginView, name='recovery'),

@@ -10,3 +10,7 @@ accounts/migrations/
 *.png
 
 *.sqlite3
+
+db2.json
+
+initdb2.json
