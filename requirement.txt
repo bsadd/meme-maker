@@ -9,6 +9,7 @@ django-extensions==2.2.9
 django-libsass==0.7
 django-sass-processor==0.8
 django-sslserver==0.22
+django-tagconstants==0.1
 djangorestframework==3.11.0
 idna==2.9
 libsass==0.19.4

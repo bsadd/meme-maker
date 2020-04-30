@@ -3,12 +3,13 @@
 
 {% block header %}
     {% load static %}
-    <link rel="stylesheet" href="{% static 'awesomplete.css' %}"/>
-    <script src="{% static 'awesomplete.js' %}" async></script>
+    <link rel="stylesheet" href="{% static 'browse/css/awesomplete.css' %}"/>
+    <script src="{% static 'browse/js/awesomplete.js' %}" async></script>
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-
+{#editor css#}
     <link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/v2.2.0/tui-color-picker.css">
     <link rel="stylesheet" href="https://uicdn.toast.com/tui-image-editor/v3.3.0/tui-image-editor.css">
+{#    editor cs#}
     <title>Add Item | FoodSquare</title>
 {% endblock %}
 
@@ -153,7 +154,7 @@
 
     <!-- </div>Page Inner -->
 
-
+{#editor js#}
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.7/fabric.js"></script>
     <script type="text/javascript"
             src="https://uicdn.toast.com/tui.code-snippet/v1.5.0/tui-code-snippet.min.js"></script>
@@ -163,8 +164,6 @@
     <script type="text/javascript" src="https://uicdn.toast.com/tui-image-editor/v3.3.0/tui-image-editor.js"></script>
     <script>
         var whiteTheme = {};
-
-
     </script>
     <script type="text/javascript" src="{% static 'browse/js/white-theme.js' %}"></script>
     <script>
@@ -244,4 +243,6 @@
 
         });
     </script>
+
+{#    editor js#}
 {% endblock %}
