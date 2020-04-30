@@ -80,16 +80,7 @@
 
                   <button class="clear-cart btn btn-danger" id="cart-clear-button">Clear</button>
                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                  {#                    <a href={% url 'browse:checkout' %}>#}
-{#                  <form action="{% url 'browse:checkout' %}" method="get">#}
-{#                     <input type="hidden" id="rest-id" name="rest-id">#}
-{#                     <input type="submit" class="btn btn-primary" value="Checkout"#}
-{#                        id="cart-checkout-button">#}
-{#                     <script>#}
-{#                        console.log(document.getElementById('rest-id').value)#}
-{#                     </script>#}
-{#                  </form>#}
-                  {#                    </a>#}
+
                </div>
             </div>
          </div>
@@ -117,8 +108,7 @@
              });
          }
       </script>
-      <link href="{% static 'browse/css/cart.css' %}" rel='stylesheet' type='text/css'/>
-      <script src="{% static 'browse/js/cart.js' %}"></script>
+
       {#    Cart#}
       {% endblock %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
@@ -218,9 +208,7 @@
 
          }
       </script>
-      <script
-         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyATg_isuGSCHIlJamrxAXfkFDTYhIz7ytM&libraries=places&callback=initAutocomplete"
-         async defer></script>
+
 
       <link rel="stylesheet" href="{% static 'browse/Restaurant_homepage/css/bootstrap.css' %}">
 
@@ -231,7 +219,7 @@
           <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 
       {% endblock %}
-      <script src={% static 'browse/js/location.js' %}></script>
+{#      <script src={% static 'browse/js/location.js' %}></script>#}
       {% block body-js %}
       {% endblock %}
    </body>

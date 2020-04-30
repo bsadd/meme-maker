@@ -210,4 +210,5 @@ SITE_ID = 3
 # Template Constant
 TAG_CONSTANTS = {
 	'Website_Name': 'MemeMaker',
+	'MAX_IMGSIZE': 2,
 }

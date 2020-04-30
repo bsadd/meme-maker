@@ -1,4 +1,5 @@
 {% extends 'browse/base.html' %}
+{% load tagconstants %}
 
 
 {% block header %}
@@ -22,7 +23,10 @@
             <div class="container"></div>
             <div class="container" style="max-width: 95%">
                 <h1>Add Template</h1>
+
                 <hr>
+                <h3 class="text-danger">Upload Image size less than {% constant "MAX_IMGSIZE" %} MB</h3>
+
                 <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
                     {% csrf_token %}
                     <div class="row">
@@ -145,6 +149,7 @@
     </script>
     <script>
         // Create an instance of the tui imageEditor, loading a blank image
+        var max_allowedSize = {% constant "MAX_IMGSIZE" %};
         var imageEditor = new tui.ImageEditor('#tui-image-editor-container', {
             includeUI: {
                 loadImage: {
@@ -188,7 +193,7 @@
         })();
 
         // Load an image and tell our tui imageEditor instance the new and the old image size:
-        imageEditor.loadImageFromURL("https://upload.wikimedia.org/wikipedia/en/thumb/8/80/Wikipedia-logo-v2.svg/526px-Wikipedia-logo-v2.svg.png", "SampleImage").then(result => {
+        imageEditor.loadImageFromURL("{% static 'browse/images/memeLoad.jpg' %}", "SampleImage").then(result => {
             imageEditor.ui.resizeEditor({
                 imageSize: {
                     oldWidth: result.oldWidth,
@@ -212,11 +217,24 @@
 
 
         });
+
+        $('.tui-image-editor-load-btn').on('change', function (e) {
+            var size = this.files[0].size / 1000000;
+            if (size > max_allowedSize) {
+                alert('File size Too Large');
+                imageEditor.loadImageFromURL("{% static 'browse/images/memeLoad.jpg' %}", "SampleImage");
+            }
+
+        });
+
+
     </script>
 
     <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
+    <script language="javascript" src="{% static 'browse/js/lz-string.js' %}"></script>
 
     <script>
+
 
         function dataURLtoBlob(dataurl) {
             var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
@@ -240,20 +258,26 @@
         $("#confirm_upload").on('click', function (e) {
             e.preventDefault();
             var category = $('#category').val();
-            var blob = dataURLtoBlob(imageEditor.toDataURL());
+            var blob = imageEditor.toDataURL();
             var caption = $('#tmplt_caption').val();
             var keywords = '';
+
+            var compressed = LZString.compress(imageEditor.toDataURL());
+            console.log("Size of compressed sample is: " + compressed.length);
+            var dcmp = LZString.decompress(compressed);
+            console.log("Sample is: " + dcmp.length);
+
+
             $('#added_keywords').each(function () {// id of ul
                 var li = $(this).find('li')//get each li in ul
                 li.each(function () {// id of ul
                     keywords += '\'' + $(this).text().trim().slice(0, -1).trim() + '\','
-                })
-                $('#ingrds').val(keywords.slice(0, -1))
+                });
+                $('#ingrds').val(keywords.slice(0, -1));
 
 
             });
 
-            console.log(keywords);
             $.ajax({
                 type: "POST",
                 headers: {
@@ -262,9 +286,10 @@
                 url: '/browse/upload/',
                 data: {
                     'category': category,
+                    'caption': caption,
+                    'keywords': keywords,
                     'image': imageEditor.toDataURL(),
-                    'caption' : caption,
-                    'keywords': keywords
+
                 },
                 dataType: 'json',
                 success: function (data) {
@@ -272,8 +297,19 @@
 
                 }
             });
+            console.log(keywords);
+
 
         });
+    </script>
+
+    <script>
+        var string = "This is my compression test.";
+        console.log("Size of sample is: " + string.length);
+        var compressed = LZString.compress(string);
+        console.log("Size of compressed sample is: " + compressed.length);
+        string = LZString.decompress(compressed);
+        console.log("Sample is: " + string);
     </script>
     {#    editor js#}
 {% endblock %}
