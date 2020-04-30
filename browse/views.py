@@ -6,10 +6,12 @@ from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
 
 from accounts.models import *
+from browse.forms import PostForm
 from browse.models import *
+
+
 # from browse.utils import *
 # from browse.utils_db import *
-
 
 
 class Index(TemplateView):
@@ -23,10 +25,12 @@ class Index(TemplateView):
 		# 	myfile.write(">>>>>>\n" + pretty_request(self.request) + "\n>>>>>>\n")
 
 		ctx = {'loggedIn': self.request.user.is_authenticated
-			   # 'restaurant_list': Restaurant.objects.all(),
-			   # 'item_list': pkg_list[:3], 'restaurants': rest_list[0:4]
-			   }
+		       # 'restaurant_list': Restaurant.objects.all(),
+		       # 'item_list': pkg_list[:3], 'restaurants': rest_list[0:4]
+		       }
 		return ctx
+
+
 #
 #
 # class OrderView(TemplateView):
@@ -257,7 +261,6 @@ from django.shortcuts import redirect, render
 from django.views.generic import TemplateView, ListView
 
 
-
 class AddMenuView(TemplateView):
 	template_name = 'browse/memeUpload.html'
 
@@ -270,21 +273,20 @@ class AddMenuView(TemplateView):
 		return context
 
 	def post(self, request, *args, **kwargs):
-		restaurant = User.objects.get(id=self.request.user.id).restaurant
+		restaurant = User.objects.get(id=self.request.user.id).author
 		print(request.POST)
-		menu_form = PackageForm(request.POST or None, request.FILES or None)
+		menu_form = PostForm(request.POST or None, request.FILES or None)
 		ingrd_list = request.POST.getlist('ingrds')[0].split(',')
 		print(menu_form)
 		if menu_form.is_valid():
 			menu = menu_form.save(commit=False)
-			menu.restaurant = restaurant
+			menu.author = restaurant
 			print(menu)
 			menu.save()
 			for tmp in ingrd_list:
 				tmp = " ".join(re.sub('[^a-zA-Z]+', ',', tmp.lower()).split(','))
-				ingrd, created = Ingredient.objects.get_or_create(name=tmp.strip())
-				IngredientList.objects.create(package=menu, ingredient=ingrd)
-			PackageBranchDetails.add_package_to_all_branches(restaurant=restaurant, package=menu)
+				ingrd, created = Genre.objects.get_or_create(name=tmp.strip())
+				GenreList.objects.create(package=menu, ingredient=ingrd)
 			return render(request, 'manager/message_page.html',
 			              {'header': "Done !", 'details': 'Menu added succcessfully'})
 
@@ -293,14 +295,12 @@ class AddMenuView(TemplateView):
 			              {'header': "Sorry !", 'details': 'Couldnot add up menu'})
 
 
-
-
 class ViewMenusView(TemplateView):
 	template_name = 'manager/manage_menus.html'
 
 	def get_context_data(self, **kwargs):
-		restaurant = User.objects.get(id=self.request.user.id).restaurant
-		obj_list = Package.objects.filter(restaurant=restaurant)  # .order_by('status', '-time')
+		restaurant = User.objects.get(id=self.request.user.id).author
+		obj_list = Post.objects.filter(restaurant=restaurant)  # .order_by('status', '-time')
 		print(obj_list)
 		print('-----')
 		return {'menu_list': obj_list}
@@ -316,4 +316,3 @@ class ViewBranchMenusView(TemplateView):
 def branch_pkg_details(request):
 	return render(request, 'manager/branch_pkg_modal.html',
 	              {'pkg': get_package_branch(request.user, request.GET.get('id'))})
-
