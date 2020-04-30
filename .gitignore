@@ -8,3 +8,5 @@ accounts/migrations/
 *.jpg
 
 *.png
+
+*.sqlite3

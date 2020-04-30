@@ -8,7 +8,6 @@ from django.dispatch import receiver
 from django.urls import reverse
 
 
-
 class User(AbstractUser):
 	"""User's login credential entity for any system user"""
 
@@ -36,7 +35,6 @@ class User(AbstractUser):
 		# 	rating = 0
 		return round(rating, 2)
 
-
 	def get_image(self):
 		# if self.is_customer:
 		# 	return self.userprofile.avatar
@@ -56,7 +54,6 @@ class User(AbstractUser):
 			recipient_list=[self.email],
 			fail_silently=False,
 		)
-
 
 #
 # class UserProfile(models.Model):

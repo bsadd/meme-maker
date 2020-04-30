@@ -38,8 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-
-'sass_processor',
+    'sass_processor',
 
     'accounts',
     'browse',
@@ -199,7 +198,7 @@ LOGIN_REDIRECT_URL = '/'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-SITE_ID = 1
+SITE_ID = 3
 
 # PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # Extra lookup directories for collectstatic to find static files

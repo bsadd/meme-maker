@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 # from geopy.geocoders import Nominatim
@@ -22,6 +23,7 @@ from django.core.mail import send_mail
 #
 # def homepageRender(request):
 # 	return render(request, USER_DASHBOARD_PAGE)
+from accounts.forms import UserForm
 
 
 class LoginView(TemplateView):
@@ -38,12 +40,12 @@ class LoginView(TemplateView):
 		return ctx
 
 	def post(self, request, *args, **kwargs):
-		print(pretty_request(request))
+		# print(pretty_request(request))
 		username = request.POST.get('username', False)
 		password = request.POST.get('pass', False)
 		if username and password:
 			user = authenticate(request, username=username, password=password)
-			if user is not None and user.is_customer:
+			if user is not None:
 				login(request, user)
 				print('Signing in: ' + str(request.user))
 				return redirect('/')
@@ -51,17 +53,16 @@ class LoginView(TemplateView):
 				return render(request, 'accounts/message_page.html',
 				              {'header': "Error !", 'details': 'Invalid Username or Password',
 				               'redirect': reverse('accounts:login')})
-			# return JsonResponse({'account': False})
-			elif not user.is_customer:
-				return render(request, 'accounts/message_page.html',
-				              {'header': "Error !", 'details': 'Not a Customer account',
-				               'redirect': reverse('accounts:login')})
+		# return JsonResponse({'account': False})
+		# elif not user.is_customer:
+		# 	return render(request, 'accounts/message_page.html',
+		# 	              {'header': "Error !", 'details': 'Not a Customer account',
+		# 	               'redirect': reverse('accounts:login')})
 		# return JsonResponse({'account': True, 'customer': False})
 		else:
 			return render(request, 'accounts/message_page.html',
 			              {'header': "Error !", 'details': 'Username or password is empty',
 			               'redirect': reverse('accounts:login')})
-
 
 
 class RegisterView(TemplateView):
@@ -81,7 +82,7 @@ class RegisterView(TemplateView):
 		return ctx
 
 	def post(self, request, *args, **kwargs):
-		print(pretty_request(request))
+		# print(pretty_request(request))
 
 		user_form = UserForm(request.POST)
 
@@ -89,14 +90,15 @@ class RegisterView(TemplateView):
 			user = user_form.save(commit=False)
 			user.is_customer = True
 			user.save()
-			p = UserProfile.objects.create(user=user)
-			p.save()
+			# p = UserProfile.objects.create(user=user)
+			# p.save()
 			print('Registering : ' + str(request.user))
 			login(request, user)
 			return redirect('/')
 		else:
-			return render(request, 'accounts/message_page.html',
-			              {'header': "Error !", 'details': ' signup'})
+			# return render(request, 'accounts/message_page.html',
+			#               {'header': "Error !", 'details': ' signup'})
+			return HttpResponse("Error ! signup")
 
 
 class LogoutView(View, LoginRequiredMixin):
@@ -104,4 +106,3 @@ class LogoutView(View, LoginRequiredMixin):
 		print('Signing out: ' + str(request.user))
 		logout(request)
 		return redirect('/')
-
