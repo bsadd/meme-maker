@@ -1,18 +1,9 @@
-import json
-
-from django.db.models import Q
-from django.http import JsonResponse
-from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
 
 from accounts.models import *
-from browse.forms import PostForm
 from browse.models import *
 
-
-# from browse.utils import *
-# from browse.utils_db import *
-from browse.utils import pretty_request
+from browse import utils_db
 
 
 class Index(TemplateView):
@@ -32,42 +23,6 @@ class Index(TemplateView):
 		return ctx
 
 
-#
-#
-# class OrderView(TemplateView):
-# 	"""View to render Cuisines List"""
-# 	template_name = 'browse/order.html'
-#
-# 	def get_context_data(self, **kwargs):
-# 		with open("sessionLog.txt", "a") as myfile:
-# 			myfile.write(">>>>>>\n" + pretty_request(self.request) + "\n>>>>>>\n")
-# 		entry_name = self.request.GET.get('menu_search')
-# 		price_range = self.request.GET.get('range')
-# 		pkg_list = Package.objects.all()
-# 		if entry_name is not None:
-# 			minprice = (float(str(price_range).split('-')[0].strip()[1:]))
-# 			maxprice = (float(str(price_range).split('-')[1].strip()[1:]))
-# 			queryset2 = [ingobj.package for ingobj in
-# 						 IngredientList.objects.filter(ingredient__name__icontains=entry_name)]
-# 			# queryset2 = Package.objects.raw(" Select * from browse_package where ")
-# 			queryset1 = Package.objects.filter(
-# 				Q(pkg_name__icontains=entry_name) & Q(price__range=(minprice, maxprice))
-# 			)
-# 			result_list = list(dict.fromkeys(list(queryset1) + queryset2))
-# 			result_list.sort(key=lambda x: x.pkg_name, reverse=False)
-# 			filtered_result = []
-# 			for x in result_list:
-# 				if minprice <= x.price <= maxprice:
-# 					filtered_result.append(x)
-# 			pkg_list = filtered_result
-# 		page = self.request.GET.get('page')
-#
-# 		ctx = {'loggedIn': self.request.user.is_authenticated, 'item_list': get_page_objects(pkg_list, page),
-# 			   'rating': range(5),
-# 			   'categories': [c['category'] for c in Package.objects.all().values('category').distinct()]}
-# 		return ctx
-#
-#
 # class PackageDetails(TemplateView):
 # 	"""View to render Details Page for a cuisine"""
 # 	template_name = 'browse/item.html'
@@ -95,72 +50,6 @@ class Index(TemplateView):
 # 			   'ing_list': ing_list, 'comments': comments, 'ratings': get_rating_count_package(id),
 # 			   'avg_rating': get_rating_package(id)
 # 			, 'user_rating': user_rating}
-# 		return ctx
-#
-#
-# class RestaurantList(TemplateView):
-# 	"""
-# 	View to renders list of branches in 4km radius
-# 	If no such branch is in radius then None
-# 	Assuming, a restaurant with null key cannot have any branch
-# 	"""
-# 	template_name = 'browse/restaurants.html'
-#
-# 	def get_context_data(self, **kwargs):
-# 		print(pretty_request(self.request))
-# 		with open("sessionLog.txt", "a") as myfile:
-# 			myfile.write(">>>>>>\n" + pretty_request(self.request) + "\n>>>>>>\n")
-#
-# 		query = self.request.GET.get('searchBy_dish_food')
-# 		coord = self.request.GET.get('delivery_area_srch')
-# 		show = self.request.GET.get('show')
-#
-# 		if query is None:
-# 			query = ''
-#
-# 		if coord is None or not coord:
-# 			show = 'all'
-# 		elif coord is not None and show is None:
-# 			show = 'near_me'
-# 			print(' @ ' + coord)
-#
-# 		qset = RestaurantBranch.objects.filter(
-# 			Q(branch_name__icontains=query) | Q(restaurant__restaurant_name__icontains=query) | Q(
-# 				restaurant__package__category__icontains=query)).distinct()
-# 		if show == 'all':
-# 			rest_list = frozenset(x.restaurant for x in qset)
-# 			rest_list = [RestBranch(x) for x in rest_list]
-# 		else:
-# 			rest_list = branchesInRadius(coord=coord, queryset=qset)
-# 		print(rest_list)
-# 		ctx = {'loggedIn': self.request.user.is_authenticated, 'restaurants': rest_list,
-# 			   'show_all': (show == 'all'), 'query': query}
-# 		return ctx
-#
-#
-#
-# class RestaurantDetails(TemplateView):
-# 	"""
-# 	Renders a Restaurant's Home Page with list of packages it currently has
-# 	"""
-#
-# 	template_name = 'browse/restaurant_home.html'
-#
-# 	def get_context_data(self, **kwargs):
-# 		with open("sessionLog.txt", "a") as myfile:
-# 			myfile.write(">>>>>>\n" + pretty_request(self.request) + "\n>>>>>>\n")
-#
-# 		rest = Restaurant.objects.get(id=kwargs['id'])
-#
-# 		pkg_list = Package.objects.filter(restaurant__id=rest.id)
-#
-# 		categories = set([item.category for item in pkg_list])
-# 		# print(pkg_list)
-# 		branch_list = RestaurantBranch.objects.filter(restaurant__id=kwargs['id'])
-#
-# 		ctx = {'loggedIn': self.request.user.is_authenticated, 'item_list': pkg_list, 'categories': categories,
-# 			   'restaurant': RestBranch(restaurant=rest, branch=None), 'rating': get_rating_restaurant(kwargs['id']),
-# 			   'branch_list': branch_list}
 # 		return ctx
 #
 #
@@ -262,11 +151,12 @@ from django.shortcuts import redirect, render
 from django.views.generic import TemplateView, ListView
 
 
-
 class AddMemeView(TemplateView):
 	template_name = 'browse/memeUpload.html'
 
 	def get(self, request, *args, **kwargs):
+		if not request.user.is_authenticated:
+			return redirect('accounts:login')
 		return super(self.__class__, self).get(request, *args, **kwargs)
 
 	def get_context_data(self, *args, **kwargs):
@@ -275,24 +165,21 @@ class AddMemeView(TemplateView):
 		return context
 
 	def post(self, request, *args, **kwargs):
-		restaurant = User.objects.get(id=self.request.user.id).restaurant
-		print(request.POST)
-		menu_form = PackageForm(request.POST or None, request.FILES or None)
-		ingrd_list = request.POST.getlist('ingrds')[0].split(',')
-		print(menu_form)
-		if menu_form.is_valid():
-			menu = menu_form.save(commit=False)
-			menu.restaurant = restaurant
-			print(menu)
-			menu.save()
-			for tmp in ingrd_list:
-				tmp = " ".join(re.sub('[^a-zA-Z]+', ',', tmp.lower()).split(','))
-				ingrd, created = Ingredient.objects.get_or_create(name=tmp.strip())
-				IngredientList.objects.create(package=menu, ingredient=ingrd)
-			PackageBranchDetails.add_package_to_all_branches(restaurant=restaurant, package=menu)
-			return render(request, 'manager/message_page.html',
-			              {'header': "Done !", 'details': 'Menu added succcessfully'})
+		if not request.user.is_authenticated:
+			return HttpResponse('Not logged in')
 
+		# print(pretty_request(self.request))
+		# print(request.POST)
+		genre_list = request.POST.getlist('keywords')[0].split(',')
+		category = request.POST.get('category')
+		caption = request.POST.get('caption')
+		image = request.POST.get('image')
+		if image is None or caption is None:
+			return HttpResponse('Invalid data')
+
+		utils_db.insert_post(user_id=self.request.user.id, image_base64=image, post_name=caption, category=category,
+		                     genre_list=genre_list)
+		return HttpResponse('Ok')
 
 
 
@@ -306,13 +193,6 @@ class ViewMenusView(TemplateView):
 		print(obj_list)
 		print('-----')
 		return {'menu_list': obj_list}
-
-
-class ViewBranchMenusView(TemplateView):
-	template_name = 'manager/manage_branchMenus.html'
-
-	def get_context_data(self, **kwargs):
-		return {'menu_list': get_packages_list_branch(self.request.user)}
 
 
 def branch_pkg_details(request):

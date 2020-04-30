@@ -186,13 +186,23 @@ def get_category_post(categoty_name):
 
 
 #  ----------------------- Insert utils -------------------------
-def insert_post(post_name, genre_list, category, user_id):
+def insert_post(post_name, genre_list, category, image_base64, user_id):
+	"""
+	:param post_name: caption
+	:param genre_list: list of keywords
+	:param category: category of meme
+	:param image_base64: js image data
+	:param user_id: author id
+	"""
 	from browse.models import Post
 	user = User.objects.get(id=user_id)
-	package, _ = Post.objects.get_or_create(pkg_name=post_name, category=category, author=user)
+	post, _ = Post.objects.get_or_create(name=post_name, category=category, author=user)
 	for gen in genre_list:
 		from browse.models import Genre
 		from browse.models import GenreList
 		gen = str(gen).strip().lower()
 		genre, _ = Genre.objects.get_or_create(name=gen)
-		GenreList.objects.get_or_create(post=package, genre=genre)
+		GenreList.objects.get_or_create(post=post, genre=genre)
+	from browse.utils import image_to_file
+	img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
+	post.image.save(img_filename, img_data, save=True)

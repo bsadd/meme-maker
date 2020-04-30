@@ -3,7 +3,7 @@
 
 __pycache__/
 
-accounts/migrations/
+**/migrations/**
 
 *.jpg
 

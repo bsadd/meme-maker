@@ -36,10 +36,10 @@ class Post(models.Model):
 
 	author = models.ForeignKey(User, on_delete=models.CASCADE)
 
-	genre_list = models.ManyToManyField(Genre, through='browse.models.GenreList')
+	genre_list = models.ManyToManyField(Genre, through='browse.GenreList', related_name='post_genres')
 
-	ratings = models.ManyToManyField(User, through='browse.models.PostRating', related_name='post_rating_user')
-	comments = models.ManyToManyField(User, through='browse.models.PostComment', related_name='post_comment_user')
+	ratings = models.ManyToManyField(User, through='browse.PostRating', related_name='post_rating_user')
+	comments = models.ManyToManyField(User, through='browse.PostComment', related_name='post_comment_user')
 
 	class Meta:
 		verbose_name = "Post"
@@ -55,7 +55,7 @@ class Post(models.Model):
 		return reverse("manager:edit_menu", kwargs={"id": self.pk})
 
 	def is_editable(self, user):
-		return user.is_authenticated and user.is_manager and user.author.id == self.author.id
+		return user.is_authenticated and user.author.id == self.author.id
 
 	def get_avg_rating(self):
 		from browse.utils_db import get_rating_post
@@ -105,7 +105,7 @@ class PostComment(models.Model):
 	time = models.DateTimeField(verbose_name="Post Time", auto_now=True, auto_now_add=False)
 	package = models.ForeignKey(Post, on_delete=models.CASCADE)
 	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_comment_author_user')
-	reacts = models.ManyToManyField(User, through='browse.models.PostCommentReact', related_name='post_react_user')
+	reacts = models.ManyToManyField(User, through='browse.PostCommentReact', related_name='post_react_user')
 
 	class Meta:
 		verbose_name = "Package Comment"

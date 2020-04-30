@@ -1,7 +1,6 @@
 from math import sin, atan2, sqrt, cos
 
 
-
 def pretty_request(request):
 	headers = ''
 	for header, value in request.META.items():
@@ -26,6 +25,21 @@ def pretty_request(request):
 
 
 # print(distance("52.2296756,21.0122287", "52.406374,16.9251681"))
+
+
+def image_to_file(img_base64, file_id):
+	import base64
+	from django.core.files.base import ContentFile
+
+	image_data = img_base64
+	format, imgstr = image_data.split(';base64,')
+	print("format", format)
+	ext = format.split('/')[-1]
+
+	data = ContentFile(base64.b64decode(imgstr))
+	file_name = str(file_id) + '.' + ext
+	return file_name, data
+	# user.image.save(file_name, data, save=True)  # image is User's model field
 
 
 # ------------------- Pagination --------------------
