@@ -85,31 +85,7 @@
             </div>
          </div>
       </div>
-      <script type="text/javascript" src="{% static 'browse/js/notify.js' %}"></script>
-      <script>
-         function showSuccessNotification(name, timeout = 5000) {
-             $.notify(name, "success", {
-                 position: "right",
-                 autoHideDelay: timeout
-             });
-         }
 
-         function showFailureNotification(name, timeout = 5000) {
-             $.notify(name, "error", {
-                 position: "right",
-                 autoHideDelay: timeout
-             });
-         }
-
-         function showWarningNotification(name, timeout = 5000) {
-             $.notify(name, "warn", {
-                 position: "right",
-                 autoHideDelay: timeout
-             });
-         }
-      </script>
-
-      {#    Cart#}
       {% endblock %}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
 
@@ -210,16 +186,15 @@
       </script>
 
 
-      <link rel="stylesheet" href="{% static 'browse/Restaurant_homepage/css/bootstrap.css' %}">
-
-      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
-      <!-- //bootstrap working-->
+{#      <link rel="stylesheet" href="{% static 'browse/Restaurant_homepage/css/bootstrap.css' %}">#}
+{##}
+{#      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">#}
+{#      <!-- //bootstrap working-->#}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.css">
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-confirm/3.3.2/jquery-confirm.min.js"></script>
           <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
 
       {% endblock %}
-{#      <script src={% static 'browse/js/location.js' %}></script>#}
       {% block body-js %}
       {% endblock %}
    </body>

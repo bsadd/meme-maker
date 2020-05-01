@@ -1,228 +1,180 @@
+
+
 {% extends 'browse/base.html' %}
+{% load static %}
+
 {% load tagconstants %}
 
 
 {% block header %}
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'browse/css/awesomplete.css' %}"/>
-    <script src="{% static 'browse/js/awesomplete.js' %}" async></script>
-    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-    {#editor css#}
-    <link rel="stylesheet" href="https://uicdn.toast.com/tui-color-picker/v2.2.0/tui-color-picker.css">
-    <link rel="stylesheet" href="https://uicdn.toast.com/tui-image-editor/v3.3.0/tui-image-editor.css">
-    {#    editor cs#}
-    <title>Add Item | FoodSquare</title>
+    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+    <script src="{% static 'browse/js/spectrum.js' %}"></script>
+
+    <script type="text/javascript" src="{% static 'browse/js/jquery.memegenerator.min.js' %}"></script>
+
+    <link rel="stylesheet" type="text/css" href="{% static 'browse/css/jquery.memegenerator.min.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'browse/css/spectrum.css' %}">
+    <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <style>
+        h2 {
+            display: block;
+            text-align: center;
+        }
+
+        .example {
+            margin: 0 0 10% 0;
+        }
+
+        .bootstrap {
+            width: 600px;
+            margin-right: auto;
+            margin-left: auto;
+        }
+
+        .save button {
+            display: block;
+            width: 100%;
+            margin-bottom: 15px;
+            font-size: 24px;
+        }
+
+        #preview {
+            min-height: 200px;
+            background-color: #EFEFEF;
+            font-family: monospace;
+            overflow-y: auto;
+        }
+
+        #preview img {
+            max-width: 100%;
+        }
+    </style>
+
+    <title>Upload Meme | {% constant "Website_Name" %}</title>
 {% endblock %}
 
 
 {% block body-content %}
-    <div class="page-inner">
-        {% load static %}
-        <div style="height: 50px"></div>
-        <div id="main-wrapper">
-            <div class="container"></div>
-            <div class="container" style="max-width: 95%">
-                <h1>Add Template</h1>
 
-                <hr>
-                <h3 class="text-danger">Upload Image size less than {% constant "MAX_IMGSIZE" %} MB</h3>
+    <div class="container" style="max-width: 95%">
+        <h1>Add Template</h1>
 
-                <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
-                    {% csrf_token %}
-                    <div class="row">
-                        <!-- left column -->
+        <hr>
+        <h3 class="text-danger">Upload Image size less than {% constant "MAX_IMGSIZE" %} MB</h3>
 
+        <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
+            {% csrf_token %}
+            <div class="example horizontal">
+                <img src="{% static 'browse/images/memeLoad.jpg' %}" id='memeImg'>
 
-                        <input type="file" name="image" id="selected_image" class="form-control" hidden>
-                        <div id="tui-image-editor-container" style=" height: 50vh "></div>
+                <div class="mg-controls">
 
-                        {#                    </div>#}
-                        {#                    <div class="row">#}
-                        <!-- edit form column -->
-                        <div class="col-md-1"></div>
-                        <div class="col-md-3 personal-info">
-                            <h3>Template info</h3>
+                    <h3>Template info</h3>
 
-                            <div class="form-group w-75">
-                                <label class=" control-label">Template Caption:</label>
-                                <input class="form-control" type="text" name="tmplt_caption" id="tmplt_caption">
-                                <small id="emailHelp" class="form-text text-muted">We'll never share your email with
-                                    anyone else.
-                                </small>
-                            </div>
+                    <input type='file' accept="image/*" id="imgInpt" onchange="readURL(this);"/>
 
+                    <div class="form-group w-75">
+                        <label class=" control-label">Template Caption:</label>
+                        <input class="form-control" type="text" name="tmplt_caption" id="tmplt_caption">
+                        <small id="emailHelp" class="form-text text-muted">We'll never share your email with
+                            anyone else.
+                        </small>
+                    </div>
 
-                            <div class="form-group w-75">
-                                <label class=" control-label">Categoy name:</label>
-                                <input class="form-control" type="text" name="category" id="category">
-                                <small class="form-text text-muted">like Bangla Movies, English Serial</small>
+                    <div class="form-group w-75">
+                        <label class="control-label">Add Keywords:</label>
+                        <div>
+                            <ol style="display: inline" id="added_keywords">
+                            </ol>
+                        </div>
 
-                            </div>
+                        <input type="hidden" name="ingrds" id="ingrds">
 
-                            <div class="form-group w-75">
-                                <label class="control-label">Add Keywords:</label>
-                                <div>
-                                    <ol style="display: inline" id="added_keywords">
-                                    </ol>
-                                </div>
+                        <input class="awesomplete form-control" id="ingrd_input"
+                               style="border: 1px solid #ccc; border-radius: 4px;padding: 5px 6px;"
+                               list="ingredient_list"/>
+                        <datalist id="ingredient_list">
+                            {% for ingrd in ingredient_list %}
+                                <option>{{ ingrd.name }}</option>
+                            {% endfor %}
+                        </datalist>
 
-                                <input type="hidden" name="ingrds" id="ingrds">
+                        <script>
+                            $(document).ready(function () {
+                                $(window).keydown(function (event) {
+                                    if (event.keyCode == 13) {
+                                        event.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#ingrd_input').bind("enterKey", function (e) {
+                                    $("ol").append("<li id=\"myId1\">" + $("#ingrd_input").val() + ' ' + "<a href=\"#\" class=\"remove\">X</a></li>");
+                                    $('#ingrd_input').val("");
+                                });
+                                $('#ingrd_input').keyup(function (e) {
+                                    if (e.keyCode == 13) {
+                                        $(this).trigger("enterKey");
+                                    }
+                                });
+                                $("#remove_li").click(function () {
+                                    $("li:last").remove();
+                                });
+                                $("ol").on('click', '.remove', function () {
+                                    $(this).parents('li').remove();
+                                });
 
-                                <input class="awesomplete form-control" id="ingrd_input"
-                                       style="border: 1px solid #ccc; border-radius: 4px;padding: 5px 6px;"
-                                       list="ingredient_list"/>
-                                <datalist id="ingredient_list">
-                                    {% for ingrd in ingredient_list %}
-                                        <option>{{ ingrd.name }}</option>
-                                    {% endfor %}
-                                </datalist>
+                            });
+                        </script>
+                    </div>
+                </div>
 
-                                <script>
-                                    $(document).ready(function () {
-                                        $(window).keydown(function (event) {
-                                            if (event.keyCode == 13) {
-                                                event.preventDefault();
-                                                return false;
-                                            }
-                                        });
-                                        $('#ingrd_input').bind("enterKey", function (e) {
-                                            $("ol").append("<li id=\"myId1\">" + $("#ingrd_input").val() + ' ' + "<a href=\"#\" class=\"remove\">X</a></li>");
-                                            $('#ingrd_input').val("");
-                                        });
-                                        $('#ingrd_input').keyup(function (e) {
-                                            if (e.keyCode == 13) {
-                                                $(this).trigger("enterKey");
-                                            }
-                                        });
-                                        $("#remove_li").click(function () {
-                                            $("li:last").remove();
-                                        });
-                                        $("ol").on('click', '.remove', function () {
-                                            $(this).parents('li').remove();
-                                        });
+                <script type="text/javascript">
+                    function readURL(input) {
+                        if (input.files && input.files[0]) {
+                            var reader = new FileReader();
 
-                                    });
-                                </script>
-                            </div>
+                            reader.onload = function (e) {
+                                $('#memeImg')
+                                    .attr('src', e.target.result);
+                            };
 
+                            reader.readAsDataURL(input.files[0]);
+                        }
+                    }
+                </script>
 
-                            <div class="form-group">
-                                <label class="col-md-3 control-label"></label>
-                                <div class="col-md-8">
-                                    {#                                    <button  type="button"  class="btn btn-primary" id="confirm_upload">Upload#}
-                                    {#                                            </button>#}
-                                    <input type="submit" class="btn btn-primary" value="Upload" id="confirm_upload">
-                                    <span></span>
-                                    <input type="reset" class="btn btn-danger" value="Cancel">
-                                </div>
-                            </div>
-                </form>
+                <div class="form-group">
+                    <label class="col-md-3 control-label"></label>
+                    <div class="col-md-8">
+
+                        <input type="submit" class="btn btn-primary" value="Upload" id="confirm_upload">
+                        <span></span>
+                        <input type="reset" class="btn btn-danger" value="Cancel">
+                    </div>
+                </div>
+
 
             </div>
 
-        </div>
-    </div>
-    <hr>
-
+        </form>
     </div>
 
-    <!-- </div>Page Inner -->
 
-    {#editor js#}
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/1.6.7/fabric.js"></script>
-    <script type="text/javascript"
-            src="https://uicdn.toast.com/tui.code-snippet/v1.5.0/tui-code-snippet.min.js"></script>
-    <script type="text/javascript"
-            src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/1.3.3/FileSaver.min.js"></script>
-    <script type="text/javascript" src="https://uicdn.toast.com/tui-color-picker/v2.2.0/tui-color-picker.js"></script>
-    <script type="text/javascript" src="https://uicdn.toast.com/tui-image-editor/v3.3.0/tui-image-editor.js"></script>
-    <script>
-        var whiteTheme = {};
-    </script>
-    <script type="text/javascript" src="{% static 'browse/js/white-theme.js' %}"></script>
-    <script>
-        whiteTheme["menu.normalIcon.path"] = "{% static '/browse/editorIconImg/icon-d.svg' %}";
-        whiteTheme["submenu.normalIcon.path"] = "{% static '/browse/editorIconImg/icon-d.svg' %}";
-        whiteTheme["menu.activeIcon.path"] = "{% static '/browse/editorIconImg/icon-b.svg'  %}";
-        whiteTheme["menu.disabledIcon.path"] = "{% static '/browse/editorIconImg/icon-a.svg'  %}";
-        whiteTheme["menu.hoverIcon.path"] = "{% static '/browse/editorIconImg/icon-c.svg'  %}";
-    </script>
-    <script>
+   <script>
         // Create an instance of the tui imageEditor, loading a blank image
         var max_allowedSize = {% constant "MAX_IMGSIZE" %};
-        var imageEditor = new tui.ImageEditor('#tui-image-editor-container', {
-            includeUI: {
-                loadImage: {
-                    path: 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7',
-                    name: 'Blank'
-                },
-                theme: whiteTheme,
-                menuBarPosition: 'bottom',
-                menu: ['crop', 'flip', 'rotate', 'draw', 'shape', 'text'],
-                uiSize: {
-                    width: '170vh',
-                    height: '90vh'
-                }
-            },
-            cssMaxWidth: 800,
-            cssMaxHeight: 400,
-            selectionStyle: {
-                cornerSize: 5,
-                rotatingPointOffset: 70
-            }
-        });
-
-        // Patch the loadImageFromURL of our tui imageEditor instance:
-        imageEditor.loadImageFromURL = (function () {
-            var cached_function = imageEditor.loadImageFromURL;
-
-            function waitUntilImageEditorIsUnlocked(imageEditor) {
-                return new Promise((resolve, reject) => {
-                    const interval = setInterval(() => {
-                        if (!imageEditor._invoker._isLocked) {
-                            clearInterval(interval);
-                            resolve();
-                        }
-                    }, 100);
-                })
-            }
-
-            return function () {
-                return waitUntilImageEditorIsUnlocked(imageEditor).then(() => cached_function.apply(this, arguments));
-            };
-        })();
-
-        // Load an image and tell our tui imageEditor instance the new and the old image size:
-        imageEditor.loadImageFromURL("{% static 'browse/images/memeLoad.jpg' %}", "SampleImage").then(result => {
-            imageEditor.ui.resizeEditor({
-                imageSize: {
-                    oldWidth: result.oldWidth,
-                    oldHeight: result.oldHeight,
-                    newWidth: result.newWidth,
-                    newHeight: result.newHeight
-                },
-            });
-        }).catch(err => {
-            console.error("Something went wrong:", err);
-        });
-
-        // Auto resize the editor to the window size:
-        window.addEventListener("resize", function () {
-            imageEditor.ui.resizeEditor()
-        });
-
-        $(document).ready(function () {
-
-            $("#tui-image-editor-container").addClass("col-md-8");
 
 
-        });
-
-        $('.tui-image-editor-load-btn').on('change', function (e) {
+        $('#imgInpt').on('change', function (e) {
             var size = this.files[0].size / 1000000;
             if (size > max_allowedSize) {
                 alert('File size Too Large');
-                imageEditor.loadImageFromURL("{% static 'browse/images/memeLoad.jpg' %}", "SampleImage");
+                $("#memeImg").attr("src","{% static 'browse/images/memeLoad.jpg' %}");
+
+
             }
 
         });
@@ -230,11 +182,84 @@
 
     </script>
 
-    <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
-    <script language="javascript" src="{% static 'browse/js/lz-string.js' %}"></script>
+    <script type="text/javascript">
+
+        $(".example.default img").memeGenerator({});
+
+        $(".example.bootstrap img").memeGenerator({
+            useBootstrap: true
+        });
+
+        $(".example.horizontal img").memeGenerator({
+            useBootstrap: true,
+            layout: "horizontal",
+            previewMode: "css",
+            defaultTextStyle: {
+                font: "'Comic Sans', Arial",
+                lineHeight: 2
+            },
+            captions: [
+                "PREDEFINED text on top"
+            ]
+        });
+
+
+        $("#example-save").memeGenerator({
+            useBootstrap: true
+        });
+
+
+        $("#save").click(function (e) {
+            e.preventDefault();
+
+            var imageDataUrl = $("#example-save").memeGenerator("save");
+
+            $.ajax({
+                url: "http://127.0.0.1:8000/save-img",
+                type: "POST",
+                data: {
+                    image: imageDataUrl
+                },
+                dataType: "json",
+                success: function (response) {
+                    $("#preview").html(
+                        $("<img>").attr("src", response.filename)
+                    );
+                },
+                error: function () {
+                    alert('This demo uses communication with the server which is not implemented here.');
+                }
+            });
+        });
+
+        $("#download").click(function (e) {
+            e.preventDefault();
+            $("#example-save").memeGenerator("download");
+        });
+
+        $("#serialize").click(function (e) {
+            $("#preview").html($("#example-save").memeGenerator("serialize"));
+        });
+    </script>
+
+
+
+
+        <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
 
     <script>
 
+
+        function getBase64Image(imgElem) {
+            var c = document.createElement('canvas');
+            var img = document.getElementById(imgElem);
+            c.height = img.naturalHeight;
+            c.width = img.naturalWidth;
+            var ctx = c.getContext('2d');
+
+            ctx.drawImage(img, 0, 0, c.width, c.height);
+            return c.toDataURL();
+        }
 
         function dataURLtoBlob(dataurl) {
             var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
@@ -258,9 +283,10 @@
         $("#confirm_upload").on('click', function (e) {
             e.preventDefault();
             var category = $('#category').val();
-            var blob = imageEditor.toDataURL();
+            var blob = getBase64Image('memeImg');
             var caption = $('#tmplt_caption').val();
             var keywords = '';
+            var memeImage = $("#memeImg").memeGenerator("save");
 
             var compressed = LZString.compress(imageEditor.toDataURL());
             console.log("Size of compressed sample is: " + compressed.length);
@@ -278,6 +304,21 @@
 
             });
 
+            textJson = [];
+
+            $('.mg-textbox-text').each(function (i, obj) {
+
+                var id = $(this).attr("title");
+                var email = $(this).val();
+
+                item = {}
+                item ["text"] = obj.value;
+                item ["style"] = $($('.mg-css-preview div')[i]).attr('style');
+                textJson.push(item);
+
+                {#console.log(obj.value + '  ' + $('.mg-textbox-size')[i].value + '  ' + $('.mg-textbox-text-color')[i].value + " " + $($('.mg-css-preview div')[i]).attr('style'));#}
+            });
+
             $.ajax({
                 type: "POST",
                 headers: {
@@ -285,10 +326,11 @@
                 },
                 url: '/browse/upload/',
                 data: {
-                    'category': category,
                     'caption': caption,
                     'keywords': keywords,
-                    'image': imageEditor.toDataURL(),
+                    'template': blob,
+                    'memeImg': memeImage,
+                    'text': textJson
 
                 },
                 dataType: 'json',
@@ -302,14 +344,10 @@
 
         });
     </script>
-
-    <script>
-        var string = "This is my compression test.";
-        console.log("Size of sample is: " + string.length);
-        var compressed = LZString.compress(string);
-        console.log("Size of compressed sample is: " + compressed.length);
-        string = LZString.decompress(compressed);
-        console.log("Sample is: " + string);
-    </script>
-    {#    editor js#}
 {% endblock %}
+
+
+
+
+
+
