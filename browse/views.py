@@ -130,7 +130,7 @@ class Index(TemplateView):
 #
 # 	page = request.GET.get('page')
 # 	print(page, get_page_objects(pkg_list, page))
-# 	return render(request, 'browse/product_list.html', {'item_list': get_page_objects(pkg_list, page)})
+# 	return render(request, 'browse/meme_list.html', {'item_list': get_page_objects(pkg_list, page)})
 #
 #
 # def aboutSection(request):
