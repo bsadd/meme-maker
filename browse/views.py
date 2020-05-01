@@ -168,14 +168,14 @@ class AddMemeView(TemplateView):
 		print(pretty_request(self.request))
 		# print(request.POST)
 		genre_list = request.POST.getlist('keywords')[0].split(',')
-		category = request.POST.get('category')
+		# category = request.POST.get('category')
 		caption = request.POST.get('caption')
-		image = request.POST.get('image')
+		image = request.POST.get('memeImg')
+		template = request.POST.get('template')
 		if image is None or caption is None:
 			return HttpResponse('Invalid data')
 
-		utils_db.insert_post(user_id=self.request.user.id, image_base64=image, post_name=caption, category=category,
-		                     genre_list=genre_list)
+		utils_db.insert_post(user_id=self.request.user.id, image_base64=image, post_name=caption, genre_list=genre_list)
 		return HttpResponse('Ok')
 
 

@@ -186,7 +186,7 @@ def get_category_post(categoty_name):
 
 
 #  ----------------------- Insert utils -------------------------
-def insert_post(post_name, genre_list, category, image_base64, user_id):
+def insert_post(post_name, genre_list, image_base64, user_id):
 	"""
 	:param post_name: caption
 	:param genre_list: list of keywords
@@ -196,7 +196,7 @@ def insert_post(post_name, genre_list, category, image_base64, user_id):
 	"""
 	from browse.models import Post
 	user = User.objects.get(id=user_id)
-	post, _ = Post.objects.get_or_create(name=post_name, category=category, author=user)
+	post, _ = Post.objects.get_or_create(name=post_name, author=user)
 	for gen in genre_list:
 		from browse.models import Genre
 		from browse.models import GenreList
@@ -208,7 +208,7 @@ def insert_post(post_name, genre_list, category, image_base64, user_id):
 	post.image.save(img_filename, img_data, save=True)
 
 
-def insert_post_path(post_name, genre_list, category, image_path, user_id):
+def insert_post_path(post_name, genre_list, image_path, user_id):
 	"""
 	:param post_name: caption
 	:param genre_list: list of keywords
@@ -218,7 +218,7 @@ def insert_post_path(post_name, genre_list, category, image_path, user_id):
 	"""
 	from browse.models import Post
 	user = User.objects.get(id=user_id)
-	post, _ = Post.objects.get_or_create(name=post_name, category=category, author=user)
+	post, _ = Post.objects.get_or_create(name=post_name, author=user)
 	post.image = image_path
 	post.save()
 	for gen in genre_list:
