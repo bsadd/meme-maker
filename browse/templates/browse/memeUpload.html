@@ -74,7 +74,7 @@
 
                     <h3>Template info</h3>
 
-                    <input type='file' accept="image/*" id="imgInpt" onchange="readURL(this);"/>
+                    <input type='file' onchange="readURL(this);"/>
 
                     <div class="form-group w-75">
                         <label class=" control-label">Template Caption:</label>
@@ -163,24 +163,7 @@
     </div>
 
 
-   <script>
-        // Create an instance of the tui imageEditor, loading a blank image
-        var max_allowedSize = {% constant "MAX_IMGSIZE" %};
 
-
-        $('#imgInpt').on('change', function (e) {
-            var size = this.files[0].size / 1000000;
-            if (size > max_allowedSize) {
-                alert('File size Too Large');
-                $("#memeImg").attr("src","{% static 'browse/images/memeLoad.jpg' %}");
-
-
-            }
-
-        });
-
-
-    </script>
 
     <script type="text/javascript">
 
@@ -241,11 +224,6 @@
             $("#preview").html($("#example-save").memeGenerator("serialize"));
         });
     </script>
-
-
-
-
-        <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
 
     <script>
 

@@ -165,7 +165,7 @@ class AddMemeView(TemplateView):
 		if not request.user.is_authenticated:
 			return HttpResponse('Not logged in')
 
-		# print(pretty_request(self.request))
+		print(pretty_request(self.request))
 		# print(request.POST)
 		genre_list = request.POST.getlist('keywords')[0].split(',')
 		category = request.POST.get('category')
