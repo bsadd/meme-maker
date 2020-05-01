@@ -74,7 +74,7 @@
                 <div class="product-toys-info">
                     <div class="men-pro-item">
                         <div class="men-thumb-item">
-                            <img src="/media/{{ item.image }}" class="img-thumbnail img-fluid" alt=""
+                            <img src="{{ item.image.url }}" class="img-thumbnail img-fluid" alt=""
                                  style="height: 190px;width: 290px;">
                             <div class="men-cart-pro">
                                 <div class="inner-men-cart-pro">
@@ -89,9 +89,7 @@
                             <div class="info-product-price">
                                 <div class="grid_meta">
                                     <div class="product_price">
-                                        {#                                    <h4>#}
-                                        <a href={{ item.get_absolute_url }}><h4>{{ item.pkg_name }}</h4></a>
-                                        {#                                    </h4>#}
+                                        <a href={{ item.get_absolute_url }}><h4>{{ item.name }}</h4></a>
 
                                     </div>
                                     <div id="star_rating{{ item.id }}">

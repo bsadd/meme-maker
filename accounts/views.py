@@ -49,8 +49,8 @@ class LoginView(TemplateView):
 				return redirect('/')
 			elif user is None:
 				return render(request, 'accounts/message_page.html',
-							  {'header': "Error !", 'details': 'Invalid Username or Password',
-							   'redirect': reverse('accounts:login')})
+				              {'header': "Error !", 'details': 'Invalid Username or Password',
+				               'redirect': reverse('accounts:login')})
 		# return JsonResponse({'account': False})
 		# elif not user.is_customer:
 		# 	return render(request, 'accounts/message_page.html',
@@ -59,8 +59,8 @@ class LoginView(TemplateView):
 		# return JsonResponse({'account': True, 'customer': False})
 		else:
 			return render(request, 'accounts/message_page.html',
-						  {'header': "Error !", 'details': 'Username or password is empty',
-						   'redirect': reverse('accounts:login')})
+			              {'header': "Error !", 'details': 'Username or password is empty',
+			               'redirect': reverse('accounts:login')})
 
 
 class RegisterView(TemplateView):
@@ -127,7 +127,6 @@ class SignupLoginView(TemplateView):
 		formName = request.POST.get('formName', False)
 		print(formName)
 
-
 		if formName == 'LOGIN':
 			username = request.POST.get('log-username', False)
 			password = request.POST.get('log-password', False)
@@ -139,13 +138,13 @@ class SignupLoginView(TemplateView):
 					return redirect('/')
 				elif user is None:
 					return render(request, 'accounts/message_page.html',
-								  {'header': "Error !", 'details': 'Invalid Username or Password',
-								   'redirect': reverse('accounts:login')})
+					              {'header': "Error !", 'details': 'Invalid Username or Password',
+					               'redirect': reverse('accounts:login')})
 
 			else:
 				return render(request, 'accounts/message_page.html',
-							  {'header': "Error !", 'details': 'Username or password is empty',
-							   'redirect': reverse('accounts:login')})
+				              {'header': "Error !", 'details': 'Username or password is empty',
+				               'redirect': reverse('accounts:login')})
 
 		else:
 			user_form = UserForm(request.POST)

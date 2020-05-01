@@ -1,9 +1,7 @@
 from django.views.generic import TemplateView
 
-from accounts.models import *
-from browse.models import *
-
 from browse import utils_db
+from browse.models import *
 
 
 class Index(TemplateView):
@@ -16,9 +14,10 @@ class Index(TemplateView):
 		# with open("sessionLog.txt", "a") as myfile:
 		# 	myfile.write(">>>>>>\n" + pretty_request(self.request) + "\n>>>>>>\n")
 
-		ctx = {'loggedIn': self.request.user.is_authenticated
+		ctx = {'loggedIn': self.request.user.is_authenticated,
 		       # 'restaurant_list': Restaurant.objects.all(),
 		       # 'item_list': pkg_list[:3], 'restaurants': rest_list[0:4]
+		       'item_list': Post.objects.all()
 		       }
 		return ctx
 
@@ -144,11 +143,9 @@ class Index(TemplateView):
 #
 
 
-import re
-
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
 from django.shortcuts import redirect, render
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView
 
 
 class AddMemeView(TemplateView):
@@ -161,7 +158,7 @@ class AddMemeView(TemplateView):
 
 	def get_context_data(self, *args, **kwargs):
 		context = super(AddMemeView, self).get_context_data()
-		# context['ingredient_list'] = Ingredient.objects.all()
+		context['loggedIn'] = self.request.user.is_authenticated
 		return context
 
 	def post(self, request, *args, **kwargs):
@@ -188,11 +185,10 @@ class ViewMenusView(TemplateView):
 	template_name = 'manager/manage_menus.html'
 
 	def get_context_data(self, **kwargs):
-		restaurant = User.objects.get(id=self.request.user.id).author
-		obj_list = Post.objects.filter(restaurant=restaurant)  # .order_by('status', '-time')
+		obj_list = Post.objects.filter(author=self.request.user)  # .order_by('status', '-time')
 		print(obj_list)
 		print('-----')
-		return {'menu_list': obj_list}
+		return {'loggedIn': self.request.user.is_authenticated, 'menu_list': obj_list}
 
 
 def branch_pkg_details(request):

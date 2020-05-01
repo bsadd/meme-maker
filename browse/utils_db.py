@@ -35,7 +35,7 @@ def get_rating_count_post(post_id):
 def get_rating_post(post_id):
 	""":returns average rating of a post"""
 	from django.db.models import Avg
-	return float(PostRating.objects.filter(post__id=post_id).aggregate(Avg('rating'))['avg_rating'])
+	return PostRating.objects.filter(post__id=post_id).aggregate(Avg('rating'))['rating__avg']
 
 
 def get_reviews_post(user_id, post_id):
@@ -206,3 +206,24 @@ def insert_post(post_name, genre_list, category, image_base64, user_id):
 	from browse.utils import image_to_file
 	img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
 	post.image.save(img_filename, img_data, save=True)
+
+
+def insert_post_path(post_name, genre_list, category, image_path, user_id):
+	"""
+	:param post_name: caption
+	:param genre_list: list of keywords
+	:param category: category of meme
+	:param image_path: image path on server
+	:param user_id: author id
+	"""
+	from browse.models import Post
+	user = User.objects.get(id=user_id)
+	post, _ = Post.objects.get_or_create(name=post_name, category=category, author=user)
+	post.image = image_path
+	post.save()
+	for gen in genre_list:
+		from browse.models import Genre
+		from browse.models import GenreList
+		gen = str(gen).strip().lower()
+		genre, _ = Genre.objects.get_or_create(name=gen)
+		GenreList.objects.get_or_create(post=post, genre=genre)
