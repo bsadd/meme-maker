@@ -152,8 +152,8 @@ class AddMemeView(TemplateView):
 	template_name = 'browse/memeUpload.html'
 
 	def get(self, request, *args, **kwargs):
-		if not request.user.is_authenticated:
-			return redirect('accounts:login')
+		# if not request.user.is_authenticated:
+		# 	return redirect('accounts:login')
 		return super(self.__class__, self).get(request, *args, **kwargs)
 
 	def get_context_data(self, *args, **kwargs):
@@ -194,3 +194,12 @@ class ViewMenusView(TemplateView):
 def branch_pkg_details(request):
 	return render(request, 'manager/branch_pkg_modal.html',
 	              {'pkg': get_package_branch(request.user, request.GET.get('id'))})
+
+
+
+def contactSection(request):
+	"""Renders Contact Page"""
+	st = render(request, 'browse/memeEdit.html',
+				{'fullLoad': False})
+	print(st)
+	return st

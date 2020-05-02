@@ -1,11 +1,12 @@
 .mg-wrapper {
 	position: relative;
-	text-align: center
+	text-align: center;
+	width: 100%;
 }
 
 .mg-wrapper.mg-horizontal-layout .mg-image {
 	float: left;
-	width: 55%;
+	width: 50%;
 	margin-right: 5%
 }
 

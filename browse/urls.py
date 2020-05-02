@@ -26,6 +26,8 @@ urlpatterns = [
 
 	path('browse/restaurants/<int:id>/', views.Index.as_view(), name='restaurant_detail'),
 
+	path('browse/test/', views.contactSection, name='rating_filter'),
+
 ]
 
 urlpatterns = format_suffix_patterns(urlpatterns)

@@ -1,0 +1,53 @@
+
+                    <div class="form-group w-75">
+                        <label class=" control-label">Template Caption:</label>
+                        <input class="form-control" type="text" name="tmplt_caption" id="tmplt_caption">
+                        <small id="emailHelp" class="form-text text-muted">We'll never share your email with
+                            anyone else.
+                        </small>
+                    </div>
+
+                    <div class="form-group w-75">
+                        <label class="control-label">Add Keywords:</label>
+                        <div>
+                            <ol style="display: inline" id="added_keywords">
+                            </ol>
+                        </div>
+
+                        <input type="hidden" name="ingrds" id="ingrds">
+
+                        <input class="awesomplete form-control" id="ingrd_input"
+                               style="border: 1px solid #ccc; border-radius: 4px;padding: 5px 6px;"
+                               list="ingredient_list"/>
+                        <datalist id="ingredient_list">
+                            {% for ingrd in ingredient_list %}
+                                <option>{{ ingrd.name }}</option>
+                            {% endfor %}
+                        </datalist>
+
+                        <script>
+                            $(document).ready(function () {
+                                $(window).keydown(function (event) {
+                                    if (event.keyCode == 13) {
+                                        event.preventDefault();
+                                        return false;
+                                    }
+                                });
+                                $('#ingrd_input').bind("enterKey", function (e) {
+                                    $("ol").append("<li id=\"myId1\">" + $("#ingrd_input").val() + ' ' + "<a href=\"#\" class=\"remove\">X</a></li>");
+                                    $('#ingrd_input').val("");
+                                });
+                                $('#ingrd_input').keyup(function (e) {
+                                    if (e.keyCode == 13) {
+                                        $(this).trigger("enterKey");
+                                    }
+                                });
+                                $("#remove_li").click(function () {
+                                    $("li:last").remove();
+                                });
+                                $("ol").on('click', '.remove', function () {
+                                    $(this).parents('li').remove();
+                                });
+
+                            });
+                        </script>

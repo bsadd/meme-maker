@@ -1,9 +1,10 @@
+{% extends fullLoad|yesno:"browse/base.html,browse/empty.html" %}
 
-
-{% extends 'browse/base.html' %}
+{#{% extends 'browse/base.html' %}#}
 {% load static %}
 
 {% load tagconstants %}
+{#{% if fullLoad %}#}
 
 
 {% block header %}
@@ -56,92 +57,42 @@
     <title>Upload Meme | {% constant "Website_Name" %}</title>
 {% endblock %}
 
+{#{% endif %}#}
 
 {% block body-content %}
-    <div id="editBody">
-        <div class="container" style="max-width: 95%">
-            <h1>Add Template</h1>
 
-            <hr>
-            <h3 class="text-danger">Upload Image size less than {% constant "MAX_IMGSIZE" %} MB</h3>
+    <div class="container" style="max-width: 95%">
+        <h1>Edit Meme</h1>
 
-
-            <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
-                {% csrf_token %}
-                <div class="container">
-
-                    <div class=" row">
-                        <div class="col-md-6">
-                            <img src="{% static 'browse/images/memeLoad.jpg' %}" id='memeImg'
-                                 style="float: left; max-width: 100%;">
-                        </div>
-                        <div class="col-md-2"></div>
-                        <div class="col-md-4">
-                            <input type='file' accept="image/*" id="imgInpt" onchange="readURL(this);"/>
-                            {% include "browse/meme_info.html" %}
+        <hr>
 
 
-                            <div style="height: 2vh"></div>
-                            <div style="width: 60%; padding-left: 20%;">
-                                <input type="submit" class="btn btn-primary btn-lg " value="Upload"
-                                       id="confirm_upload">
-
-                            </div>
+        <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
+            {% csrf_token %}
+            <div class="example horizontal row">
+                <img src="{% static 'browse/images/memeLoad.jpg' %}" id='memeImg' style="float: left; width: 50vw">
 
 
-                        </div>
+                <div class=" mg-controls " >
 
-                        <script type="text/javascript">
-                            function readURL(input) {
-                                if (input.files && input.files[0]) {
-                                    var reader = new FileReader();
+                    <h3>Template info</h3>
 
-                                    reader.onload = function (e) {
-                                        $('#memeImg')
-                                            .attr('src', e.target.result);
-                                    };
-
-                                    reader.readAsDataURL(input.files[0]);
-                                }
-                            }
-                        </script>
-
-
-                    </div>
-
+                    {% include "browse/meme_info.html" %}
 
                 </div>
+            </div>
 
-            </form>
+            <div style="width: 60vw; padding-left: 20%">
+                <input type="submit" class="btn btn-primary btn-lg btn-block" value="Upload" id="confirm_upload">
+
+            </div>
 
 
-        </div>
+        </form>
+
 
     </div>
 
-
-
-        var isLarge = 'F';
-        $('#memeImg').on('load', function (e) {
-            if (isLarge === 'T') {
-                {#$("#memeImg").attr("src", "{% static 'browse/images/memeLoad.jpg' %}");#}
-                $('#memeImg').attr('src', '/static/browse/images/memeLoad.jpg');
-            }
-
-        });
-
-        $('#imgInpt').on('change', function (e) {
-            var size = this.files[0].size / 1000000;
-            if (size > max_allowedSize) {
-                isLarge = 'T';
-                alert('File size Too Large');
-            } else {
-                isLarge = 'F';
-            }
-
-        });
-
-    </script>
 
     <script type="text/javascript">
 
@@ -169,6 +120,7 @@
             useBootstrap: true
         });
 
+        var imageDataUrl = $("#example-save").memeGenerator("save");
 
         $("#save").click(function (e) {
             e.preventDefault();
@@ -205,9 +157,14 @@
 
     </script>
 
+
+
+
+    <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
+    <script language="javascript" src="{% static 'browse/js/lz-string.js' %}"></script>
+
     <script>
 
-        var htmlData = '';
 
         function getBase64Image(imgElem) {
             var c = document.createElement('canvas');
@@ -238,18 +195,19 @@
             }
         });
 
+
         $("#confirm_upload").on('click', function (e) {
             e.preventDefault();
+            alert('here');
             var category = $('#category').val();
-            var blob = getBase64Image('memeImg');
             var caption = $('#tmplt_caption').val();
             var keywords = '';
             var memeImage = $("#memeImg").memeGenerator("save");
 
-            var compressed = LZString.compress(imageEditor.toDataURL());
-            console.log("Size of compressed sample is: " + compressed.length);
-            var dcmp = LZString.decompress(compressed);
-            console.log("Sample is: " + dcmp.length);
+            {#var compressed = LZString.compress(imageEditor.toDataURL());#}
+            {#console.log("Size of compressed sample is: " + compressed.length);#}
+            {#var dcmp = LZString.decompress(compressed);#}
+            {#console.log("Sample is: " + dcmp.length);#}
 
 
             $('#added_keywords').each(function () {// id of ul
@@ -268,70 +226,20 @@
                 headers: {
                     "X-CSRFToken": csrftoken
                 },
-                url: '/browse/test/',
-
+                url: '/browse/upload/',
                 data: {
                     'caption': caption,
                     'keywords': keywords,
-                    'template': blob,
+                    'memeImg': memeImage,
+
                 },
+                dataType: 'json',
                 success: function (data) {
-                    $('#memeModal').click();
-                    htmlData = data;
-                    console.log(data);
+
+
                 }
             });
             console.log(keywords);
-
-
-        });
-
-
-    </script>
-    <!-- Button trigger modal -->
-    <button id="memeModal" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter"
-            hidden>
-        Launch demo modal
-    </button>
-
-    <!-- Modal -->
-    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog"
-         aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    Your template has been uploaded successfully.<br>
-                    Would you like to make a meme on it ?
-                </div>
-                <div class="modal-footer">
-                    <button id="ismemeEdit" type="button" class="btn btn-primary" data-dismiss="modal">Yes</button>
-
-                    <button id="closeModal" type="button" class="btn btn-secondary" data-dismiss="modal">No,Thanks
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <script>
-        $("#ismemeEdit").on('click', function (e) {
-            console.log("clicked...waiting...");
-
-            setTimeout(
-                function () {
-                    console.log(htmlData);
-                    $('#editBody').html(htmlData);
-                },
-                500);
-
-        });
-        $("#closeModal").on('click', function (e) {
-            window.location.replace("/");
 
 
         });
