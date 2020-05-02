@@ -211,6 +211,7 @@ def insert_template_post(post_name, genre_list, image_base64, is_adult, user_id)
     img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
     post.image.save(img_filename, img_data, save=True)
     post.save()
+    return post
 
 
 def insert_template_post_path(post_name, genre_list, image_path, is_adult, user_id):
@@ -235,6 +236,7 @@ def insert_template_post_path(post_name, genre_list, image_path, is_adult, user_
         GenreList.objects.get_or_create(post=post, genre=genre)
     post.image = image_path
     post.save()
+    return post
 
 
 def insert_meme_post(post_name, genre_list, image_base64, is_adult, user_id, template_id):
@@ -262,3 +264,4 @@ def insert_meme_post(post_name, genre_list, image_base64, is_adult, user_id, tem
     from browse.utils import image_to_file
     img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
     post.image.save(img_filename, img_data, save=True)
+    return post
