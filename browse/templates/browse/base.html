@@ -17,7 +17,6 @@
     <!--booststrap-->
     {#    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">#}
     {#    <link href="{% static 'browse/toys_shop/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css" media="all">#}
-{#    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.css">#}
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.css">
 
     <!--//booststrap end-->
@@ -37,7 +36,6 @@
     <!--//stylesheets-->
 
 
-    {#    <link href="{% static 'browse/toys_shop/index/css/bootstrap.css' %}" rel='stylesheet' type='text/css'/>#}
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
 {#    <script src="{% static 'browse/toys_shop/index/js/jquery.min.js' %}"></script>#}
     <!-- Custom Theme files -->
@@ -72,8 +70,8 @@
     <script>
         new WOW().init();
     </script>
-    <script type="text/javascript" src="{% static 'browse/toys_shop/index/js/move-top.js' %}"></script>
-    <script type="text/javascript" src="{% static 'browse/toys_shop/index/js/easing.js' %}"></script>
+    <!-- <script type="text/javascript" src="{% static 'browse/toys_shop/index/js/move-top.js' %}"></script> -->
+    <!-- <script type="text/javascript" src="{% static 'browse/toys_shop/index/js/easing.js' %}"></script> -->
     <script type="text/javascript">
         jQuery(document).ready(function ($) {
             $(".scroll").click(function (event) {
@@ -83,7 +81,6 @@
         });
     </script>
 
-    <script src="{% static 'browse/toys_shop/js/bootstrap.min.js' %}"></script>
 
     <style>
         .topBtn {
@@ -149,40 +146,4 @@
 {% block body-footer-common %}
 
 
-
-    <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Login</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="register-form">
-                        <form action="#" method="post">
-                            <div class="fields-grid">
-                                <div class="styled-input">
-                                    <input type="text" placeholder="Your Name" name="Your Name" required="">
-                                </div>
-                                <div class="styled-input">
-                                    <input type="email" placeholder="Your Email" name="Your Email" required="">
-                                </div>
-                                <div class="styled-input">
-                                    <input type="password" placeholder="password" name="password" required="">
-                                </div>
-                                <button type="submit" class="btn subscrib-btnn">Login</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- //Modal 1-->
 {% endblock %}

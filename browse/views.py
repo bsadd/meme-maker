@@ -94,3 +94,17 @@ def editView(request, id):
                 context={'fullLoad': False, 'post': Post.objects.get(id=id)})
     print(st)
     return st
+
+
+
+def memeDetails(request):
+    """Renders Contact Page"""
+
+    print(request.POST)
+    st = render(request, 'browse/memeDetails.html')
+    print(st)
+    return st
+
+
+
+

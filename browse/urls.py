@@ -26,7 +26,7 @@ urlpatterns = [
 
 
 	# path('browse/test/', views.contactSection, name='rating_filter'),
-	# path('browse/tst/', views.memeDetails),
+	path('browse/tst/', views.memeDetails),
 
 ]
 
