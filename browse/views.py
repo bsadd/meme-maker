@@ -55,7 +55,7 @@ class AddMemeView(TemplateView):
     """
     View for uploading template
     """
-    template_name = 'browse/memeUpload.html'
+    template_name = 'browse/templateUpload.html'
 
     def get(self, request, *args, **kwargs):
         # if not request.user.is_authenticated:

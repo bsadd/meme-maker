@@ -23,7 +23,10 @@ urlpatterns = [
     path('browse/item/<int:id>/submitRating/', views.Index, name='rate-meme'),
     path('browse/item/<int:id>/reactOn/', views.Index, name='react-comment'),
 
-    path('browse/test/', views.editView, name='rating_filter'),
+
+
+	# path('browse/test/', views.contactSection, name='rating_filter'),
+	# path('browse/tst/', views.memeDetails),
 
 ]
 
