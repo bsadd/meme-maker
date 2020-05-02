@@ -175,7 +175,7 @@ class AddMemeView(TemplateView):
 		if image is None or caption is None:
 			return HttpResponse('Invalid data')
 
-		utils_db.insert_post(user_id=self.request.user.id, image_base64=image, post_name=caption, genre_list=genre_list)
+		utils_db.insert_template_post(user_id=self.request.user.id, image_base64=template, post_name=caption, genre_list=genre_list)
 		return HttpResponse('Ok')
 
 

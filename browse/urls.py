@@ -12,10 +12,6 @@ urlpatterns = [
 	path('contact/', views.Index),
 	path('browse/filter/', views.Index, name='rating_filter'),
 
-	path('browse/restaurants/', views.Index.as_view(), name='restaurants'),
-
-	# path('menuEntryForRestaurant/', views.RestaurantMenuEntryList.as_view()),
-	# path('branchListForRestaurant/', views.RestaurantBranchList.as_view())
 	path('browse/raw/', views.Index),
 	path('browse/upload/', views.AddMemeView.as_view(), name='image-upload'),
 
