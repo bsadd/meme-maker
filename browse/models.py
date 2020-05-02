@@ -53,10 +53,10 @@ class Post(models.Model):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("browse:package-details", kwargs={"id": self.pk})
+        return reverse("browse:view-meme", kwargs={"id": self.pk})
 
     def get_absolute_edit_url(self):
-        return reverse("manager:edit_menu", kwargs={"id": self.pk})
+        return reverse("browse:edit-meme", kwargs={"id": self.pk})
 
     def is_editable(self, user):
         return user.is_authenticated and user.author.id == self.author.id

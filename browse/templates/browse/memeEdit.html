@@ -70,7 +70,7 @@
         <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
             {% csrf_token %}
             <div class="example horizontal row">
-                <img src="{% static 'browse/images/memeLoad.jpg' %}" id='memeImg' style="float: left; width: 50vw">
+                <img src="{{ post.image.url }}" id='memeImg' style="float: left; width: 50vw">
 
 
                 <div class=" mg-controls " >
