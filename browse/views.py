@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from browse import utils_db
 from browse.models import *
 
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
 
@@ -32,7 +32,7 @@ def upload_template_image(request):
 
     post = utils_db.insert_template_post(user_id=request.user.id, image_base64=template, post_name=caption,
                                          genre_list=genre_list, is_adult=False)
-    return HttpResponse(post.id)
+    return JsonResponse({'id': 1})
 
 
 class Index(TemplateView):
@@ -58,8 +58,8 @@ class AddMemeView(TemplateView):
     template_name = 'browse/templateUpload.html'
 
     def get(self, request, *args, **kwargs):
-        # if not request.user.is_authenticated:
-        # 	return redirect('accounts:login')
+
+
         return super(self.__class__, self).get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):

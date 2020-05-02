@@ -143,71 +143,16 @@
 
     </script>
 
-    <script type="text/javascript">
-
-        $(".example.default img").memeGenerator({});
-
-        $(".example.bootstrap img").memeGenerator({
-            useBootstrap: true
-        });
-
-        $(".example.horizontal img").memeGenerator({
-            useBootstrap: true,
-            layout: "horizontal",
-            previewMode: "css",
-            defaultTextStyle: {
-                font: "'Comic Sans', Arial",
-                lineHeight: 2
-            },
-            captions: [
-                "PREDEFINED text on top"
-            ]
-        });
 
 
-        $("#example-save").memeGenerator({
-            useBootstrap: true
-        });
 
 
-        $("#save").click(function (e) {
-            e.preventDefault();
-
-            var imageDataUrl = $("#example-save").memeGenerator("save");
-
-            $.ajax({
-                url: "http://127.0.0.1:8000/save-img",
-                type: "POST",
-                data: {
-                    image: imageDataUrl
-                },
-                dataType: "json",
-                success: function (response) {
-                    $("#preview").html(
-                        $("<img>").attr("src", response.filename)
-                    );
-                },
-                error: function () {
-                    alert('This demo uses communication with the server which is not implemented here.');
-                }
-            });
-        });
-
-        $("#download").click(function (e) {
-            e.preventDefault();
-            $("#example-save").memeGenerator("download");
-        });
-
-        $("#serialize").click(function (e) {
-            $("#preview").html($("#example-save").memeGenerator("serialize"));
-        });
-
-
-    </script>
+    <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
+    <script language="javascript" src="{% static 'browse/js/lz-string.js' %}"></script>
 
     <script>
 
-        var htmlData = '';
+        var memeId = '';
 
         function getBase64Image(imgElem) {
             var c = document.createElement('canvas');
@@ -245,11 +190,11 @@
             var caption = $('#tmplt_caption').val();
             var keywords = '';
             var memeImage = $("#memeImg").memeGenerator("save");
-
-            var compressed = LZString.compress(imageEditor.toDataURL());
-            console.log("Size of compressed sample is: " + compressed.length);
-            var dcmp = LZString.decompress(compressed);
-            console.log("Sample is: " + dcmp.length);
+            alert('here');
+            {#var compressed = LZString.compress(imageEditor.toDataURL());#}
+            {#console.log("Size of compressed sample is: " + compressed.length);#}
+            {#var dcmp = LZString.decompress(compressed);#}
+            {#console.log("Sample is: " + dcmp.length);#}
 
 
             $('#added_keywords').each(function () {// id of ul
@@ -268,17 +213,27 @@
                 headers: {
                     "X-CSRFToken": csrftoken
                 },
-                url: '/browse/edit/',
-
+                url: '/browse/upload/',
+                dataType: "json",
                 data: {
                     'caption': caption,
                     'keywords': keywords,
                     'template': blob,
                 },
                 success: function (data) {
-                    $('#memeModal').click();
-                    htmlData = data;
                     console.log(data);
+
+                    console.log(data['id']);
+                    if (data['id'] === -1) {
+                        $('#modal_text').text('sorry cannot be added');
+                        $('#failModalBtn').click();
+
+                    } else {
+
+                        memeId = data['id'];
+                        $('#memeModal').click();
+                    }
+
                 }
             });
             console.log(keywords);
@@ -288,6 +243,37 @@
 
 
     </script>
+
+
+
+    <button id="failModalBtn" type="button" class="btn btn-primary" data-toggle="modal"
+            data-target="#failModalCenter"
+            hidden>
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="failModalCenter" tabindex="-1" role="dialog"
+         aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Oops!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="modal_text">
+                    Sorry can't be added
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <!-- Button trigger modal -->
     <button id="memeModal" type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter"
             hidden>
@@ -300,7 +286,7 @@
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLongTitle">Modal title</h5>
+                    <h5 class="modal-title">Success</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -319,21 +305,33 @@
         </div>
     </div>
     <script>
-        $("#ismemeEdit").on('click', function (e) {
-            console.log("clicked...waiting...");
 
-            setTimeout(
-                function () {
-                    console.log(htmlData);
-                    $('#editBody').html(htmlData);
+        $("#ismemeEdit").on('click', function (e) {
+
+            $.ajax({
+                type: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken
                 },
-                500);
+                url: '/browse/item/' + memeId + '/edit/',
+                data: {
+                    'fromAjax': 'True'
+                },
+                success: function (data) {
+                    setTimeout(
+                        function () {
+                            console.log(data);
+                            $('#editBody').html(data);
+                        },
+                        500);
+
+                }
+            });
+
 
         });
         $("#closeModal").on('click', function (e) {
             window.location.replace("/");
-
-
         });
     </script>
 {% endblock %}

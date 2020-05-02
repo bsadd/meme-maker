@@ -1,63 +1,64 @@
 {% extends fullLoad|yesno:"browse/base.html,browse/empty.html" %}
 
-{#{% extends 'browse/base.html' %}#}
 {% load static %}
 
 {% load tagconstants %}
-{#{% if fullLoad %}#}
 
 
 {% block header %}
-    <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
-    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
-    <script src="{% static 'browse/js/spectrum.js' %}"></script>
+    {% if fullLoad == 'True' %}
 
-    <script type="text/javascript" src="{% static 'browse/js/jquery.memegenerator.min.js' %}"></script>
+        <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+        <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+        <script src="{% static 'browse/js/spectrum.js' %}"></script>
 
-    <link rel="stylesheet" type="text/css" href="{% static 'browse/css/jquery.memegenerator.min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'browse/css/spectrum.css' %}">
-    <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+        <script type="text/javascript" src="{% static 'browse/js/jquery.memegenerator.min.js' %}"></script>
 
-    <style>
-        h2 {
-            display: block;
-            text-align: center;
-        }
+        <link rel="stylesheet" type="text/css" href="{% static 'browse/css/jquery.memegenerator.min.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'browse/css/spectrum.css' %}">
+        <link rel="stylesheet" type="text/css" href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 
-        .example {
-            margin: 0 0 10% 0;
-        }
+        <style>
+            h2 {
+                display: block;
+                text-align: center;
+            }
 
-        .bootstrap {
-            width: 600px;
-            margin-right: auto;
-            margin-left: auto;
-        }
+            .example {
+                margin: 0 0 10% 0;
+            }
 
-        .save button {
-            display: block;
-            width: 100%;
-            margin-bottom: 15px;
-            font-size: 24px;
-        }
+            .bootstrap {
+                width: 600px;
+                margin-right: auto;
+                margin-left: auto;
+            }
 
-        #preview {
-            min-height: 200px;
-            background-color: #EFEFEF;
-            font-family: monospace;
-            overflow-y: auto;
-        }
+            .save button {
+                display: block;
+                width: 100%;
+                margin-bottom: 15px;
+                font-size: 24px;
+            }
 
-        #preview img {
-            max-width: 100%;
-        }
-    </style>
+            #preview {
+                min-height: 200px;
+                background-color: #EFEFEF;
+                font-family: monospace;
+                overflow-y: auto;
+            }
 
-    <title>Upload Meme | {% constant "Website_Name" %}</title>
+            #preview img {
+                max-width: 100%;
+            }
+        </style>
+
+        <title>Upload Meme | {% constant "Website_Name" %}</title>
+    {% endif %}
+
 {% endblock %}
 
-{#{% endif %}#}
 
 {% block body-content %}
 
@@ -73,7 +74,7 @@
                 <img src="{{ post.image.url }}" id='memeImg' style="float: left; width: 50vw">
 
 
-                <div class=" mg-controls " >
+                <div class=" mg-controls ">
 
                     <h3>Template info</h3>
 
@@ -95,7 +96,6 @@
 
 
     <script type="text/javascript">
-
         $(".example.default img").memeGenerator({});
 
         $(".example.bootstrap img").memeGenerator({
@@ -156,8 +156,6 @@
 
 
     </script>
-
-
 
 
     <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
@@ -226,16 +224,15 @@
                 headers: {
                     "X-CSRFToken": csrftoken
                 },
-                url: '/browse/upload/',
+                url: '/browse/upload-image-edited/',
                 data: {
                     'caption': caption,
                     'keywords': keywords,
                     'memeImg': memeImage,
 
                 },
-                dataType: 'json',
                 success: function (data) {
-
+                    alert('success');
 
                 }
             });

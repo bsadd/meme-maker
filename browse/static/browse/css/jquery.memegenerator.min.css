@@ -242,11 +242,17 @@
 	top: 0;
 	z-index: 4;
 	width: 100%;
-	border: 2px dashed #222
+	border: 2px dashed #222;
+
+	min-height: 8%;
+
 }
 
 .mg-wrapper .mg-helpers .draggable:hover:before {
-	border-color: #fff
+	border-color: #fff;
+
+	min-height: 8%;
+
 }
 
 .mg-wrapper .mg-helpers .draggable:before {
@@ -257,7 +263,9 @@
 	bottom: 0;
 	left: 0;
 	right: 0;
-	border: 2px dashed #ccc
+	border: 2px dashed #ccc;
+
+	min-height: 8%;
 }
 
 .mg-wrapper .mg-css-preview {
