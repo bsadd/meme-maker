@@ -9,30 +9,36 @@ from django.views.generic import TemplateView
 
 
 def upload_meme_image(request):
+    """
+    :param request: request with edited image over a template
+    :return: Json with id: uploaded-post-id, loggedIn:True/False && id is -1 for failure
+    """
     genre_list = request.POST.getlist('keywords')[0].split(',')
     caption = request.POST.get('caption')
     template_id = request.POST.get('template-id')
     image = request.POST.get('memeImg')
-    if template_id is None or caption is None or image is None:
-        return HttpResponse('Invalid')
+    if not request.user.is_authenticated or template_id is None or caption is None or image is None:
+        return JsonResponse({'id': -1, 'loggedIn': request.user.is_authenticated})
 
     post = utils_db.insert_meme_post(user_id=request.user.id, image_base64=image, post_name=caption,
-                                     genre_list=genre_list, is_adult=False)
-    return HttpResponse(post.id)
+                                     genre_list=genre_list, is_adult=False, template_id=template_id)
+    return JsonResponse({'id': post.id, 'loggedIn': request.user.is_authenticated})
 
 
 def upload_template_image(request):
+    """
+    :param request: request a new template image
+    :return: Json with id: uploaded-post-id, loggedIn:True/False && id is -1 for failure
+    """
     genre_list = request.POST.getlist('keywords')[0].split(',')
-    # category = request.POST.get('category')
     caption = request.POST.get('caption')
-    # image = request.POST.get('memeImg')
     template = request.POST.get('template')
-    if template is None or caption is None:
-        return HttpResponse('Invalid data')
+    if not request.user.is_authenticated or template is None or caption is None:
+        return JsonResponse({'id': -1, 'loggedIn': request.user.is_authenticated})
 
     post = utils_db.insert_template_post(user_id=request.user.id, image_base64=template, post_name=caption,
                                          genre_list=genre_list, is_adult=False)
-    return JsonResponse({'id': 1})
+    return JsonResponse({'id': post.id, 'loggedIn': request.user.is_authenticated})
 
 
 class Index(TemplateView):
@@ -68,9 +74,6 @@ class AddMemeView(TemplateView):
         return context
 
     def post(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return HttpResponse('Not logged in')
-
         # print(pretty_request(self.request))
         print(request.POST)
         return upload_template_image(request)
@@ -87,7 +90,7 @@ class ViewMenusView(TemplateView):
 
 
 def editView(request, id):
-    """Renders Contact Page"""
+    """Renders Edit Page for the given meme id"""
 
     print(request.POST)
     st = render(request, 'browse/memeEdit.html',
@@ -96,15 +99,5 @@ def editView(request, id):
     return st
 
 
-
-def memeDetails(request):
-    """Renders Contact Page"""
-
-    print(request.POST)
-    st = render(request, 'browse/memeDetails.html')
-    print(st)
-    return st
-
-
-
-
+def memeDetails(request, id):
+    return None

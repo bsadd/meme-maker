@@ -16,17 +16,12 @@ urlpatterns = [
     path('browse/upload-image-edited/', views.upload_meme_image, name='upload-meme-image'),
     # path('browse/edit/', views.contactSection, name='image-edit'),
 
-    path('browse/item/<int:id>/', views.editView, name='view-meme'),
+    path('browse/item/<int:id>/', views.memeDetails, name='view-meme'),
     path('browse/item/<int:id>/edit/', views.editView, name='edit-meme'),
 
     path('browse/item/<int:id>/submitReview/', views.Index, name='comment-meme'),
     path('browse/item/<int:id>/submitRating/', views.Index, name='rate-meme'),
     path('browse/item/<int:id>/reactOn/', views.Index, name='react-comment'),
-
-
-
-	# path('browse/test/', views.contactSection, name='rating_filter'),
-	path('browse/tst/', views.memeDetails),
 
 ]
 

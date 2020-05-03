@@ -202,8 +202,7 @@ def insert_template_post(post_name, genre_list, image_base64, is_adult, user_id)
     post.is_adult = is_adult
     post.is_template = True
     for gen in genre_list:
-        from browse.models import Genre
-        from browse.models import GenreList
+        from browse.models import Genre, GenreList
         gen = str(gen).strip().lower()
         genre, _ = Genre.objects.get_or_create(name=gen)
         GenreList.objects.get_or_create(post=post, genre=genre)
@@ -225,12 +224,11 @@ def insert_template_post_path(post_name, genre_list, image_path, is_adult, user_
     from browse.models import Post
     from browse.utils import trim_replace_wsp
     user = User.objects.get(id=user_id)
-    post, _ = Post.objects.get_or_create(name=trim_replace_wsp(post_name), author=user)
+    post = Post.objects.create(name=trim_replace_wsp(post_name), author=user)
     post.is_adult = is_adult
     post.is_template = True
     for gen in genre_list:
-        from browse.models import Genre
-        from browse.models import GenreList
+        from browse.models import Genre, GenreList
         gen = str(gen).strip().lower()
         genre, _ = Genre.objects.get_or_create(name=gen)
         GenreList.objects.get_or_create(post=post, genre=genre)
@@ -246,18 +244,17 @@ def insert_meme_post(post_name, genre_list, image_base64, is_adult, user_id, tem
     :param image_base64: js image data
     :param is_adult: is adult content
     :param user_id: author id
-    :param template_id: blank template of the meme
+    :param template_id: id of the meme on which it had been edited on
     """
     from browse.models import Post
     user = User.objects.get(id=user_id)
-    template = Post.objects.get(id=template_id)
+    template_id = Post.objects.get(id=template_id).get_template_id()
     from browse.utils import trim_replace_wsp
-    post, _ = Post.objects.get_or_create(name=trim_replace_wsp(post_name), author=user, template=template)
+    post, _ = Post.objects.create(name=trim_replace_wsp(post_name), author=user, template_id=template_id)
     post.is_adult = is_adult
     post.is_template = False
     for gen in genre_list:
-        from browse.models import Genre
-        from browse.models import GenreList
+        from browse.models import Genre, GenreList
         gen = str(gen).strip().lower()
         genre, _ = Genre.objects.get_or_create(name=gen)
         GenreList.objects.get_or_create(post=post, genre=genre)
