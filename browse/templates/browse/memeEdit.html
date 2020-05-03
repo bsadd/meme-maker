@@ -62,185 +62,186 @@
 
 {% block body-content %}
 
-    <div class="container" style="max-width: 95%">
-        <h1>Edit Meme</h1>
+	<div class="container" style="max-width: 95%">
+		<h1>Edit Meme</h1>
 
-        <hr>
+		<hr>
 
 
-        <form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
-            {% csrf_token %}
-            <div class="example horizontal row">
-                <img src="{{ post.image.url }}" id='memeImg' style="float: left; width: 50vw">
+		<form method="post" enctype="multipart/form-data" class="form-horizontal" role="form">
+			{% csrf_token %}
+			<div class="example horizontal row">
+				<img src="{{ post.image.url }}" id='memeImg' style="float: left; width: 50vw">
 
 
                 <div class=" mg-controls ">
 
-                    <h3>Template info</h3>
+					<h3>Template info</h3>
 
-                    {% include "browse/meme_info.html" %}
+					{% include "browse/meme_info.html" %}
 
-                </div>
-            </div>
+				</div>
+			</div>
 
-            <div style="width: 60vw; padding-left: 20%">
-                <input type="submit" class="btn btn-primary btn-lg btn-block" value="Upload" id="confirm_upload">
+			<div style="width: 60vw; padding-left: 20%">
+				<input type="submit" class="btn btn-primary btn-lg btn-block" value="Upload" id="confirm_upload">
 
-            </div>
-
-
-        </form>
+			</div>
 
 
-    </div>
+		</form>
+
+
+	</div>
 
 
     <script type="text/javascript">
         $(".example.default img").memeGenerator({});
 
-        $(".example.bootstrap img").memeGenerator({
-            useBootstrap: true
-        });
+		$(".example.bootstrap img").memeGenerator({
+			useBootstrap: true
+		});
 
-        $(".example.horizontal img").memeGenerator({
-            useBootstrap: true,
-            layout: "horizontal",
-            previewMode: "css",
-            defaultTextStyle: {
-                font: "'Comic Sans', Arial",
-                lineHeight: 2
-            },
-            captions: [
-                "PREDEFINED text on top"
-            ]
-        });
-
-
-        $("#example-save").memeGenerator({
-            useBootstrap: true
-        });
-
-        var imageDataUrl = $("#example-save").memeGenerator("save");
-
-        $("#save").click(function (e) {
-            e.preventDefault();
-
-            var imageDataUrl = $("#example-save").memeGenerator("save");
-
-            $.ajax({
-                url: "http://127.0.0.1:8000/save-img",
-                type: "POST",
-                data: {
-                    image: imageDataUrl
-                },
-                dataType: "json",
-                success: function (response) {
-                    $("#preview").html(
-                        $("<img>").attr("src", response.filename)
-                    );
-                },
-                error: function () {
-                    alert('This demo uses communication with the server which is not implemented here.');
-                }
-            });
-        });
-
-        $("#download").click(function (e) {
-            e.preventDefault();
-            $("#example-save").memeGenerator("download");
-        });
-
-        $("#serialize").click(function (e) {
-            $("#preview").html($("#example-save").memeGenerator("serialize"));
-        });
+		$(".example.horizontal img").memeGenerator({
+			useBootstrap: true,
+			layout: "horizontal",
+			previewMode: "css",
+			defaultTextStyle: {
+				font: "'Comic Sans', Arial",
+				lineHeight: 2
+			},
+			captions: [
+				"PREDEFINED text on top"
+			]
+		});
 
 
-    </script>
+		$("#example-save").memeGenerator({
+			useBootstrap: true
+		});
+
+		var imageDataUrl = $("#example-save").memeGenerator("save");
+
+		$("#save").click(function (e) {
+			e.preventDefault();
+
+			var imageDataUrl = $("#example-save").memeGenerator("save");
+
+			$.ajax({
+				url: "http://127.0.0.1:8000/save-img",
+				type: "POST",
+				data: {
+					image: imageDataUrl
+				},
+				dataType: "json",
+				success: function (response) {
+					$("#preview").html(
+						$("<img>").attr("src", response.filename)
+					);
+				},
+				error: function () {
+					alert('This demo uses communication with the server which is not implemented here.');
+				}
+			});
+		});
+
+		$("#download").click(function (e) {
+			e.preventDefault();
+			$("#example-save").memeGenerator("download");
+		});
+
+		$("#serialize").click(function (e) {
+			$("#preview").html($("#example-save").memeGenerator("serialize"));
+		});
+
+
+	</script>
 
 
     <script src="{% static 'browse/js/ajaxRequest.js' %}"></script>
     <script language="javascript" src="{% static 'browse/js/lz-string.js' %}"></script>
 
-    <script>
+	<script>
 
 
-        function getBase64Image(imgElem) {
-            var c = document.createElement('canvas');
-            var img = document.getElementById(imgElem);
-            c.height = img.naturalHeight;
-            c.width = img.naturalWidth;
-            var ctx = c.getContext('2d');
+		function getBase64Image(imgElem) {
+			var c = document.createElement('canvas');
+			var img = document.getElementById(imgElem);
+			c.height = img.naturalHeight;
+			c.width = img.naturalWidth;
+			var ctx = c.getContext('2d');
 
-            ctx.drawImage(img, 0, 0, c.width, c.height);
-            return c.toDataURL();
-        }
+			ctx.drawImage(img, 0, 0, c.width, c.height);
+			return c.toDataURL();
+		}
 
-        function dataURLtoBlob(dataurl) {
-            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
-                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
-            while (n--) {
-                u8arr[n] = bstr.charCodeAt(n);
-            }
-            return new Blob([u8arr], {type: mime});
-        }
+		function dataURLtoBlob(dataurl) {
+			var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+				bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+			while (n--) {
+				u8arr[n] = bstr.charCodeAt(n);
+			}
+			return new Blob([u8arr], {type: mime});
+		}
 
-        var csrftoken = getCookie('csrftoken');
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                }
-            }
-        });
-
-
-        $("#confirm_upload").on('click', function (e) {
-            e.preventDefault();
-            alert('here');
-            var category = $('#category').val();
-            var caption = $('#tmplt_caption').val();
-            var keywords = '';
-            var memeImage = $("#memeImg").memeGenerator("save");
-
-            {#var compressed = LZString.compress(imageEditor.toDataURL());#}
-            {#console.log("Size of compressed sample is: " + compressed.length);#}
-            {#var dcmp = LZString.decompress(compressed);#}
-            {#console.log("Sample is: " + dcmp.length);#}
+		var csrftoken = getCookie('csrftoken');
+		$.ajaxSetup({
+			beforeSend: function (xhr, settings) {
+				if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+					xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				}
+			}
+		});
 
 
-            $('#added_keywords').each(function () {// id of ul
-                var li = $(this).find('li')//get each li in ul
-                li.each(function () {// id of ul
-                    keywords += '\'' + $(this).text().trim().slice(0, -1).trim() + '\','
-                });
-                $('#ingrds').val(keywords.slice(0, -1));
+		$("#confirm_upload").on('click', function (e) {
+			e.preventDefault();
+			alert('here');
+			var category = $('#category').val();
+			var caption = $('#tmplt_caption').val();
+			var keywords = '';
+			var memeImage = $("#memeImg").memeGenerator("save");
+
+			{#var compressed = LZString.compress(imageEditor.toDataURL());#}
+			{#console.log("Size of compressed sample is: " + compressed.length);#}
+			{#var dcmp = LZString.decompress(compressed);#}
+			{#console.log("Sample is: " + dcmp.length);#}
 
 
-            });
+			$('#added_keywords').each(function () {// id of ul
+				var li = $(this).find('li')//get each li in ul
+				li.each(function () {// id of ul
+					keywords += '\'' + $(this).text().trim().slice(0, -1).trim() + '\','
+				});
+				$('#ingrds').val(keywords.slice(0, -1));
 
 
-            $.ajax({
-                type: "POST",
-                headers: {
-                    "X-CSRFToken": csrftoken
-                },
-                url: '/browse/upload-image-edited/',
-                data: {
-                    'caption': caption,
-                    'keywords': keywords,
-                    'memeImg': memeImage,
-
-                },
-                success: function (data) {
-                    alert('success');
-
-                }
-            });
-            console.log(keywords);
+			});
 
 
-        });
-    </script>
+			$.ajax({
+				type: "POST",
+				headers: {
+					"X-CSRFToken": csrftoken
+				},
+				url: '/browse/upload-image-edited/',
+				data: {
+					'caption': caption,
+					'keywords': keywords,
+					'memeImg': memeImage,
+					'template-id': {{ post.id }}
+				},
+				dataType: 'json',
+				success: function (data) {
+
+
+				}
+			});
+			console.log(keywords);
+
+
+		});
+	</script>
 {% endblock %}
 
 

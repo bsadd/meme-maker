@@ -101,5 +101,8 @@ def editView(request, id):
 
 
 def memeDetails(request, id):
+    post = Post.objects.get(id=id)
+    post.nviews += 1
+    post.save()
     return render(request, 'browse/memeDetails.html',
-                  context={'loggedIn': request.user.is_authenticated, 'post': Post.objects.get(id=id)})
+                  context={'loggedIn': request.user.is_authenticated, 'post': post})

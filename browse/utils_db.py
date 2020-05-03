@@ -255,7 +255,7 @@ def insert_meme_post(post_name, genre_list, image_base64, is_adult, user_id, tem
     user = User.objects.get(id=user_id)
     template_id = Post.objects.get(id=template_id).get_template_id()
     from browse.utils import trim_replace_wsp
-    post, _ = Post.objects.create(name=trim_replace_wsp(post_name), author=user, template_id=template_id)
+    post = Post.objects.create(name=trim_replace_wsp(post_name), author=user, template_id=template_id)
     post.is_adult = is_adult
     post.is_template = False
     for gen in genre_list:
