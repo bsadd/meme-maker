@@ -52,7 +52,7 @@ class Index(TemplateView):
         # 	myfile.write(">>>>>>\n" + pretty_request(self.request) + "\n>>>>>>\n")
 
         ctx = {'loggedIn': self.request.user.is_authenticated,
-               'item_list': Post.objects.all()
+               'item_list': Post.objects.filter(template__isnull=True)
                }
         return ctx
 
@@ -64,8 +64,8 @@ class AddMemeView(TemplateView):
     template_name = 'browse/templateUpload.html'
 
     def get(self, request, *args, **kwargs):
-
-
+        if not request.user.is_authenticated:
+            return redirect(reverse('accounts:login'))
         return super(self.__class__, self).get(request, *args, **kwargs)
 
     def get_context_data(self, *args, **kwargs):
@@ -92,6 +92,8 @@ class ViewMenusView(TemplateView):
 def editView(request, id):
     """Renders Edit Page for the given meme id"""
 
+    if not request.user.is_authenticated:
+        return redirect(reverse('accounts:login'))
     print(request.POST)
     st = render(request, 'browse/memeEdit.html',
                 context={'loggedIn': request.user.is_authenticated, 'fullLoad': request.POST.get('fromAjax') is None,
