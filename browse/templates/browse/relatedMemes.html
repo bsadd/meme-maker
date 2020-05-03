@@ -185,10 +185,10 @@
 
             <div class="carousel slide" id="myCarousel" data-interval="false">
                 <div class="carousel-inner">
-                    <div class="item active">
-                        <ul class="thumbnails">
-	                        {% for p in post.related_posts %}
-		                        <li class="span3">
+                    {% for p in post.related_posts %}
+
+                    <div class="item {% if forloop.counter == 1 %}active{% endif %}" id="slide{{ forloop.counter }}">
+		                        <li class="span3" >
 			                        <div class="thumbnail">
 				                        <a href="{{ p.get_absolute_url }}"><img src="{{ p.image.url }}" alt=""></a>
 			                        </div>
@@ -196,52 +196,52 @@
 	                        {% endfor %}
                         </ul>
                     </div><!-- /Slide1 -->
-                    <div class="item">
-                        <ul class="thumbnails">
-                            <li class="span3">
-                                <div class="thumbnail">
-                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>
-                                </div>
+<!--                    <div class="item">-->
+<!--                        <ul class="thumbnails">-->
+<!--                            <li class="span3">-->
+<!--                                <div class="thumbnail">-->
+<!--                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>-->
+<!--                                </div>-->
 
-                            </li>
-                            <li class="span3">
-                                <div class="thumbnail">
-                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>
-                                </div>
+<!--                            </li>-->
+<!--                            <li class="span3">-->
+<!--                                <div class="thumbnail">-->
+<!--                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>-->
+<!--                                </div>-->
 
-                            </li>
-                            <li class="span3">
-                                <div class="thumbnail">
-                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>
-                                </div>
+<!--                            </li>-->
+<!--                            <li class="span3">-->
+<!--                                <div class="thumbnail">-->
+<!--                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>-->
+<!--                                </div>-->
 
-                            </li>
+<!--                            </li>-->
 
-                        </ul>
-                    </div><!-- /Slide2 -->
-                    <div class="item">
-                       <ul class="thumbnails">
-                            <li class="span3">
-                                <div class="thumbnail">
-                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>
-                                </div>
+<!--                        </ul>-->
+<!--                    </div>&lt;!&ndash; /Slide2 &ndash;&gt;-->
+<!--                    <div class="item">-->
+<!--                       <ul class="thumbnails">-->
+<!--                            <li class="span3">-->
+<!--                                <div class="thumbnail">-->
+<!--                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>-->
+<!--                                </div>-->
 
-                            </li>
-                            <li class="span3">
-                                <div class="thumbnail">
-                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>
-                                </div>
+<!--                            </li>-->
+<!--                            <li class="span3">-->
+<!--                                <div class="thumbnail">-->
+<!--                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>-->
+<!--                                </div>-->
 
-                            </li>
-                            <li class="span3">
-                                <div class="thumbnail">
-                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>
-                                </div>
+<!--                            </li>-->
+<!--                            <li class="span3">-->
+<!--                                <div class="thumbnail">-->
+<!--                                    <a href="#"><img src="http://placehold.it/360x240" alt=""></a>-->
+<!--                                </div>-->
 
-                            </li>
+<!--                            </li>-->
 
-                        </ul>
-                    </div><!-- /Slide3 -->
+<!--                        </ul>-->
+<!--                    </div>&lt;!&ndash; /Slide3 &ndash;&gt;-->
                 </div>
                 <div style="height: 6vh;"></div>
                 <div class="control-box">
