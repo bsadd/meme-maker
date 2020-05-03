@@ -94,10 +94,12 @@ def editView(request, id):
 
     print(request.POST)
     st = render(request, 'browse/memeEdit.html',
-                context={'fullLoad': False, 'post': Post.objects.get(id=id)})
+                context={'loggedIn': request.user.is_authenticated, 'fullLoad': request.POST.get('fromAjax') is None,
+                         'post': Post.objects.get(id=id)})
     print(st)
     return st
 
 
 def memeDetails(request, id):
-    return None
+    return render(request, 'browse/memeDetails.html',
+                  context={'loggedIn': request.user.is_authenticated, 'post': Post.objects.get(id=id)})

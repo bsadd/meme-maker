@@ -58,11 +58,21 @@ class Post(models.Model):
     def get_absolute_edit_url(self):
         return reverse("browse:edit-meme", kwargs={"id": self.pk})
 
+    def get_absolute_template_edit_url(self):
+        return reverse("browse:edit-meme", kwargs={"id": self.get_template_id()})
+
     def get_template_id(self):
         """Blank Template id for an image. Own id if itself is a template"""
-        if self.template is None:
+        if self.is_template_post():
             return self.id
         return self.template.id
+
+    def is_template_post(self):
+        return self.template is None
+
+    def related_posts(self):
+        from browse import utils_db
+        return utils_db.get_related_posts(self.id, self)
 
     def is_editable(self, user):
         return user.is_authenticated and user.author.id == self.author.id

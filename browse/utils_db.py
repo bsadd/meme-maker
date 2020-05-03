@@ -4,7 +4,7 @@ from django.db import connection
 
 # ------------------ util functions --------------------------
 from accounts.models import User
-from browse.models import PostRating
+from browse.models import PostRating, Post
 
 
 def namedtuplefetchall(query, param_list):
@@ -176,13 +176,18 @@ def get_nviews_range_post(low=0.0, high=90000.0):
     return Post.objects.filter(Q(price__gte=low) & Q(price__lte=high)).distinct()
 
 
-def get_category_post(categoty_name):
+def get_related_posts(post_id, post=None):
     """
-    :param categoty_name: category-name
-    :return: set of packages satisfying above criteria
+    :param post_id: id of the post to look for memes made on its template
+    :param post: the post to look for memes made on its template. pass to deter double hit on db
+    :return: qset of memes excluding itself & blank template
     """
-    from browse.models import Post
-    return Post.objects.filter(category__iexact=categoty_name).distinct()
+    if post is None:
+        post = Post.objects.get(id=post_id)
+    if post.is_template_post():
+        return Post.objects.filter(template=post)
+    else:
+        return Post.objects.exclude(id=post.id).filter(template=post.template)
 
 
 #  ----------------------- Insert utils -------------------------

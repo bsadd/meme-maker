@@ -24,7 +24,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-6">
-                <img src="{% static 'browse/images/memeLoad.jpg' %}" style="max-width: 100%">
+                <img src="{{ post.image.url }}" style="max-width: 100%">
             </div>
             <div class="col-md-1">
             </div>
@@ -32,7 +32,7 @@
                 <div class="container" style="max-width: 100%;">
                     <div class="row" style="padding: 2%">
                         <div class="col-md-12">
-                            <h3>caption</h3>
+                            <h3>{{ post.name }}</h3>
 
                         </div>
 
@@ -81,9 +81,11 @@
                     <div style="height: 5vh;"></div>
                     <div class="row">
                         <div class="col-md-12">
-                            <button type="button" class="btn btn-primary btn-lg btn-block">Edit on this Meme</button>
-                            <button type="button" class="btn btn-success btn-lg btn-block">Edit on its Template
-                            </button>
+	                        {% if not post.is_template_post %}
+	                        <a href="{{ post.get_absolute_edit_url }}"><button href="{{ post.get_absolute_edit_url }}" type="button" class="btn btn-primary btn-lg btn-block">Edit on this Meme</button></a>
+	                        {% endif %}
+                            <a href="{{ post.get_absolute_template_edit_url }}"><button type="button" class="btn btn-success btn-lg btn-block">Edit on its Template
+                            </button></a>
 
                         </div>
 
@@ -91,7 +93,7 @@
 
                     <div class="row">
                         <div class="col-md-12">
-                            <h4>Avg. Rating 4.5</h4>
+                            <h4>Avg. Rating {{ post.get_avg_rating }}</h4>
 
                         </div>
 
