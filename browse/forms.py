@@ -6,4 +6,4 @@ from browse.models import Post
 class PostForm(ModelForm):
 	class Meta:
 		model = Post
-		fields = ('name', 'for_n_persons', 'image', 'details', 'price', 'category')
+		fields = ('caption', 'for_n_persons', 'image', 'details', 'price', 'category')

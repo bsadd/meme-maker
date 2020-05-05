@@ -27,11 +27,12 @@ class Post(models.Model):
     """
     Entity for a post maintained by a user
     """
-    name = models.CharField(max_length=50)
+    caption = models.CharField(max_length=50)
     image = models.ImageField(upload_to='img/', default='img/default.png')
     nviews = models.IntegerField(default=0, verbose_name='Number of views')
-    ndownloads = models.IntegerField(default=0, verbose_name='Number of downloads')
+
     is_adult = models.BooleanField(default=False, verbose_name='Adult Content')
+    is_violent = models.BooleanField(default=False, verbose_name='Violent Content')
     # details = models.CharField(max_length=250, blank=True)
 
     is_template = models.BooleanField(default=False, verbose_name='Template Image')
@@ -50,7 +51,7 @@ class Post(models.Model):
         verbose_name_plural = "Posts"
 
     def __str__(self):
-        return self.name
+        return self.caption
 
     def get_absolute_url(self):
         return reverse("browse:view-meme", kwargs={"id": self.pk})
@@ -73,9 +74,6 @@ class Post(models.Model):
     def related_posts(self):
         from browse import utils_db
         return utils_db.get_related_posts(self.id, self)
-
-    def is_editable(self, user):
-        return user.is_authenticated and user.author.id == self.author.id
 
     def get_avg_rating(self):
         from browse.utils_db import get_rating_post
