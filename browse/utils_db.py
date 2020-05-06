@@ -4,7 +4,7 @@ from django.db import connection
 
 # ------------------ util functions --------------------------
 from accounts.models import User
-from browse.models import PostRating, Post
+from browse.models import Post, PostReact
 
 
 def namedtuplefetchall(query, param_list):
@@ -17,25 +17,6 @@ def namedtuplefetchall(query, param_list):
 
 
 # ------------------- Review Ratings -------------------------
-
-
-def get_rating_count_post(post_id):
-    """:returns an array with index as rating-value and value as count"""
-    results = namedtuplefetchall(
-        'select rating, count(distinct user_id)\
-        from browse_packagerating\
-        where package_id = %s\
-        group by rating', [post_id])
-    ratings = [0, 0, 0, 0, 0, 0]
-    for i in results:
-        ratings[i.rating] = i.count
-    return ratings
-
-
-def get_rating_post(post_id):
-    """:returns average rating of a post"""
-    from django.db.models import Avg
-    return PostRating.objects.filter(post__id=post_id).aggregate(Avg('rating'))['rating__avg']
 
 
 def get_reviews_post(user_id, post_id):
@@ -91,31 +72,26 @@ def get_reviews_post(user_id, post_id):
     return results
 
 
-def get_react_count_post(post):
-    """:returns (likes_count, dislikes_count) of post in package"""
-    from browse.models import PostCommentReact
-    nliked = PostCommentReact.objects.filter(post=post, liked=True).count()
-    ndisliked = PostCommentReact.objects.filter(post=post, disliked=True).count()
-    return nliked, ndisliked
+def get_react_count_post(post_id):
+    """:returns an array with index as react-value and value as count"""
+    from django.db.models import Count
+    qset = PostReact.objects.filter(post_id=post_id).annotate(count=Count('user')).values('react', 'count')
+    from browse.consts_db import Reacts
+    react_counts = [0] * (Reacts.MAX + 1)
+    for q in qset:
+        react_counts[q['react']] = q['count']
+    return react_counts
 
 
-def get_rating_author(user_id):
-    """:returns avg rating over all users from all branches"""
-    results = namedtuplefetchall(
-        'select avg(rating) as avg_rating\
-        from browse_branchrating join accounts_restaurantbranch\
-                                    on browse_branchrating.branch_id = accounts_restaurantbranch.id\
-        where accounts_restaurantbranch.restaurant_id = %s', [user_id])
-    return results[0].avg_rating
-
-
-def update_rating_post(user, pkg_id, rating):
-    """ create or update user rating on package """
-    from browse.models import PostRating
+def update_react_post(user, post_id, react):
+    """ create or update user react on post """
+    from browse.consts_db import Reacts
+    if not Reacts.is_valid_react(react):
+        return
+    from browse.models import PostReact
     from browse.models import Post
-    package = Post.objects.get(id=pkg_id)
-    post, _ = PostRating.objects.get_or_create(package=package, user=user)
-    post.rating = rating
+    post, _ = PostReact.objects.get_or_create(post=Post.objects.get(id=post_id), user=user)
+    post.react = react
     post.save()
 
 
@@ -161,15 +137,6 @@ def get_named_post(name):
         category__icontains=name)).distinct()
 
 
-def get_rated_post(rating=0):
-    from browse.models import PostRating
-    from django.db.models import Avg
-    pkg_ids = PostRating.objects.values('post').annotate(avg=Avg('rating')).filter(
-        avg__gte=rating).values('post').distinct()
-    from browse.models import Post
-    return Post.objects.filter(id__in=pkg_ids).distinct()
-
-
 def get_nviews_range_post(low=0.0, high=90000.0):
     from browse.models import Post
     from django.db.models import Q
@@ -191,9 +158,9 @@ def get_related_posts(post_id, post=None):
 
 
 #  ----------------------- Insert utils -------------------------
-def insert_template_post(post_name, genre_list, image_base64, is_adult, user_id):
+def insert_template_post(caption, genre_list, image_base64, is_adult, user_id):
     """
-    :param post_name: caption
+    :param caption: caption
     :param genre_list: list of keywords
     :param image_base64: js image data
     :param is_adult: is adult content
@@ -202,10 +169,9 @@ def insert_template_post(post_name, genre_list, image_base64, is_adult, user_id)
     from browse.models import Post
     from browse.utils import trim_replace_wsp
     user = User.objects.get(id=user_id)
-    # post, _ = Post.objects.get_or_create(name=trim_replace_wsp(post_name), author=user)
-    post = Post.objects.create(name=trim_replace_wsp(post_name), author=user)
+    # post, _ = Post.objects.get_or_create(caption=trim_replace_wsp(post_name), author=user)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user)
     post.is_adult = is_adult
-    post.is_template = True
     for gen in genre_list:
         from browse.models import Genre, GenreList
         gen = str(gen).strip().lower()
@@ -218,9 +184,9 @@ def insert_template_post(post_name, genre_list, image_base64, is_adult, user_id)
     return post
 
 
-def insert_template_post_path(post_name, genre_list, image_path, is_adult, user_id):
+def insert_template_post_path(caption, genre_list, image_path, is_adult, user_id):
     """
-    :param post_name: caption
+    :param caption: caption
     :param genre_list: list of keywords
     :param image_path: image path on server
     :param is_adult: is adult content
@@ -229,9 +195,8 @@ def insert_template_post_path(post_name, genre_list, image_path, is_adult, user_
     from browse.models import Post
     from browse.utils import trim_replace_wsp
     user = User.objects.get(id=user_id)
-    post = Post.objects.create(name=trim_replace_wsp(post_name), author=user)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user)
     post.is_adult = is_adult
-    post.is_template = True
     for gen in genre_list:
         from browse.models import Genre, GenreList
         gen = str(gen).strip().lower()
@@ -242,9 +207,9 @@ def insert_template_post_path(post_name, genre_list, image_path, is_adult, user_
     return post
 
 
-def insert_meme_post(post_name, genre_list, image_base64, is_adult, user_id, template_id):
+def insert_meme_post(caption, genre_list, image_base64, is_adult, user_id, template_id):
     """
-    :param post_name: caption
+    :param caption: caption
     :param genre_list: list of keywords
     :param image_base64: js image data
     :param is_adult: is adult content
@@ -255,9 +220,8 @@ def insert_meme_post(post_name, genre_list, image_base64, is_adult, user_id, tem
     user = User.objects.get(id=user_id)
     template_id = Post.objects.get(id=template_id).get_template_id()
     from browse.utils import trim_replace_wsp
-    post = Post.objects.create(name=trim_replace_wsp(post_name), author=user, template_id=template_id)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user, template_id=template_id)
     post.is_adult = is_adult
-    post.is_template = False
     for gen in genre_list:
         from browse.models import Genre, GenreList
         gen = str(gen).strip().lower()

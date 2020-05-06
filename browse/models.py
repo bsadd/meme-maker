@@ -6,6 +6,7 @@ from django.db import models
 from django.urls import reverse
 
 from accounts.models import User
+from browse.consts_db import Reacts
 
 
 class Genre(models.Model):
@@ -33,9 +34,6 @@ class Post(models.Model):
 
     is_adult = models.BooleanField(default=False, verbose_name='Adult Content')
     is_violent = models.BooleanField(default=False, verbose_name='Violent Content')
-    # details = models.CharField(max_length=250, blank=True)
-
-    is_template = models.BooleanField(default=False, verbose_name='Template Image')
 
     template = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
@@ -43,7 +41,7 @@ class Post(models.Model):
 
     genre_list = models.ManyToManyField(Genre, through='browse.GenreList', related_name='post_genres')
 
-    ratings = models.ManyToManyField(User, through='browse.PostRating', related_name='post_rating_user')
+    reacts = models.ManyToManyField(User, through='browse.PostReact', related_name='post_react_user')
     comments = models.ManyToManyField(User, through='browse.PostComment', related_name='post_comment_user')
 
     class Meta:
@@ -75,10 +73,6 @@ class Post(models.Model):
         from browse import utils_db
         return utils_db.get_related_posts(self.id, self)
 
-    def get_avg_rating(self):
-        from browse.utils_db import get_rating_post
-        return get_rating_post(self.id)
-
 
 class GenreList(models.Model):
     """
@@ -95,24 +89,25 @@ class GenreList(models.Model):
         return reverse("IngredientList_detail", kwargs={"pk": self.pk})
 
 
-class PostRating(models.Model):
+class PostReact(models.Model):
     """
-    Ratings for a post rated by a user
+    Like, Dislike reacts of viewers on a post
     """
-    rating = models.IntegerField('Rating', default=5, null=False)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+    react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE)
+
     class Meta:
-        verbose_name = "Post Rating"
-        verbose_name_plural = "Post Ratings"
+        verbose_name = "Post React"
+        verbose_name_plural = "Post Reacts"
         unique_together = [['post', 'user']]
 
     def get_absolute_url(self):
-        return reverse("browse:PackageRating", kwargs={"id": self.pk})
+        return reverse("browse:PostReact", kwargs={"id": self.pk})
 
     def __str__(self):
-        return self.post.__str__() + " " + str(self.rating) + " from " + self.user.__str__()
+        return "%s %s %s" % (str(self.user), Reacts.REACT_NAMES[self.react], str(self.post))
 
 
 class PostComment(models.Model):
@@ -123,7 +118,7 @@ class PostComment(models.Model):
     time = models.DateTimeField(verbose_name="Post Time", auto_now=True, auto_now_add=False)
     package = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_comment_author_user')
-    reacts = models.ManyToManyField(User, through='browse.PostCommentReact', related_name='post_react_user')
+    reacts = models.ManyToManyField(User, through='browse.PostCommentReact', related_name='comment_react_user')
 
     class Meta:
         verbose_name = "Package Comment"

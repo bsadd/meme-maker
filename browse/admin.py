@@ -4,7 +4,7 @@ from django.contrib import admin
 from browse.models import *
 
 admin.site.register(Post)
-admin.site.register(PostRating)
+admin.site.register(PostReact)
 admin.site.register(PostComment)
 admin.site.register(PostCommentReact)
 admin.site.register(Genre)
