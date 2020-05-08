@@ -4,7 +4,8 @@ from django.db import connection
 
 # ------------------ util functions --------------------------
 from accounts.models import User
-from browse.models import Post, PostReact
+from browse.consts_view import TextBox
+from browse.models import Post, PostReact, TextBox
 
 
 def namedtuplefetchall(query, param_list):
@@ -73,7 +74,11 @@ def get_reviews_post(user_id, post_id):
 
 
 def get_react_count_post(post_id):
-    """:returns an array with index as react-value and value as count"""
+    """
+    :param post_id: id of the post
+    :returns an array with index as react-value and value as count
+    i.e. ret_val[Reacts.UPVOTE] is number of times this post had been up-voted
+    """
     from django.db.models import Count
     qset = PostReact.objects.filter(post_id=post_id).annotate(count=Count('user')).values('react', 'count')
     from browse.consts_db import Reacts
@@ -124,17 +129,17 @@ def update_comment_react_post(user, comment_id, react_val):
 
 # ------------ Posts -----------------------------
 
-def get_named_post(name):
+def get_posts(key=''):
     """
-    :param name: package-name / restaurant-name / category-name / ingredient-name
-    :return: set of packages satisfying above criteria
+    :param key: search key to look for posts
+    :return: set of posts satisfying above criteria
     """
+    caption = key.strip().lower()
+    keywords = [k.lower() for k in key.split()]
     from browse.models import Post
     return (Post.objects.filter(
-        pkg_name__icontains=name) | Post.objects.filter(
-        # restaurant__restaurant_name__icontains=name) | Package.objects.filter(
-        ingr_list__name__icontains=name) | Post.objects.filter(
-        category__icontains=name)).distinct()
+        caption__icontains=caption) | Post.objects.filter(
+        keywordlist__keyword__name__in=keywords)).distinct()
 
 
 def get_nviews_range_post(low=0.0, high=90000.0):
@@ -158,10 +163,11 @@ def get_related_posts(post_id, post=None):
 
 
 #  ----------------------- Insert utils -------------------------
-def insert_template_post(caption, genre_list, image_base64, is_adult, user_id):
+def insert_template_post(caption, keyword_list, image_base64, is_adult, user_id, text_boxes):
     """
+    :param text_boxes: a list of TextBox objects
     :param caption: caption
-    :param genre_list: list of keywords
+    :param keyword_list: list of keywords
     :param image_base64: js image data
     :param is_adult: is adult content
     :param user_id: author id
@@ -169,25 +175,30 @@ def insert_template_post(caption, genre_list, image_base64, is_adult, user_id):
     from browse.models import Post
     from browse.utils import trim_replace_wsp
     user = User.objects.get(id=user_id)
-    # post, _ = Post.objects.get_or_create(caption=trim_replace_wsp(post_name), author=user)
     post = Post.objects.create(caption=trim_replace_wsp(caption), author=user)
     post.is_adult = is_adult
-    for gen in genre_list:
-        from browse.models import Genre, GenreList
+    for gen in keyword_list:
+        from browse.models import Keyword, KeywordList
         gen = str(gen).strip().lower()
-        genre, _ = Genre.objects.get_or_create(name=gen)
-        GenreList.objects.get_or_create(post=post, genre=genre)
+        keyword, _ = Keyword.objects.get_or_create(name=gen)
+        KeywordList.objects.get_or_create(post=post, keyword=keyword)
     from browse.utils import image_to_file
     img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
     post.image.save(img_filename, img_data, save=True)
     post.save()
+    for t in text_boxes:
+        TextBox.objects.create(position=t.pos_type, pos_x=t.pos.x, pos_y=t.pos.y, pos_z=t.pos.z,
+                               len_x=t.len.width, len_y=t.len.height,
+                               style_text=t.style_text, background_color=t.background_color,
+                               background_opacity=t.background_opacity, post=post)
     return post
 
 
-def insert_template_post_path(caption, genre_list, image_path, is_adult, user_id):
+def insert_template_post_path(caption, keyword_list, image_path, is_adult, user_id, text_boxes):
     """
+    :param text_boxes: a list of TextBox objects
     :param caption: caption
-    :param genre_list: list of keywords
+    :param keyword_list: list of keywords
     :param image_path: image path on server
     :param is_adult: is adult content
     :param user_id: author id
@@ -197,20 +208,26 @@ def insert_template_post_path(caption, genre_list, image_path, is_adult, user_id
     user = User.objects.get(id=user_id)
     post = Post.objects.create(caption=trim_replace_wsp(caption), author=user)
     post.is_adult = is_adult
-    for gen in genre_list:
-        from browse.models import Genre, GenreList
+    for gen in keyword_list:
+        from browse.models import Keyword, KeywordList
         gen = str(gen).strip().lower()
-        genre, _ = Genre.objects.get_or_create(name=gen)
-        GenreList.objects.get_or_create(post=post, genre=genre)
+        keyword, _ = Keyword.objects.get_or_create(name=gen)
+        KeywordList.objects.get_or_create(post=post, keyword=keyword)
     post.image = image_path
     post.save()
+    for t in text_boxes:
+        TextBox.objects.create(position=t.pos_type, pos_x=t.pos.x, pos_y=t.pos.y, pos_z=t.pos.z,
+                               len_x=t.len.width, len_y=t.len.height,
+                               style_text=t.style_text, background_color=t.background_color,
+                               background_opacity=t.background_opacity, post=post)
     return post
 
 
-def insert_meme_post(caption, genre_list, image_base64, is_adult, user_id, template_id):
+def insert_meme_post(caption, keyword_list, image_base64, is_adult, user_id, template_id, text_boxes):
     """
+    :param text_boxes: a list of TextBox objects
     :param caption: caption
-    :param genre_list: list of keywords
+    :param keyword_list: list of keywords
     :param image_base64: js image data
     :param is_adult: is adult content
     :param user_id: author id
@@ -222,12 +239,18 @@ def insert_meme_post(caption, genre_list, image_base64, is_adult, user_id, templ
     from browse.utils import trim_replace_wsp
     post = Post.objects.create(caption=trim_replace_wsp(caption), author=user, template_id=template_id)
     post.is_adult = is_adult
-    for gen in genre_list:
-        from browse.models import Genre, GenreList
+    for gen in keyword_list:
+        from browse.models import Keyword, KeywordList
         gen = str(gen).strip().lower()
-        genre, _ = Genre.objects.get_or_create(name=gen)
-        GenreList.objects.get_or_create(post=post, genre=genre)
+        keyword, _ = Keyword.objects.get_or_create(name=gen)
+        KeywordList.objects.get_or_create(post=post, keyword=keyword)
     from browse.utils import image_to_file
     img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
     post.image.save(img_filename, img_data, save=True)
+    for t in text_boxes:
+        if t.style_text != '':
+            TextBox.objects.create(position=t.pos_type, pos_x=t.pos.x, pos_y=t.pos.y, pos_z=t.pos.z,
+                                   len_x=t.len.width, len_y=t.len.height,
+                                   style_text=t.style_text, background_color=t.background_color,
+                                   background_opacity=t.background_opacity, post=post)
     return post

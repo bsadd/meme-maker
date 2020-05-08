@@ -7,7 +7,7 @@ app_name = 'browse'
 
 urlpatterns = [
     path('', views.Index.as_view(), name='home'),
-    path('browse/', views.Index.as_view(), name='package-list'),
+    path('browse/', views.Index.as_view(), name='post-list'),
 
     path('browse/raw/', views.Index),
     path('browse/upload/', views.AddMemeView.as_view(), name='upload-page'),

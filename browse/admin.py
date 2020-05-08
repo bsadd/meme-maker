@@ -7,6 +7,6 @@ admin.site.register(Post)
 admin.site.register(PostReact)
 admin.site.register(PostComment)
 admin.site.register(PostCommentReact)
-admin.site.register(Genre)
-admin.site.register(GenreList)
+admin.site.register(Keyword)
+admin.site.register(KeywordList)
 

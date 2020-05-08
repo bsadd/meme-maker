@@ -21,7 +21,7 @@ def upload_meme_image(request):
         return JsonResponse({'id': -1, 'loggedIn': request.user.is_authenticated})
 
     post = utils_db.insert_meme_post(user_id=request.user.id, image_base64=image, caption=caption,
-                                     genre_list=genre_list, is_adult=False, template_id=template_id)
+                                     keyword_list=genre_list, is_adult=False, template_id=template_id)
     return JsonResponse({'id': post.id, 'loggedIn': request.user.is_authenticated})
 
 
@@ -37,7 +37,7 @@ def upload_template_image(request):
         return JsonResponse({'id': -1, 'loggedIn': request.user.is_authenticated})
 
     post = utils_db.insert_template_post(user_id=request.user.id, image_base64=template, caption=caption,
-                                         genre_list=genre_list, is_adult=False)
+                                         keyword_list=genre_list, is_adult=False)
     return JsonResponse({'id': post.id, 'loggedIn': request.user.is_authenticated})
 
 
