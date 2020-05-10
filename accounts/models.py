@@ -21,30 +21,12 @@ class User(AbstractUser):
 
 	def get_rating(self):
 		rating = 0
-		# if self.is_customer:
-		# 	from customer.utils_db import get_avg_customer_rating
-		# 	rating = get_avg_customer_rating(self.id)
-		# elif self.is_delivery_man:
-		# 	from delivery.utils_db import get_avg_deliveryman_rating
-		# 	rating = get_avg_deliveryman_rating(self.id)
-		# elif self.is_manager:
-		# 	rating = self.restaurant.get_avg_rating()
-		# elif self.is_branch_manager:
-		# 	rating = self.restaurantbranch.get_avg_rating()
-		# if rating is None:
-		# 	rating = 0
 		return round(rating, 2)
 
 	def get_image(self):
-		# if self.is_customer:
-		# 	return self.userprofile.avatar
-		# if self.is_manager:
-		# 	return self.restaurant.get_image()
-		# if self.is_branch_manager:
-		# 	return self.restaurantbranch.get_image()
 		return 'default.png'
 
-	def send_mail(self, subject, message, from_email='admin@foodsquare'):
+	def send_mail(self, subject, message, from_email='admin@mememaker'):
 		print('sending mail to', self)
 		import django.core.mail
 		django.core.mail.send_mail(

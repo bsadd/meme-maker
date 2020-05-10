@@ -5,7 +5,7 @@ from django.db import connection
 # ------------------ util functions --------------------------
 from accounts.models import User
 from browse.consts_view import TextBox
-from browse.models import Post, PostReact, TextBox
+from browse.models import Post, PostReact
 
 
 def namedtuplefetchall(query, param_list):
@@ -139,13 +139,13 @@ def get_posts(key=''):
     from browse.models import Post
     return (Post.objects.filter(
         caption__icontains=caption) | Post.objects.filter(
-        keywordlist__keyword__name__in=keywords)).distinct()
+        keywords__keyword__name__in=keywords)).distinct()
 
 
 def get_nviews_range_post(low=0.0, high=90000.0):
     from browse.models import Post
     from django.db.models import Q
-    return Post.objects.filter(Q(price__gte=low) & Q(price__lte=high)).distinct()
+    return Post.objects.filter(Q(nviews__gte=low) & Q(nviews__lte=high)).distinct()
 
 
 def get_related_posts(post_id, post=None):
@@ -163,7 +163,7 @@ def get_related_posts(post_id, post=None):
 
 
 #  ----------------------- Insert utils -------------------------
-def insert_template_post(caption, keyword_list, image_base64, is_adult, user_id, text_boxes):
+def insert_template_post(caption, keyword_list, image_base64, is_adult, user_id):
     """
     :param text_boxes: a list of TextBox objects
     :param caption: caption
@@ -186,15 +186,10 @@ def insert_template_post(caption, keyword_list, image_base64, is_adult, user_id,
     img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
     post.image.save(img_filename, img_data, save=True)
     post.save()
-    for t in text_boxes:
-        TextBox.objects.create(position=t.pos_type, pos_x=t.pos.x, pos_y=t.pos.y, pos_z=t.pos.z,
-                               len_x=t.len.width, len_y=t.len.height,
-                               style_text=t.style_text, background_color=t.background_color,
-                               background_opacity=t.background_opacity, post=post)
     return post
 
 
-def insert_template_post_path(caption, keyword_list, image_path, is_adult, user_id, text_boxes):
+def insert_template_post_path(caption, keyword_list, image_path, is_adult, user_id):
     """
     :param text_boxes: a list of TextBox objects
     :param caption: caption
@@ -215,15 +210,10 @@ def insert_template_post_path(caption, keyword_list, image_path, is_adult, user_
         KeywordList.objects.get_or_create(post=post, keyword=keyword)
     post.image = image_path
     post.save()
-    for t in text_boxes:
-        TextBox.objects.create(position=t.pos_type, pos_x=t.pos.x, pos_y=t.pos.y, pos_z=t.pos.z,
-                               len_x=t.len.width, len_y=t.len.height,
-                               style_text=t.style_text, background_color=t.background_color,
-                               background_opacity=t.background_opacity, post=post)
     return post
 
 
-def insert_meme_post(caption, keyword_list, image_base64, is_adult, user_id, template_id, text_boxes):
+def insert_meme_post(caption, keyword_list, image_base64, is_adult, user_id, template_id):
     """
     :param text_boxes: a list of TextBox objects
     :param caption: caption
@@ -247,10 +237,4 @@ def insert_meme_post(caption, keyword_list, image_base64, is_adult, user_id, tem
     from browse.utils import image_to_file
     img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
     post.image.save(img_filename, img_data, save=True)
-    for t in text_boxes:
-        if t.style_text != '':
-            TextBox.objects.create(position=t.pos_type, pos_x=t.pos.x, pos_y=t.pos.y, pos_z=t.pos.z,
-                                   len_x=t.len.width, len_y=t.len.height,
-                                   style_text=t.style_text, background_color=t.background_color,
-                                   background_opacity=t.background_opacity, post=post)
     return post

@@ -13,7 +13,7 @@ def upload_meme_image(request):
     :param request: request with edited image over a template
     :return: Json with id: uploaded-post-id, loggedIn:True/False && id is -1 for failure
     """
-    genre_list = request.POST.getlist('keywords')[0].split(',')
+    keyword_list = request.POST.getlist('keywords')[0].split(',')
     caption = request.POST.get('caption')
     template_id = request.POST.get('template-id')
     image = request.POST.get('memeImg')
@@ -21,7 +21,7 @@ def upload_meme_image(request):
         return JsonResponse({'id': -1, 'loggedIn': request.user.is_authenticated})
 
     post = utils_db.insert_meme_post(user_id=request.user.id, image_base64=image, caption=caption,
-                                     keyword_list=genre_list, is_adult=False, template_id=template_id)
+                                     keyword_list=keyword_list, is_adult=False, template_id=template_id)
     return JsonResponse({'id': post.id, 'loggedIn': request.user.is_authenticated})
 
 
@@ -30,14 +30,14 @@ def upload_template_image(request):
     :param request: request a new template image
     :return: Json with id: uploaded-post-id, loggedIn:True/False && id is -1 for failure
     """
-    genre_list = request.POST.getlist('keywords')[0].split(',')
+    keyword_list = request.POST.getlist('keywords')[0].split(',')
     caption = request.POST.get('caption')
     template = request.POST.get('template')
     if not request.user.is_authenticated or template is None or caption is None:
         return JsonResponse({'id': -1, 'loggedIn': request.user.is_authenticated})
 
     post = utils_db.insert_template_post(user_id=request.user.id, image_base64=template, caption=caption,
-                                         keyword_list=genre_list, is_adult=False)
+                                         keyword_list=keyword_list, is_adult=False)
     return JsonResponse({'id': post.id, 'loggedIn': request.user.is_authenticated})
 
 

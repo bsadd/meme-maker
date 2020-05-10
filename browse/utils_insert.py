@@ -7,7 +7,6 @@ def post_inserter(start, end):
                                   image_path='img/' + str(i) + '.jpg', user_id=2, is_adult=False)
 
 
-# insert_post_path('Iron man2',['Frustrated', 'Angry', 'Iron Man', 'MCU'],'Iron man','browse/2.jpg', 2)
 def post_list_inserter(imglist=None):
     if imglist is None:
         imglist = []

@@ -23,7 +23,6 @@ class Keyword(models.Model):
 
 class Post(models.Model):
     """
-    TODO: incorporate collage
     Entity for a post maintained by a user
     Keeping blank template as reference
     """
@@ -34,11 +33,15 @@ class Post(models.Model):
     is_adult = models.BooleanField(default=False, verbose_name='Adult Content')
     is_violent = models.BooleanField(default=False, verbose_name='Violent Content')
 
+    configuration_head = models.CharField(max_length=100, default='', verbose_name='Text-Boxes top of image')
+    configuration_over = models.CharField(max_length=1000, default='', verbose_name='Text-Boxes on image')
+    configuration_tail = models.CharField(max_length=100, default='', verbose_name='Text-Boxes below of image')
+
     template = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
     author = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    genre_list = models.ManyToManyField(Keyword, through='browse.KeywordList', related_name='post_genres')
+    keywords = models.ManyToManyField(Keyword, through='browse.KeywordList', related_name='post_keywords')
 
     reacts = models.ManyToManyField(User, through='browse.PostReact', related_name='post_react_user')
     comments = models.ManyToManyField(User, through='browse.PostComment', related_name='post_comment_user')
@@ -79,60 +82,9 @@ class Post(models.Model):
         return Image.open(self.image).size
 
 
-class TextBox(models.Model):
-    """
-    TODO: multi line text
-    Textbox of image of a post
-    """
-    position = models.CharField(max_length=1, verbose_name="Position Type", choices=TextPositions.position_choices(),
-                                default=TextPositions.OVER)
-
-    style_text = models.CharField(max_length=100, verbose_name='Style Text', default='')
-    background_color = models.CharField(max_length=7, verbose_name='Textbox Background Fill Color', default='#ffffff')
-    background_opacity = models.IntegerField(verbose_name='Textbox Background Opacity', default=0)
-
-    pos_x = models.IntegerField(verbose_name='textbox\'s leftmost X coordinate')
-    pos_y = models.IntegerField(verbose_name='textbox\'s topmost  Y coordinate')
-    pos_z = models.IntegerField(verbose_name='Relative Order Position from Image(0) to Front(inf)')
-
-    len_x = models.IntegerField(verbose_name='Textbox Horizontal Width')
-    len_y = models.IntegerField(verbose_name='Textbox Vertical Height')
-
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='image_textboxes')
-
-    class Meta:
-        verbose_name = "Textbox"
-        verbose_name_plural = "Textboxes"
-
-    def get_absolute_url(self):
-        return reverse("browse:PostReact", kwargs={"id": self.pk})
-
-    def __str__(self):
-        return "%s %s" % (self.position, str(self.post))
-
-    def is_valid_config(self):
-        img_w, img_h = self.post.image_shape()
-        if img_w is None or img_h is None or TextPositions.is_valid_position(self.position):
-            return False
-        if self.pos_x < 0 or self.pos_y < 0 or self.pos_z < 0 or \
-                self.pos_x + self.len_x > img_w or self.pos_y + self.len_y > img_h:
-            return False
-        import re
-        pattern = re.compile("#[0-9a-f]{6}$")
-        if not bool(pattern.match(self.background_color)):
-            return False
-        return True
-
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
-        if self.is_valid_config():
-            super().save(force_insert, force_update, using, update_fields)
-        else:
-            raise ValidationError(message='Invalid Text Box Config')
-
-
 class KeywordList(models.Model):
     """
-    Keeps which post has which genres
+    Keeps which post has which keywords
     """
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     keyword = models.ForeignKey(Keyword, on_delete=models.CASCADE)
