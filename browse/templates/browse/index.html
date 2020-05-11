@@ -41,15 +41,9 @@
 
     <section class="contact py-lg-4 py-md-3 py-sm-3 py-3">
         <div class="container-fluid py-lg-5 py-md-4 py-sm-4 py-3">
-            <h3 class="title text-center mb-lg-5 mb-md-4 mb-sm-4 mb-3">Cuisine List</h3>
+            <h3 class="title text-center mb-lg-5 mb-md-4 mb-sm-4 mb-3">Memes</h3>
             <div class="row">
                 <div class="">
-
-                    {#                    <div class="search-hotel">#}
-                    {##}
-                    {#                        <input type="search" placeholder="Product name..." id="menu_search" name="menu_search">#}
-                    {##}
-                    {#                    </div>#}
 
                     <link href="{% sass_src 'browse/css/utility.scss' %}" rel="stylesheet" type="text/css"/>
 
@@ -58,32 +52,17 @@
                           type='text/css'>
                     <link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css">
 
-                    <dropdown id="category_drop">
-                        <input id="toggle2" type="checkbox">
-                        <label for="toggle2" class="animate">Select Category<i
-                                class="fa fa-list float-right"></i></label>
-                        <ul class="animate" style="padding-left: 0px" id="cat_list">
-                            <li class="animate">Source</li>
-                            <li class="animate">Fullpage</li>
-                            <li class="animate">Debug</li>
-                        </ul>
-                    </dropdown>
-
-                    <script>
-                        {#$(document).click(function (e) {#}
-                        {#    e.stopPropagation();#}
-                        {#    var container = $("#category_drop");#}
-                        {##}
-                        {#    //check if the clicked area is dropDown or not#}
-                        {#    if (container.has(e.target).length === 0) {#}
-                        {#        $('#cat_list').hide();#}
-                        {#    } else {#}
-                        {#        $('#cat_list').show();#}
-                        {#    }#}
-                        {#})#}
-
-
-                    </script>
+{#                    <dropdown id="category_drop">#}
+{#                        <input id="toggle2" type="checkbox">#}
+{#                        <label for="toggle2" class="animate">Select Category<i#}
+{#                                class="fa fa-list float-right"></i></label>#}
+{#                        <ul class="animate" style="padding-left: 0px" id="cat_list">#}
+{#                            <li class="animate">Source</li>#}
+{#                            <li class="animate">Fullpage</li>#}
+{#                            <li class="animate">Debug</li>#}
+{#                        </ul>#}
+{#                    </dropdown>#}
+{##}
                 </div>
             </div>
             <div class="row">
