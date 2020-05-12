@@ -39,7 +39,7 @@ INSTALLED_APPS = [
 	'sass_processor',
 
 	'accounts',
-	'browse',
+	'memesbd',
 
 	'django_extensions',
 
