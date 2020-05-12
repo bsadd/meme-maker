@@ -38,6 +38,7 @@ INSTALLED_APPS = [
 	'django.contrib.sites',
 	'sass_processor',
 
+	'coreapp',
 	'accounts',
 	'memesbd',
 
