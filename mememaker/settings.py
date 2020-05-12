@@ -196,7 +196,7 @@ LOGIN_REDIRECT_URL = '/'
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-SITE_ID = 3
+SITE_ID = 4
 
 # PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 # Extra lookup directories for collectstatic to find static files
