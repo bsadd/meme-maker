@@ -20,7 +20,7 @@
   "pk": 1,
   "fields": {
     "password": "pbkdf2_sha256$180000$GUXQ4sWGJLEV$cTT9ms+zklO1KEDPt8Ids/K3WLqu1UnJCG7Ahl5HUG4=",
-    "last_login": "2020-05-14T07:24:35.586Z",
+    "last_login": "2020-05-14T18:42:06.612Z",
     "is_superuser": true,
     "username": "admin",
     "first_name": "",
@@ -61,6 +61,21 @@
     "name": "facebook",
     "client_id": "244278026819821",
     "secret": "8629627ca8defaa3199d7199c19483b2",
+    "key": "",
+    "sites": [
+      4,
+      5
+    ]
+  }
+},
+{
+  "model": "socialaccount.socialapp",
+  "pk": 2,
+  "fields": {
+    "provider": "google",
+    "name": "google",
+    "client_id": "688985495159-28mo16kdmnmi3690dchbeclfafuljigf.apps.googleusercontent.com",
+    "secret": "JIMPpsvg6_A-3dWDHBShaxeO",
     "key": "",
     "sites": [
       4,
