@@ -34,7 +34,8 @@
                                  <a href={% url 'accounts:register' %}>Register</a>
                               </div>
                               {% else %}
-                              <button class="topBtn"><span class="far fa-user">
+                              <button class="topBtn"><span class="far">
+	                              <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" width="40" height="40" alt="" />
                               {{ request.user.username|upper }}</span></button>
                               <div class="dropdown-content">
                                  <a href="/customer/editProfile/">Profile</a>
@@ -63,7 +64,7 @@
 
       <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
       {% block body-js-common %}
-    
+
 
 
 {#      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">#}
