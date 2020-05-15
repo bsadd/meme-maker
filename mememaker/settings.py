@@ -15,9 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'sjdzq5cl^c4j!0!xi-gow^qv1n!^we-p$73cd1hb&4mom+^c)i'
 
@@ -29,59 +26,59 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-	'django.contrib.admin',
-	'django.contrib.auth',
-	'django.contrib.contenttypes',
-	'django.contrib.sessions',
-	'django.contrib.messages',
-	'django.contrib.staticfiles',
-	'django.contrib.sites',
-	'sass_processor',
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'django.contrib.sites',
+    'sass_processor',
 
-	'coreapp',
-	'accounts',
-	'memesbd',
+    'coreapp',
+    'accounts',
+    'memesbd',
 
-	'django_extensions',
+    'django_extensions',
 
-	'allauth',
-	'allauth.account',
-	'allauth.socialaccount',
-	'allauth.socialaccount.providers.facebook',
-	'allauth.socialaccount.providers.google',
-	'sslserver',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.facebook',
+    'allauth.socialaccount.providers.google',
+    'sslserver',
 
-	'tagconstants',  # template const.
+    'tagconstants',  # template const.
 
 ]
 
 MIDDLEWARE = [
-	'django.middleware.security.SecurityMiddleware',
-	'django.contrib.sessions.middleware.SessionMiddleware',
-	'django.middleware.common.CommonMiddleware',
-	'django.middleware.csrf.CsrfViewMiddleware',
-	'django.contrib.auth.middleware.AuthenticationMiddleware',
-	'django.contrib.messages.middleware.MessageMiddleware',
-	'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'mememaker.urls'
 
 TEMPLATES = [
-	{
-		'BACKEND': 'django.template.backends.django.DjangoTemplates',
-		'DIRS': [os.path.join(BASE_DIR, 'templates')]
-		,
-		'APP_DIRS': True,
-		'OPTIONS': {
-			'context_processors': [
-				'django.template.context_processors.debug',
-				'django.template.context_processors.request',
-				'django.contrib.auth.context_processors.auth',
-				'django.contrib.messages.context_processors.messages',
-			],
-		},
-	},
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates')]
+        ,
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
 ]
 
 WSGI_APPLICATION = 'mememaker.wsgi.application'
@@ -101,28 +98,28 @@ WSGI_APPLICATION = 'mememaker.wsgi.application'
 # }
 
 DATABASES = {
-	'default': {
-		'ENGINE': 'django.db.backends.sqlite3',
-		'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-	}
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
 
 # Password validation
-# https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
+# https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-	{
-		'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-	},
-	{
-		'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-	},
-	{
-		'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-	},
-	{
-		'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-	},
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
 # Internationalization
@@ -145,50 +142,50 @@ STATIC_URL = '/static/'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
 COMPRESS_PRECOMPILERS = (
-	('text/x-scss', 'django_libsass.SassCompiler'),
+    ('text/x-scss', 'django_libsass.SassCompiler'),
 )
 
 STATICFILES_FINDERS = [
-	'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-	'sass_processor.finders.CssFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'sass_processor.finders.CssFinder',
 ]
 
 SASS_PROCESSOR_ROOT = os.path.join(BASE_DIR, 'static')
 
 REST_FRAMEWORK = {
-	# Use Django's standard `django.contrib.auth` permissions,
-	# or allow read-only access for unauthenticated users.
-	'DEFAULT_PERMISSION_CLASSES': [
-		'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-	]
+    # Use Django's standard `django.contrib.auth` permissions,
+    # or allow read-only access for unauthenticated users.
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    ]
 }
 
 AUTHENTICATION_BACKENDS = (
-	"django.contrib.auth.backends.ModelBackend",
-	"allauth.account.auth_backends.AuthenticationBackend",
+    "django.contrib.auth.backends.ModelBackend",
+    "allauth.account.auth_backends.AuthenticationBackend",
 )
 
 SOCIALACCOUNT_PROVIDERS = \
-	{'facebook':
-		 {'METHOD': 'oauth2',
-		  'SCOPE': ['email', 'public_profile', 'user_friends'],
-		  'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-		  'FIELDS': [
-			  'id',
-			  'email',
-			  'name',
-			  'first_name',
-			  'last_name',
-			  'verified',
-			  'locale',
-			  'timezone',
-			  'link',
-			  'gender',
-			  'updated_time'],
-		  'EXCHANGE_TOKEN': True,
-		  'LOCALE_FUNC': lambda request: 'kr_KR',
-		  'VERIFIED_EMAIL': False,
-		  'VERSION': 'v2.4'}}
+    {'facebook':
+         {'METHOD': 'oauth2',
+          'SCOPE': ['email', 'public_profile', 'user_friends'],
+          'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+          'FIELDS': [
+              'id',
+              'email',
+              'name',
+              'first_name',
+              'last_name',
+              'verified',
+              'locale',
+              'timezone',
+              'link',
+              'gender',
+              'updated_time'],
+          'EXCHANGE_TOKEN': True,
+          'LOCALE_FUNC': lambda request: 'kr_KR',
+          'VERIFIED_EMAIL': False,
+          'VERSION': 'v2.4'}}
 
 AUTH_USER_MODEL = 'accounts.User'
 
@@ -210,6 +207,6 @@ SITE_ID = 4
 
 # Template Constant
 TAG_CONSTANTS = {
-	'Website_Name': 'MemeMaker',
-	'MAX_IMGSIZE': 2,
+    'Website_Name': 'MemeMaker',
+    'MAX_IMGSIZE': 2,
 }

@@ -1,3 +1,7 @@
+"""
+Contains utility functions to insert bulk data via `utils_db.py` functions for testing purposes
+"""
+
 from memesbd.utils_db import insert_template_post_path
 
 

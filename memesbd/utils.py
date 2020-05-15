@@ -1,3 +1,8 @@
+"""
+Contains utility functions to preprocess for variable data in `utils_db.py`, `views.py` w/o any relation to db
+"""
+
+
 def pretty_request(request):
     headers = ''
     for header, value in request.META.items():
@@ -42,9 +47,6 @@ def image_to_file(img_base64, file_id):
 
 def hexcode_to_rgb(h):
     return tuple(int(h.lstrip('#')[i:i + 2], 16) for i in (0, 2, 4))
-
-
-# user.image.save(file_name, data, save=True)  # image is User's model field
 
 
 # ------------------- Image --------------------
@@ -93,7 +95,6 @@ def add_text_on_border(img_pil, text, border_pos='top', color_text_hex='#ffffff'
     elif border_pos == 'bottom':
         x, y = 0, img_pil.size[1]
     return add_text_on_image(img, x=x, y=y, text=text, color_hex=color_text_hex, font=font)
-
 
 
 # ------------------- Pagination --------------------

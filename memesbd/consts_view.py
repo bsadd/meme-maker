@@ -1,3 +1,7 @@
+"""
+Contains constants/wrapper classes for `views.py` classes.
+"""
+
 from memesbd.consts_db import TextPositions
 import collections
 

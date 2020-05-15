@@ -1,10 +1,13 @@
+"""
+Contains utility functions for database query maintenance i.e. Insert/Update
+"""
+
 from collections import namedtuple
 
 from django.db import connection
 
 # ------------------ util functions --------------------------
 from accounts.models import User
-from memesbd.consts_view import TextBox
 from memesbd.models import Post, PostReact
 
 

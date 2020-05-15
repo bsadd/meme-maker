@@ -1,3 +1,8 @@
+"""
+Contains constants/wrapper classes for database model's fields like CHOICE_FIELD etc.
+"""
+
+
 class Reacts:
     __slots__ = ()
     NONE = 0

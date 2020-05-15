@@ -9,4 +9,3 @@ admin.site.register(PostComment)
 admin.site.register(PostCommentReact)
 admin.site.register(Keyword)
 admin.site.register(KeywordList)
-
