@@ -3,6 +3,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 from memesbd import views
 from coreapp.views import view_navbar
+from coreapp.views import view_meme_gallery
 app_name = 'memesbd'
 
 urlpatterns = [
@@ -13,6 +14,7 @@ urlpatterns = [
     path('memesbd/upload/', views.AddMemeView.as_view(), name='upload-page'),
 
     path('navbar/',view_navbar,name='navbar'),
+    path('memes/',view_meme_gallery,name='memes'),
 
 
     path('memesbd/upload-image-template/', views.upload_meme_image, name='upload-template-image'),
