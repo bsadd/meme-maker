@@ -1,0 +1,54 @@
+{% extends 'coreapp/base.html' %}
+{% load static %}
+{% block head_content %}
+	<title>Unsplash Image Gallery</title>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"
+	      integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+	      integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
+{% endblock %}
+
+
+{% block body_content %}
+	<div class="infinite-container">
+		<div class="row">
+			{% for post in posts %}
+				<div class="infinite-item col-lg-4 col-sm-6">
+					<div class="thumbnail">
+						<img src="{{ post.image.url }}">
+						<label for="tags">{{ post.caption }} </label>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+
+
+	</div>
+	{% if posts.has_next %}
+		<a class="infinite-more-link" href="?page={{ posts.next_page_number }}">More</a>
+	{% endif %}
+
+{% endblock %}
+
+{% block script_content %}
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
+
+	{#	<script src="{% static 'coreapp/js/jquery-3.3.1.min.js' %}"></script>#}
+	{#	<script src="{% static 'coreapp/js/jquery.waypoints.min.js' %}"></script>#}
+	{#	<script src="{% static 'coreapp/js/infinite.min.js' %}"></script>#}
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
+	        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+	        crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/jquery.waypoints.min.js"
+	        integrity="sha256-jDnOKIOq2KNsQZTcBTEnsp76FnfMEttF6AV2DF2fFNE=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/waypoints/4.0.1/shortcuts/infinite.min.js"
+	        integrity="sha256-Qp8DnNDYDDwTWO5OCw8HFoCJOqO1l4OmcIlIZNfi6tI=" crossorigin="anonymous"></script>
+
+	<script>
+		var infinite = new Waypoint.Infinite({
+			element: $(".infinite-container")[0]
+		});
+	</script>
+
+{% endblock %}

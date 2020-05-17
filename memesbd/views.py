@@ -45,7 +45,7 @@ class Index(TemplateView):
     """
     Renders Home Page
     """
-    template_name = 'memesbd/index.html'
+    template_name = 'memesbd/meme_gallery.html'
 
     def get_context_data(self, **kwargs):
         # with open("sessionLog.txt", "a") as myfile:
@@ -108,3 +108,15 @@ def memeDetails(request, id):
     post.save()
     return render(request, 'memesbd/memeDetails.html',
                   context={'loggedIn': request.user.is_authenticated, 'post': post})
+
+
+def view_meme_gallery(request, *args, **kwargs):
+    posts = Post.objects.get_queryset().order_by('id')
+    from django.core.paginator import Paginator
+    paginator = Paginator(posts, 3)
+    page = request.GET.get("page")
+    posts = paginator.get_page(page)
+
+    return render(request, 'memesbd/meme_gallery.html',
+                  context={'loggedIn': request.user.is_authenticated, 'fullLoad': request.POST.get('fromAjax') is None,
+                           'posts': posts})
