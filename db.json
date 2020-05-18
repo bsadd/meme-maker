@@ -1,0 +1,110 @@
+[
+{
+  "model": "sites.site",
+  "pk": 4,
+  "fields": {
+    "domain": "localhost:8000",
+    "name": "localhost"
+  }
+},
+{
+  "model": "sites.site",
+  "pk": 5,
+  "fields": {
+    "domain": "memesbd.com",
+    "name": "memesbd"
+  }
+},
+{
+  "model": "accounts.user",
+  "pk": 1,
+  "fields": {
+    "password": "pbkdf2_sha256$180000$GUXQ4sWGJLEV$cTT9ms+zklO1KEDPt8Ids/K3WLqu1UnJCG7Ahl5HUG4=",
+    "last_login": "2020-05-12T08:03:29.957Z",
+    "is_superuser": true,
+    "username": "admin",
+    "first_name": "",
+    "last_name": "",
+    "email": "admin@localhost",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2020-05-12T08:03:15.152Z",
+    "is_suspended": false,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "accounts.user",
+  "pk": 2,
+  "fields": {
+    "password": "pbkdf2_sha256$180000$olsDokUYvW9W$aDfqYjAmnAHDGXEqfnHc7DjCdNEQb31P9ecEX6u/PYw=",
+    "last_login": "2020-05-12T08:12:19.012Z",
+    "is_superuser": false,
+    "username": "intruder",
+    "first_name": "",
+    "last_name": "",
+    "email": "intruder@gmail.com",
+    "is_staff": false,
+    "is_active": true,
+    "date_joined": "2020-05-12T08:12:09.694Z",
+    "is_suspended": false,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "socialaccount.socialapp",
+  "pk": 1,
+  "fields": {
+    "provider": "facebook",
+    "name": "facebook",
+    "client_id": "1346556182203093",
+    "secret": "63acc44fe0c7c41bc91124443f4e7e44",
+    "key": "",
+    "sites": [
+      4,
+      5
+    ]
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2020-05-12T08:05:21.448Z",
+    "user": 1,
+    "content_type": 6,
+    "object_id": "4",
+    "object_repr": "localhost:8000",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2020-05-12T08:05:38.813Z",
+    "user": 1,
+    "content_type": 6,
+    "object_id": "5",
+    "object_repr": "memesbd.com",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2020-05-12T08:06:31.010Z",
+    "user": 1,
+    "content_type": 17,
+    "object_id": "1",
+    "object_repr": "facebook",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+}
+]

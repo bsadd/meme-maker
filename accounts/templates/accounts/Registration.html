@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+{% load socialaccount %}
+{% providers_media_js %}
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <title>CodePen - CSS + jQuery Login/Registration form</title>
+    <link href='https://fonts.googleapis.com/css?family=Titillium+Web' rel='stylesheet' type='text/css'/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="{% static 'accounts/css/regi_form.css' %}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+</head>
+<body>
+{% if not loggedIn %}
+    <div class="container">
+        <div class="row">
+            <div class='login-box col-md-12'>
+                <ul class='nav'>
+                    <li class='selected' id='login-form'>Login</li>
+                    <li id='register-form'>Register</li>
+                </ul>
+                <form class='login-form selected' method="POST" action="{% url 'accounts:login' %}">
+                    {% csrf_token %}
+
+                    <span class='title'>Please Enter Your Login Details:<br><br></span>
+                    <div class='input'>
+                        <label for='log-username'>Username</label>
+                        <input type='text' name='log-username' id='log-username'/>
+                        <span class='icon'><i class='fa fa-user-o'></i></span>
+                        <div class='underline'></div>
+                    </div>
+                    <div class='input'>
+                        <label for='log-password'>Password</label>
+                        <input type='password' name='log-password' id='log-password'/>
+                        <span class='icon'><i class='fa fa-eye-slash'></i></span>
+                        <div class='underline'></div>
+                    </div>
+                    <div class='input submit'>
+                        <input type='submit' name='formName' id='login' value='LOGIN'/>
+                    </div>
+                </form>
+
+
+                {#    Registration #}
+
+
+                <script>
+                    var checkpass = function () {
+                        if (document.getElementById('name') == '') {
+                            document.getElementById('name').style.backgroundColor = 'red'
+                        }
+
+                        if (document.getElementById('password').value ==
+                            document.getElementById('re_pass').value) {
+                            document.getElementById('password').style.color = 'green';
+                            document.getElementById('re_pass').style.color = 'green';
+                            document.getElementById('password-message').innerHTML = '';
+                            document.getElementById('password-message').style.color = 'green';
+                            document.getElementById('signup').disabled = false
+                            document.getElementById('signup').style.backgroundColor = 'green'
+                        } else {
+                            document.getElementById('password').style.color = 'red';
+                            document.getElementById('re_pass').style.color = 'red';
+                            document.getElementById('password-message').innerHTML = 'NOT MATCHING';
+                            document.getElementById('password-message').style.color = 'red';
+                            document.getElementById('signup').disabled = true
+                            document.getElementById('signup').style.backgroundColor = 'red'
+                        }
+                    };
+
+                </script>
+
+
+                <form class='register-form' method="POST" action="{% url 'accounts:login' %}" id="register-form">
+                    {% csrf_token %}
+
+                    <span class='title'>Please Register to Login:<br><br></span>
+                    <div class='input'>
+                        <label for='reg-username'>Username</label>
+                        <input type='text' name='username' id='reg-username'/>
+                        <span class='icon'><i class='fa fa-user-o'></i></span>
+                        <div class='underline'></div>
+                    </div>
+                    <div class='input'>
+                        <label for='reg-email'>E-Mail Address</label>
+                        <input type='email' name='email' id='reg-email'/>
+                        <span class='icon'><i class='fa fa-envelope-o'></i></span>
+                        <div class='underline'></div>
+                    </div>
+                    <div class='input'>
+                        <label for='reg-password'>Password</label>
+                        <input type='password' name='password' id='reg-password'/>
+                        <span class='icon'><i class='fa fa-eye-slash'></i></span>
+                        <div class='underline'></div>
+                    </div>
+                    <div class='input'>
+                        <label for='reg-conf'>Confirm Password</label>
+                        <input type='password' name='reg-conf' id='reg-conf' onkeyup='checkpass();'/>
+                        <span class='icon'><i class='fa fa-eye-slash'></i></span>
+                        <div class='underline'></div>
+                    </div>
+                    <div class='input submit'>
+                        {#                <button id='register' name='action'  value='signup' type="submit">Sign in</button>#}
+                        <input type='submit' name='formName' id='register' value='REGISTER'/>
+                    </div>
+                </form>
+                <span class='title'>Or Connect With:</span>
+                <ul class='social-media'>
+                    <li class='facebook'><a href="{% provider_login_url "facebook" method="js_sdk" %}"><i
+                            class='fa fa-facebook'></i></a></li>
+                    <li class='google'><a href="{% provider_login_url "google" method="js_sdk" %}"><i
+                            class='fa fa-google'></i></a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+
+        <div class="row" style="height: 3vh;"></div>
+
+
+        <div class="row" style="padding-left: 45%">
+            <a href="/" class="btn btn-info">Back To Home</a>
+
+        </div>
+    </div>
+
+
+
+    <!-- partial -->
+    <script src="{% static 'accounts/js/regi_from.js' %}"></script>
+{% else %}
+    <b>You are already signed in...</b>
+{% endif %}
+</body>
+</html>
