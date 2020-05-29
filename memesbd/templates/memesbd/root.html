@@ -26,7 +26,7 @@
                      <div class="row" style="background: #000;">
                         <div class="col-md-6">
                            <div class="dropdown" style="float: right">
-                              {% if not loggedIn %}
+                              {% if not request.user.is_authenticated %}
                               <button class="topBtn"><span class="far fa-user"> Login/Register</span>
                               </button>
                               <div class="dropdown-content">

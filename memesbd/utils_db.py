@@ -9,6 +9,7 @@ from django.db import connection
 # ------------------ util functions --------------------------
 from accounts.models import User
 from memesbd.models import Post, PostReact
+from memesbd.consts_db import ApprovalStatus
 
 
 def namedtuplefetchall(query, param_list):
@@ -26,20 +27,20 @@ def namedtuplefetchall(query, param_list):
 def get_react_count_post(post_id):
     """
     :param post_id: id of the post
-    :returns an array with index as react-value and value as count
+    :returns an array with index as status-value and value as count
     i.e. ret_val[Reacts.UPVOTE] is number of times this post had been up-voted
     """
     from django.db.models import Count
     qset = PostReact.objects.filter(post_id=post_id).annotate(count=Count('user')).values('react', 'count')
     from memesbd.consts_db import Reacts
-    react_counts = [0] * (Reacts.MAX + 1)
+    react_counts = [0] * (Reacts.__MAX + 1)
     for q in qset:
-        react_counts[q['react']] = q['count']
+        react_counts[q['status']] = q['count']
     return react_counts
 
 
 def update_react_post(user, post_id, react):
-    """ create or update user react on post """
+    """ create or update user status on post """
     from memesbd.consts_db import Reacts
     if not Reacts.is_valid_react(react):
         return
@@ -62,7 +63,7 @@ def update_comment_post(user, pkg_id, comment):
 
 def update_comment_react_post(user, comment_id, react_val):
     """
-    create or update react on existing post of any user on package
+    create or update status on existing post of any user on package
     :returns updated (likes_count, dislikes_count) of that post
     """
     from memesbd.models import PostComment, PostCommentReact
@@ -75,6 +76,20 @@ def update_comment_react_post(user, comment_id, react_val):
         react.disliked = (react_val == 'dislike')
         react.save()
     return get_react_count_post(post)
+
+
+# ------------ User Profile -----------------------------
+
+def get_pending_posts(user_id):
+    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.PENDING)
+
+
+def get_approved_posts(user_id):
+    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.APPROVED)
+
+
+def get_rejected_posts(user_id):
+    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.REJECTED)
 
 
 # ------------ Posts -----------------------------

@@ -8,7 +8,7 @@ class Reacts:
     NONE = 0
     UPVOTE = 1
     DOWNVOTE = 2
-    MAX = DOWNVOTE
+    __MAX = DOWNVOTE
 
     REACT_NAMES = {0: 'NONE', 1: 'UPVOTE', 2: 'DOWNVOTE'}
     REACT_VALUE = {'NONE': 0, 'UPVOTE': 1, 'DOWNVOTE': 2}
@@ -22,7 +22,7 @@ class Reacts:
     def is_valid_react(react):
         if react is None:
             return False
-        return Reacts.NONE <= react <= Reacts.MAX
+        return Reacts.NONE <= react <= Reacts.__MAX
 
 
 class TextPositions:
@@ -46,3 +46,28 @@ class TextPositions:
     @staticmethod
     def is_valid_position(position):
         return position in [p[0] for p in TextPositions.position_choices()]
+
+
+class ApprovalStatus:
+    __slots__ = ()
+    PENDING = 'p'
+    APPROVED = 'a'
+    REJECTED = 'r'
+    __MAX = REJECTED
+
+    STATUS_NAMES = {PENDING: 'PENDING', APPROVED: 'APPROVED', REJECTED: 'REJECTED'}
+    STATUS_VALUE = {'PENDING': PENDING, 'APPROVED': APPROVED, 'REJECTED': REJECTED}
+
+    @staticmethod
+    def approval_status():
+        STATUS = (
+            (ApprovalStatus.PENDING, 'Pending'),
+            (ApprovalStatus.APPROVED, 'Approved'),
+            (ApprovalStatus.REJECTED, 'Rejected'))
+        return STATUS
+
+    @staticmethod
+    def is_valid_status(status):
+        if status is None:
+            return False
+        return ApprovalStatus.PENDING <= status <= ApprovalStatus.__MAX

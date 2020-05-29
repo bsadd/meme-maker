@@ -199,7 +199,8 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 #
 AUTH_USER_MODEL = 'accounts.User'
 
-LOGIN_REDIRECT_URL = '/'
+from django.urls import reverse_lazy
+LOGIN_REDIRECT_URL = reverse_lazy('accounts:login')
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
