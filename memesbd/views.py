@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
 from memesbd import utils_db
@@ -6,6 +8,7 @@ from memesbd.models import *
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.views.generic import TemplateView
+from django.urls import reverse_lazy
 
 
 def upload_meme_image(request):
@@ -51,9 +54,7 @@ class Index(TemplateView):
         # with open("sessionLog.txt", "a") as myfile:
         # 	myfile.write(">>>>>>\n" + pretty_request(self.request) + "\n>>>>>>\n")
 
-        ctx = {'loggedIn': self.request.user.is_authenticated,
-               'item_list': Post.objects.filter(template__isnull=True)
-               }
+        ctx = {'item_list': Post.objects.filter(template__isnull=True)}
         return ctx
 
 
@@ -63,16 +64,11 @@ class AddMemeView(TemplateView):
     """
     template_name = 'memesbd/template_upload.html'
 
+    @method_decorator(login_required)
     def get(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return redirect(reverse('accounts:login'))
         return super(self.__class__, self).get(request, *args, **kwargs)
 
-    def get_context_data(self, *args, **kwargs):
-        context = super(AddMemeView, self).get_context_data()
-        context['loggedIn'] = self.request.user.is_authenticated
-        return context
-
+    @method_decorator(login_required)
     def post(self, request, *args, **kwargs):
         # print(pretty_request(self.request))
         print(request.POST)
@@ -86,14 +82,13 @@ class ViewMenusView(TemplateView):
         obj_list = Post.objects.filter(author=self.request.user)  # .order_by('status', '-time')
         print(obj_list)
         print('-----')
-        return {'loggedIn': self.request.user.is_authenticated, 'menu_list': obj_list}
+        return {'menu_list': obj_list}
 
 
+@login_required
 def editView(request, id):
     """Renders Edit Page for the given meme id"""
 
-    if not request.user.is_authenticated:
-        return redirect(reverse('accounts:login'))
     print(request.POST)
     st = render(request, 'memesbd/meme_edit.html',
                 context={'loggedIn': request.user.is_authenticated, 'fullLoad': request.POST.get('fromAjax') is None,
@@ -118,8 +113,7 @@ def view_meme_gallery(request, *args, **kwargs):
     posts = paginator.get_page(page)
 
     return render(request, 'memesbd/meme_gallery.html',
-                  context={'loggedIn': request.user.is_authenticated, 'fullLoad': request.POST.get('fromAjax') is None,
-                           'posts': posts})
+                  context={'fullLoad': request.POST.get('fromAjax') is None, 'posts': posts})
 
 
 def update_react(request, id):

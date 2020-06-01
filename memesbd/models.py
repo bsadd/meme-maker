@@ -3,7 +3,7 @@ from django.db import models
 from django.urls import reverse
 
 from accounts.models import User
-from memesbd.consts_db import Reacts, TextPositions
+from memesbd.consts_db import Reacts, ApprovalStatus
 
 
 class Keyword(models.Model):
@@ -36,6 +36,11 @@ class Post(models.Model):
     configuration_head = models.CharField(max_length=100, default='', verbose_name='Text-Boxes top of image')
     configuration_over = models.CharField(max_length=1000, default='', verbose_name='Text-Boxes on image')
     configuration_tail = models.CharField(max_length=100, default='', verbose_name='Text-Boxes below of image')
+
+    approval_status = models.CharField(max_length=2, verbose_name="Approval Status",
+                                       choices=ApprovalStatus.approval_status(), default=ApprovalStatus.PENDING)
+
+    approval_details = models.CharField(max_length=200, verbose_name="Approval Verdict Reason", default='')
 
     template = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 

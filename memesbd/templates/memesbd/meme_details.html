@@ -50,7 +50,7 @@
                             var rate_val = $("input[type='radio'][name='rating']:checked").val();
                             {#var csrftoken = getCookie('csrftoken');#}
 
-                            {% if loggedIn %}
+                            {% if request.user.is_authenticated %}
 
                                 $.ajax({
                                     type: "POST",
