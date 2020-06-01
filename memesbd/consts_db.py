@@ -6,7 +6,7 @@ Contains constants/wrapper classes for database model's fields like CHOICE_FIELD
 class Reacts:
     __slots__ = ()
     NONE, LIKE, LOVE, HAHA, WOW, SAD, ANGRY = range(0, 7)
-    MAX = ANGRY
+    __MAX = ANGRY
 
     REACT_NAMES = dict(
         [(NONE, 'NONE'), (LIKE, 'LIKE'), (LOVE, 'LOVE'), (HAHA, 'HAHA'), (WOW, 'WOW'), (SAD, 'SAD'), (ANGRY, 'ANGRY')])

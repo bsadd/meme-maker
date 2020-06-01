@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
+from coreapp.decorators import ajax_login_required
 from memesbd import utils_db
 from memesbd.models import *
 
@@ -116,7 +117,15 @@ def view_meme_gallery(request, *args, **kwargs):
                   context={'fullLoad': request.POST.get('fromAjax') is None, 'posts': posts})
 
 
+@ajax_login_required
 def update_react(request, id):
-    react = request.POST.get('react')
-    print(react + ' on ' + str(id))
-    return JsonResponse({'id': id, 'loggedIn': request.user.is_authenticated})
+    react_name = str(request.POST.get('react')).upper()
+    print(str(request.user) + ' ' + react_name + ' on ' + str(id))
+    if Reacts.is_valid_react(Reacts.REACT_VALUE[react_name]):
+        from utils_db import update_react_post
+        post_react = update_react_post(user=request.user, post_id=id, react=Reacts.REACT_VALUE[react_name])
+        if post_react is not None:
+            return JsonResponse(
+                {'success': True, 'id': id, 'react': Reacts.REACT_NAMES[post_react.react],
+                 'loggedIn': request.user.is_authenticated})
+    return JsonResponse({'success': False, 'loggedIn': request.user.is_authenticated})

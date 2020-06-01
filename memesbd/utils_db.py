@@ -46,9 +46,14 @@ def update_react_post(user, post_id, react):
         return
     from memesbd.models import PostReact
     from memesbd.models import Post
-    post, _ = PostReact.objects.get_or_create(post=Post.objects.get(id=post_id), user=user)
-    post.react = react
-    post.save()
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return None
+    post_react, _ = PostReact.objects.get_or_create(post=post, user=user)
+    post_react.react = react
+    post_react.save()
+    return post_react
 
 
 def update_comment_post(user, pkg_id, comment):

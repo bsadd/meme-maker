@@ -26,19 +26,16 @@
 
 
 						<div class="thumbnail">
-							<img src="{{ post.image.url }}">
+							<img src="{{ post.image.url }}" alt="">
 							<label for="tags">{{ post.caption }} </label>
 
 
 							<div>
-								<div class="facebook-reaction"><!-- container div for reaction system -->
-									<span class="like-btn"> <!-- Default like button -->
+								<div class="facebook-reaction">
+									<span class="like-btn">
                                 <span class="fa like-btn-emo fa-thumbs-o-up" id="like-btn-emo-{{ post.id }}"></span>
-										<!-- Default like button emotion-->
-                                <span class="like-btn-text react-change" id="like-btn-text-{{ post.id }}">Like</span>
-										<!-- Default like button text,(Like, wow, sad..) default:Like  -->
+                                <span class="like-btn-text react-change" id="like-btn-text-{{ post.id }} ">Like</span>
                                 <ul class="reactions-box" data-id="{{ post.id }}">
-                                  <!-- Reaction buttons container-->
                                   <li class="reaction reaction-like react-change" data-id="{{ post.id }}"
                                       data-reaction="Like"></li>
                                   <li class="reaction reaction-love react-change" data-id="{{ post.id }}"
@@ -52,13 +49,20 @@
                                   <li class="reaction reaction-angry react-change" data-id="{{ post.id }}"
                                       data-reaction="Angry"></li>
                                 </ul>
+
                                 </span>
 									<div class="like-stat"> <!-- Like statistic container-->
 										<span class="like-emo" id="like-emo-{{ post.id }}"> <!-- like emotions container -->
                                   </span> <span class="like-details" id="like-details-{{ post.id }}">Mahmud Mushfique and 86 others</span>
 									</div>
 								</div>
-
+{#								{% if post.post_react_user %}#}
+								{{ post.post_react_user }}
+{#								{% endif %} #}
+{#								<script>#}
+{#									$("#like-btn-emo-" + data_id).removeClass().addClass('like-btn-emo').addClass('like-btn-' + data_reaction.toLowerCase());#}
+{#									$("#like-btn-text-" + data_id).text(data_reaction).removeClass().addClass('like-btn-text').addClass('like-btn-text-' + data_reaction.toLowerCase()).addClass("active");#}
+{#								</script>#}
 							</div>
 
 
@@ -87,9 +91,6 @@
 {% block script_content %}
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.js"></script>
 
-	{#	<script src="{% static 'coreapp/js/jquery-3.3.1.min.js' %}"></script>#}
-	{#	<script src="{% static 'coreapp/js/jquery.waypoints.min.js' %}"></script>#}
-	{#	<script src="{% static 'coreapp/js/infinite.min.js' %}"></script>#}
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"
 	        integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
 	        crossorigin="anonymous"></script>
@@ -105,7 +106,7 @@
 	</script>
 
 	<script>
-		var csrftoken = getCookie('csrftoken');
+		const csrftoken = getCookie('csrftoken');
 		$.ajaxSetup({
 			beforeSend: function (xhr, settings) {
 				if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -114,91 +115,62 @@
 			}
 		});
 
-		function send_react(data_id, react_val) {
-//			var data_id = $(this).attr("data-id");
-//			var react_val = $(this).attr("data-reaction");//$('#category').val();
-
+		function send_react(data_id, react_val, reactCallback) {
 			var react_successful = false;
 			$.ajax({
 				type: "POST",
 				headers: {
 					"X-CSRFToken": csrftoken
 				},
-				url: 'memesbd/item/1/reactOn/',
+				url: `memesbd/item/${data_id}/reactOn/`,
 				data: {
-					{#'id': data_id,#}
 					'react': react_val,
 				},
 				success: function (data) {
-					alert('success');
-					react_successful=true;
+					if (data['success'] && data['id'] == data_id) {
+						reactCallback(data_id, react_val);
+					}
 				}
 
 			});
+			return react_successful;
 		}
 
+
+		function update_react_add(data_id, data_reaction) {
+			alert(data_reaction)
+
+			$("#like-details-" + data_id).html("reacted " + data_reaction + " on " + data_id);
+			$("#like-btn-emo-" + data_id).removeClass().addClass('like-btn-emo').addClass('like-btn-' + data_reaction.toLowerCase());
+			$("#like-btn-text-" + data_id).text(data_reaction).removeClass().addClass('like-btn-text').addClass('like-btn-text-' + data_reaction.toLowerCase()).addClass("active");
+
+			if (data_reaction === "Like") {
+				$("#like-emo-" + data_id).html('<span class="like-btn-like"></span>');
+			} else {
+				$("#like-emo-" + data_id).html('<span class="like-btn-like"></span><span class="like-btn-' + data_reaction.toLowerCase() + '"></span>');
+			}
+		}
+
+		function update_react_del(data_id, data_reaction) {
+			if ($(this).hasClass("active")) {
+				$("#like-btn-text-" + data_id).text("Like").removeClass().addClass('like-btn-text');
+				$("#like-btn-emo-" + data_id).removeClass().addClass('like-btn-emo').addClass("like-btn-default");
+				$("#like-emo-" + data_id).html('<span class="like-btn-like"></span>');
+				$("#like-details-" + data_id).html("Unreacted on " + data_id);
+			}
+		}
 
 		$(document).ready(function () {
 			"use strict";
 			$(".reaction").on("click", function () {   // like click
-				var data_id = $(this).attr("data-id");
+				const data_id = $(this).attr("data-id");
 				var data_reaction = $(this).attr("data-reaction");
-				$("#like-details-" + data_id).html("reacted " + data_reaction + " on " + data_id);
-				$("#like-btn-emo-" + data_id).removeClass().addClass('like-btn-emo').addClass('like-btn-' + data_reaction.toLowerCase());
-				$("#like-btn-text-" + data_id).text(data_reaction).removeClass().addClass('like-btn-text').addClass('like-btn-text-' + data_reaction.toLowerCase()).addClass("active");
-
-				if (data_reaction === "Like") {
-					$("#like-emo-" + data_id).html('<span class="like-btn-like"></span>');
-				} else {
-					$("#like-emo-" + data_id).html('<span class="like-btn-like"></span><span class="like-btn-' + data_reaction.toLowerCase() + '"></span>');
-				}
-
-				{#send_react(data_id, data_reaction);#}
+				send_react(data_id, data_reaction, update_react_add);
 			});
 			$(".like-btn-text").on("click", function () { // undo like click
-				var data_id = $(this).attr("data-id");
-				if ($(this).hasClass("active")) {
-					$("#like-btn-text-" + data_id).text("Like").removeClass().addClass('like-btn-text');
-					$("#like-btn-emo-" + data_id).removeClass().addClass('like-btn-emo').addClass("like-btn-default");
-					$("#like-emo-" + data_id).html('<span class="like-btn-like"></span>');
-					$("#like-details-" + data_id).html("Unreacted on " + data_id);
-
-				}
-				{#send_react(data_id, 'Remove');#}
+				const data_id = $(this).attr("data-id");
+				send_react(data_id, 'None', update_react_del);
 			});
 		});
 	</script>
-
-	<script>
-
-
-		$(".react-change").on('click', function (e) {
-			e.preventDefault();
-			{#alert('success');#}
-			var data_id = $(this).attr("data-id");
-			var react_val = $(this).attr("data-reaction");//$('#category').val();
-
-			$.ajax({
-				type: "POST",
-				headers: {
-					"X-CSRFToken": csrftoken
-				},
-				url: 'memesbd/item/1/reactOn/',
-				data: {
-					'id': data_id,
-					'react': react_val,
-				},
-				success: function (data) {
-					alert('success');
-					console.log(data)
-				}
-
-			});
-			console.log(data_id);
-
-
-		});
-
-	</script>
-
 {% endblock %}
