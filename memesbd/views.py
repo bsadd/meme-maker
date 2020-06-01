@@ -61,7 +61,7 @@ class AddMemeView(TemplateView):
     """
     View for uploading template
     """
-    template_name = 'memesbd/templateUpload.html'
+    template_name = 'memesbd/template_upload.html'
 
     def get(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -95,7 +95,7 @@ def editView(request, id):
     if not request.user.is_authenticated:
         return redirect(reverse('accounts:login'))
     print(request.POST)
-    st = render(request, 'memesbd/memeEdit.html',
+    st = render(request, 'memesbd/meme_edit.html',
                 context={'loggedIn': request.user.is_authenticated, 'fullLoad': request.POST.get('fromAjax') is None,
                          'post': Post.objects.get(id=id)})
     print(st)
@@ -106,7 +106,7 @@ def memeDetails(request, id):
     post = Post.objects.get(id=id)
     post.nviews += 1
     post.save()
-    return render(request, 'memesbd/memeDetails.html',
+    return render(request, 'memesbd/meme_details.html',
                   context={'loggedIn': request.user.is_authenticated, 'post': post})
 
 
@@ -120,3 +120,9 @@ def view_meme_gallery(request, *args, **kwargs):
     return render(request, 'memesbd/meme_gallery.html',
                   context={'loggedIn': request.user.is_authenticated, 'fullLoad': request.POST.get('fromAjax') is None,
                            'posts': posts})
+
+
+def update_react(request, id):
+    react = request.POST.get('react')
+    print(react + ' on ' + str(id))
+    return JsonResponse({'id': id, 'loggedIn': request.user.is_authenticated})

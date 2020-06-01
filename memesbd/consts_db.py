@@ -5,17 +5,17 @@ Contains constants/wrapper classes for database model's fields like CHOICE_FIELD
 
 class Reacts:
     __slots__ = ()
-    NONE = 0
-    UPVOTE = 1
-    DOWNVOTE = 2
-    MAX = DOWNVOTE
+    NONE, LIKE, LOVE, HAHA, WOW, SAD, ANGRY = range(0, 7)
+    MAX = ANGRY
 
-    REACT_NAMES = {0: 'NONE', 1: 'UPVOTE', 2: 'DOWNVOTE'}
-    REACT_VALUE = {'NONE': 0, 'UPVOTE': 1, 'DOWNVOTE': 2}
+    REACT_NAMES = dict(
+        [(NONE, 'NONE'), (LIKE, 'LIKE'), (LOVE, 'LOVE'), (HAHA, 'HAHA'), (WOW, 'WOW'), (SAD, 'SAD'), (ANGRY, 'ANGRY')])
+    REACT_VALUE = dict(
+        [('NONE', NONE), ('LIKE', LIKE), ('LOVE', LOVE), ('HAHA', HAHA), ('WOW', WOW), ('SAD', SAD), ('ANGRY', ANGRY)])
 
     @staticmethod
     def react_choices():
-        REACT_TYPES = ((Reacts.NONE, 'None'), (Reacts.UPVOTE, 'Up-vote'), (Reacts.DOWNVOTE, 'Down-vote'))
+        REACT_TYPES = tuple(Reacts.REACT_NAMES.items())
         return REACT_TYPES
 
     @staticmethod

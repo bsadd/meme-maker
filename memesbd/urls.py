@@ -21,7 +21,7 @@ urlpatterns = [
 
     path('memesbd/item/<int:id>/submitReview/', views.Index, name='comment-meme'),
     path('memesbd/item/<int:id>/submitRating/', views.Index, name='rate-meme'),
-    path('memesbd/item/<int:id>/reactOn/', views.Index, name='react-comment'),
+    path('memesbd/item/<int:id>/reactOn/', views.update_react, name='react'),
 
 ]
 

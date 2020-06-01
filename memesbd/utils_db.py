@@ -124,8 +124,7 @@ def insert_template_post(caption, keyword_list, image_base64, is_adult, user_id)
     """
     from memesbd.models import Post
     from memesbd.utils import trim_replace_wsp
-    user = User.objects.get(id=user_id)
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id)
     post.is_adult = is_adult
     for gen in keyword_list:
         from memesbd.models import Keyword, KeywordList
@@ -150,8 +149,7 @@ def insert_template_post_path(caption, keyword_list, image_path, is_adult, user_
     """
     from memesbd.models import Post
     from memesbd.utils import trim_replace_wsp
-    user = User.objects.get(id=user_id)
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id)
     post.is_adult = is_adult
     for gen in keyword_list:
         from memesbd.models import Keyword, KeywordList
@@ -174,10 +172,9 @@ def insert_meme_post(caption, keyword_list, image_base64, is_adult, user_id, tem
     :param template_id: id of the meme on which it had been edited on
     """
     from memesbd.models import Post
-    user = User.objects.get(id=user_id)
     template_id = Post.objects.get(id=template_id).get_template_id()
     from memesbd.utils import trim_replace_wsp
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user, template_id=template_id)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id, template_id=template_id)
     post.is_adult = is_adult
     for gen in keyword_list:
         from memesbd.models import Keyword, KeywordList
