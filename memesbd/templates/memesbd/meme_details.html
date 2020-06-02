@@ -1,210 +1,192 @@
 {% extends 'memesbd/base.html' %}
 {% load static %}
-<script src="{% static 'coreapp/js/ajax_request.js' %}"></script>
 
 {% block header %}
-    <title>{{ post.caption }} | Mememaker</title>
-    <script>
-        var csrftoken = getCookie('csrftoken');
-        $.ajaxSetup({
-            beforeSend: function (xhr, settings) {
-                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
-                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                }
-            }
-        });
+	<title>{{ post.caption }} | Mememaker</title>
+	<script src="{% static 'coreapp/js/ajax_request.js' %}"></script>
+	<script>
+		var csrftoken = getCookie('csrftoken');
+		$.ajaxSetup({
+			beforeSend: function (xhr, settings) {
+				if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+					xhr.setRequestHeader("X-CSRFToken", csrftoken);
+				}
+			}
+		});
 
-    </script>
+	</script>
 {% endblock %}
 
 {% block body-content %}
-    <!--/shop-->
+	<!--/shop-->
 
-    <div style="height: 2vh"></div>
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <img src="{{ post.image.url }}" style="max-width: 100%">
-            </div>
-            <div class="col-md-1">
-            </div>
-            <div class="col-md-5">
-                <div class="container" style="max-width: 100%;">
-                    <div class="row" style="padding: 2%">
-                        <div class="col-md-12">
-                            <h3>{{ post.caption }}</h3>
+	<div style="height: 2vh"></div>
+	<div class="container">
+		<div class="row">
+			<div class="col-md-6">
+				<img src="{{ post.image.url }}" style="max-width: 100%">
+			</div>
+			<div class="col-md-1">
+			</div>
+			<div class="col-md-5">
+				<div class="container" style="max-width: 100%;">
+					<div class="row" style="padding: 2%">
+						<div class="col-md-12">
+							<h3>{{ post.caption }}</h3>
+						</div>
 
-                        </div>
-
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-
-                        </div>
-
-                    </div>
+					</div>
+					<div class="row">
+						<div class="col-md-12"></div>
+					</div>
 
 
-                    <script>
-                        $('.rate-meme input').on('change', function () {
-                            var rate_val = $("input[type='radio'][name='rating']:checked").val();
-                            {#var csrftoken = getCookie('csrftoken');#}
+					<script>
+						$('.rate-meme input').on('change', function () {
+							var rate_val = $("input[type='radio'][name='rating']:checked").val();
+							{#var csrftoken = getCookie('csrftoken');#}
 
-                            {% if request.user.is_authenticated %}
+							{% if request.user.is_authenticated %}
 
-                                $.ajax({
-                                    type: "POST",
-                                    headers: {
-                                        "X-CSRFToken": csrftoken
-                                    },
-                                    url: 'submitRating/',
-                                    data: {
-                                        'pkg-id': {{ item.id }},
-                                        'rating': rate_val
+								$.ajax({
+									type: "POST",
+									headers: {
+										"X-CSRFToken": csrftoken
+									},
+									url: 'submitRating/',
+									data: {
+										'rating': rate_val
 
-                                    },
-                                    dataType: 'json',
-                                    success: function (data) {
+									},
+									dataType: 'json',
+									success: function (data) {
 
-                                    }
-                                });
+									}
+								});
 
-                            {% else %}
+							{% else %}
 
-                                alert('Please log in to post review');
-                            {% endif %}
-                        });
-                    </script>
-                    <div style="height: 5vh;"></div>
-                    <div class="row">
-                        <div class="col-md-12">
-	                        {% if not post.is_template_post %}
-	                        <a href="{{ post.get_absolute_edit_url }}"><button href="{{ post.get_absolute_edit_url }}" type="button" class="btn btn-primary btn-lg btn-block">Edit on this Meme</button></a>
-	                        {% endif %}
-                            <a href="{{ post.get_absolute_template_edit_url }}"><button type="button" class="btn btn-success btn-lg btn-block">Edit on its Template
-                            </button></a>
+								alert('Please log in to post review');
+							{% endif %}
+						});
+					</script>
+					<div style="height: 5vh;"></div>
+					<div class="row">
+						<div class="col-md-12">
+							{% if not post.is_template_post %}
+								<a href="{{ post.get_absolute_edit_url }}">
+									<button href="{{ post.get_absolute_edit_url }}" type="button"
+									        class="btn btn-primary btn-lg btn-block">Edit on this Meme
+									</button>
+								</a>
+							{% endif %}
+							<a href="{{ post.get_absolute_template_edit_url }}">
+								<button type="button" class="btn btn-success btn-lg btn-block">Edit on its Template
+								</button>
+							</a>
 
-                        </div>
+						</div>
 
-                    </div>
+					</div>
 
-                    <div class="row">
-                        <div class="col-md-12">
-                            <h4>#Views: {{ post.nviews }}</h4>
+					<div class="row">
+						<div class="col-md-12">
+							<h4>#Views: {{ post.nviews }}</h4>
 
-                        </div>
+						</div>
 
-                    </div>
+					</div>
 
-                </div>
+				</div>
 
 
-            </div>
-        </div>
+			</div>
+		</div>
 
-    </div>
-    <div style="height: 2vh"></div>
-    <hr>
-    <div style="">
+	</div>
+	<div style="height: 2vh"></div>
+	<hr>
+	<div style="">
 
-        <h2> Related Memes</h2>
-    </div>
-    {% include 'memesbd/related_memes.html' %}
+		<h2> Related Memes</h2>
+	</div>
+	{% include 'memesbd/related_memes.html' %}
 
 {% endblock %}
 
 {% block body-js %}
-    <!-- newsletter modal -->
-    <!-- price range (top products) -->
-    <script src="{% static '/memesbd/toys_shop/js/jquery-ui.js' %}"></script>
-    <script>
-        //<![CDATA[
-        $(window).load(function () {
-            $("#slider-range").slider({
-                range: true,
-                min: 0,
-                max: 9000,
-                values: [50, 6000],
-                slide: function (event, ui) {
-                    $("#amount").val("$" + ui.values[0] + " - $" + ui.values[1]);
-                }
-            });
-            $("#amount").val("$" + $("#slider-range").slider("values", 0) + " - $" + $("#slider-range").slider("values", 1));
+	<!-- newsletter modal -->
+	<!-- single -->
+	<script src="{% static '/memesbd/toys_shop/js/imagezoom.js' %}"></script>
+	<!-- single -->
+	<!-- script for responsive tabs -->
+	<script src="{% static '/memesbd/toys_shop/js/easy-responsive-tabs.js' %}"></script>
+	<script>
+		$(document).ready(function () {
+			$('#horizontalTab').easyResponsiveTabs({
+				type: 'default', //Types: default, vertical, accordion
+				width: 'auto', //auto or any width like 600px
+				fit: true, // 100% fit in a container
+				closed: 'accordion', // Start closed if in accordion view
+				activate: function (event) { // Callback function if tab is switched
+					var $tab = $(this);
+					var $info = $('#tabInfo');
+					var $name = $('span', $info);
+					$name.text($tab.text());
+					$info.show();
+				}
+			});
+			$('#verticalTab').easyResponsiveTabs({
+				type: 'vertical',
+				width: 'auto',
+				fit: true
+			});
+		});
+	</script>
+	<!-- FlexSlider -->
+	<script src="{% static '/memesbd/toys_shop/js/jquery.flexslider.js' %}"></script>
+	<script>
+		// Can also be used with $(document).ready()
+		$(window).load(function () {
+			$('.flexslider1').flexslider({
+				animation: "slide",
+				controlNav: "thumbnails"
+			});
+		});
+	</script>
+	<!-- //FlexSlider-->
+	<!-- start-smoth-scrolling -->
+	<script src="{% static '/memesbd/toys_shop/js/move-top.js' %}"></script>
+	<script src="{% static '/memesbd/toys_shop/js/easing.js' %}"></script>
+	<script>
+		jQuery(document).ready(function ($) {
+			$(".scroll").click(function (event) {
+				event.preventDefault();
+				$('html,body').animate({
+					scrollTop: $(this.hash).offset().top
+				}, 900);
+			});
+		});
+	</script>
+	<!-- start-smoth-scrolling -->
+	<!-- here stars scrolling icon -->
+	<script>
+		$(document).ready(function () {
 
-        }); //]]>
-    </script>
-    <!-- //price range (top products) -->
-    <!-- single -->
-    <script src="{% static '/memesbd/toys_shop/js/imagezoom.js' %}"></script>
-    <!-- single -->
-    <!-- script for responsive tabs -->
-    <script src="{% static '/memesbd/toys_shop/js/easy-responsive-tabs.js' %}"></script>
-    <script>
-        $(document).ready(function () {
-            $('#horizontalTab').easyResponsiveTabs({
-                type: 'default', //Types: default, vertical, accordion
-                width: 'auto', //auto or any width like 600px
-                fit: true, // 100% fit in a container
-                closed: 'accordion', // Start closed if in accordion view
-                activate: function (event) { // Callback function if tab is switched
-                    var $tab = $(this);
-                    var $info = $('#tabInfo');
-                    var $name = $('span', $info);
-                    $name.text($tab.text());
-                    $info.show();
-                }
-            });
-            $('#verticalTab').easyResponsiveTabs({
-                type: 'vertical',
-                width: 'auto',
-                fit: true
-            });
-        });
-    </script>
-    <!-- FlexSlider -->
-    <script src="{% static '/memesbd/toys_shop/js/jquery.flexslider.js' %}"></script>
-    <script>
-        // Can also be used with $(document).ready()
-        $(window).load(function () {
-            $('.flexslider1').flexslider({
-                animation: "slide",
-                controlNav: "thumbnails"
-            });
-        });
-    </script>
-    <!-- //FlexSlider-->
-    <!-- start-smoth-scrolling -->
-    <script src="{% static '/memesbd/toys_shop/js/move-top.js' %}"></script>
-    <script src="{% static '/memesbd/toys_shop/js/easing.js' %}"></script>
-    <script>
-        jQuery(document).ready(function ($) {
-            $(".scroll").click(function (event) {
-                event.preventDefault();
-                $('html,body').animate({
-                    scrollTop: $(this.hash).offset().top
-                }, 900);
-            });
-        });
-    </script>
-    <!-- start-smoth-scrolling -->
-    <!-- here stars scrolling icon -->
-    <script>
-        $(document).ready(function () {
-
-            var defaults = {
-                containerID: 'toTop', // fading element id
-                containerHoverID: 'toTopHover', // fading element hover id
-                scrollSpeed: 1200,
-                easingType: 'linear'
-            };
+			var defaults = {
+				containerID: 'toTop', // fading element id
+				containerHoverID: 'toTopHover', // fading element hover id
+				scrollSpeed: 1200,
+				easingType: 'linear'
+			};
 
 
-            $().UItoTop({
-                easingType: 'easeOutQuart'
-            });
+			$().UItoTop({
+				easingType: 'easeOutQuart'
+			});
 
-        });
-    </script>
-    <!-- //here ends scrolling icon -->
-    <!-- //smooth-scrolling-of-move-up -->
+		});
+	</script>
+	<!-- //here ends scrolling icon -->
+	<!-- //smooth-scrolling-of-move-up -->
 {% endblock %}
