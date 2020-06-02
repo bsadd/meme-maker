@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
+from rest_framework import routers
 from mememaker import settings
 from django.conf.urls.static import static
 
@@ -24,6 +24,10 @@ urlpatterns = [
     path(r'', include('memesbd.urls'), name='home'),
     path(r'accounts/', include('accounts.urls'), name="accounts"),
     path('accounts/', include('allauth.urls')),
+
+    path('api/', include('coreapp.urls'), name='api'),
+    # path('', include(router.urls)),
+    # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
 
 if settings.DEBUG:

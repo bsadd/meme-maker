@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 
     'tagconstants',  # template const.
 
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -220,5 +221,5 @@ SITE_ID = 4
 # Template Constant
 TAG_CONSTANTS = {
     'Website_Name': 'MemesBD',
-    'MAX_IMGSIZE': 2,
+    'MAX_IMGSIZE': 10,
 }
