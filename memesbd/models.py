@@ -42,9 +42,13 @@ class Post(models.Model):
 
     approval_details = models.CharField(max_length=200, verbose_name="Approval Verdict Reason", default='')
 
+    time = models.DateTimeField(auto_now_add=True)
+
+    moderator = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='moderator')
+
     template = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author')
 
     keywords = models.ManyToManyField(Keyword, through='memesbd.KeywordList', related_name='post_keywords')
 

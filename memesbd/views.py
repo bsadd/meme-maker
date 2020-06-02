@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views.generic import TemplateView
 
-from coreapp.decorators import ajax_login_required
+from coreapp.decorators import ajax_login_required, moderator_login_required
 from memesbd import utils_db
 from memesbd.models import *
 
@@ -12,6 +12,7 @@ from django.views.generic import TemplateView
 from django.urls import reverse_lazy
 
 
+@ajax_login_required
 def upload_meme_image(request):
     """
     :param request: request with edited image over a template
@@ -29,6 +30,7 @@ def upload_meme_image(request):
     return JsonResponse({'id': post.id, 'loggedIn': request.user.is_authenticated})
 
 
+@ajax_login_required
 def upload_template_image(request):
     """
     :param request: request a new template image
@@ -107,7 +109,7 @@ def memeDetails(request, id):
 
 
 def view_meme_gallery(request, *args, **kwargs):
-    posts = Post.objects.get_queryset().order_by('id')
+    posts = Post.objects.filter(approval_status=ApprovalStatus.APPROVED)
     from django.core.paginator import Paginator
     paginator = Paginator(posts, 3)
     page = request.GET.get("page")
@@ -129,3 +131,44 @@ def update_react(request, id):
                 {'success': True, 'id': id, 'react': Reacts.REACT_NAMES[post_react.react],
                  'loggedIn': request.user.is_authenticated})
     return JsonResponse({'success': False, 'loggedIn': request.user.is_authenticated})
+
+
+@login_required
+def approved_posts(request):
+    return render(request, 'memesbd/user_posts.html',
+                  context={'posts': Post.objects.filter(author=request.user, approval_status=ApprovalStatus.APPROVED)})
+
+
+@login_required
+def pending_posts(request):
+    return render(request, 'memesbd/user_posts.html',
+                  context={'posts': Post.objects.filter(author=request.user, approval_status=ApprovalStatus.PENDING)})
+
+
+@login_required
+@moderator_login_required
+def pending_posts_moderator(request):
+    return render(request, 'memesbd/pending_posts.html',
+                  context={'posts': Post.objects.filter(approval_status=ApprovalStatus.PENDING)})
+
+
+@login_required
+@moderator_login_required
+def approve_post_moderator(request, id):
+    post = Post.objects.get(id=id)
+    if post.approval_status == ApprovalStatus.PENDING:
+        post.moderator = request.user
+        post.approval_status = ApprovalStatus.APPROVED
+        post.save()
+    return redirect(reverse('memesbd:pending-posts-moderator'))
+
+
+@login_required
+@moderator_login_required
+def delete_post_moderator(request, id):
+    post = Post.objects.get(id=id)
+    if post.approval_status == ApprovalStatus.PENDING:
+        post.moderator = request.user
+        post.approval_status = ApprovalStatus.REJECTED
+        post.save()
+    return redirect(reverse('memesbd:pending-posts-moderator'))

@@ -25,7 +25,7 @@
                     <li class='selected' id='login-form'>Login</li>
                     <li id='register-form'>Register</li>
                 </ul>
-                <form class='login-form selected' method="POST" action="{% url 'accounts:login' %}">
+                <form class='login-form selected' method="POST">
                     {% csrf_token %}
 
                     <span class='title'>Please Enter Your Login Details:<br><br></span>
