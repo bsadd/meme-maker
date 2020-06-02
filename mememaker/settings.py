@@ -44,8 +44,10 @@ INSTALLED_APPS = [
     'allauth',
     'allauth.account',
     'allauth.socialaccount',
+
     'allauth.socialaccount.providers.facebook',
     'allauth.socialaccount.providers.google',
+
     'sslserver',
 
     'tagconstants',  # template const.
@@ -127,7 +129,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Dhaka'
 
 USE_I18N = True
 
@@ -165,31 +167,40 @@ AUTHENTICATION_BACKENDS = (
     "allauth.account.auth_backends.AuthenticationBackend",
 )
 
-SOCIALACCOUNT_PROVIDERS = \
-    {'facebook':
-         {'METHOD': 'oauth2',
-          'SCOPE': ['email', 'public_profile', 'user_friends'],
-          'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
-          'FIELDS': [
-              'id',
-              'email',
-              'name',
-              'first_name',
-              'last_name',
-              'verified',
-              'locale',
-              'timezone',
-              'link',
-              'gender',
-              'updated_time'],
-          'EXCHANGE_TOKEN': True,
-          'LOCALE_FUNC': lambda request: 'kr_KR',
-          'VERIFIED_EMAIL': False,
-          'VERSION': 'v2.4'}}
+# SOCIALACCOUNT_AUTO_SIGNUP = True
+# SOCIALACCOUNT_PROVIDERS = \
+#     {'facebook':
+#          {'METHOD': 'oauth2',
+#           'SCOPE': ['email', 'public_profile', 'user_friends'],
+#           'AUTH_PARAMS': {'auth_type': 'reauthenticate'},
+#           'FIELDS': [
+#               'id',
+#               'email',
+#               'name',
+#               'first_name',
+#               'last_name',
+#               'verified',
+#               'locale',
+#               'timezone',
+#               'link',
+#               'gender',
+#               'updated_time'],
+#           'EXCHANGE_TOKEN': True,
+#           'LOCALE_FUNC': lambda request: 'kr_KR',
+#           'VERIFIED_EMAIL': False,
+#           'VERSION': 'v2.4'}}
 
+# # facebook
+# SOCIAL_AUTH_FACEBOOK_KEY = '244278026819821'  # App ID
+# SOCIAL_AUTH_FACEBOOK_SECRET = '8629627ca8defaa3199d7199c19483b2'  # app key
+# ACCOUNT_EMAIL_REQUIRED = False
+# ACCOUNT_USERNAME_REQURIED = True
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+#
 AUTH_USER_MODEL = 'accounts.User'
 
 LOGIN_REDIRECT_URL = '/'
+
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -207,6 +218,6 @@ SITE_ID = 4
 
 # Template Constant
 TAG_CONSTANTS = {
-    'Website_Name': 'MemeMaker',
+    'Website_Name': 'MemesBD',
     'MAX_IMGSIZE': 2,
 }
