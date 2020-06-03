@@ -1,4 +1,6 @@
+from django.db.models import Count
 from rest_framework import serializers
+from rest_framework.fields import Field
 
 from memesbd.models import *
 from accounts.serializers import UserSerializer
@@ -16,16 +18,11 @@ class KeywordSerializer(serializers.ModelSerializer):
 class PostReactSerializer(serializers.ModelSerializer):
     user = UserSerializer()
 
-    # id = serializers.ReadOnlyField(source='post.id')
-
-    # re = serializers.Field(source='post.name')
+    react = serializers.CharField(source='react_name')
 
     class Meta:
         model = PostReact
         fields = ['react', 'user']
-
-    # def to_representation(self, value):
-    #     return value
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -36,10 +33,22 @@ class PostSerializer(serializers.ModelSerializer):
     reacts = PostReactSerializer(source='postreact_set', many=True)
     # serializers.PrimaryKeyRelatedField(queryset=KeywordList.objects.all(), many=True, read_only=True)
 
+    is_template = serializers.CharField(source='is_template_post')
+
+    url_view = serializers.CharField(source='get_absolute_url')
+    url_edit = serializers.CharField(source='get_absolute_edit_url')
+    url_template = serializers.CharField(source='get_absolute_template_edit_url')
+
+    react_count = serializers.SerializerMethodField()
+
     class Meta:
         model = Post
-        fields = ['id', 'caption', 'image', 'nviews', 'is_adult',
-                  'is_violent', 'configuration_head', 'configuration_over', 'configuration_tail', 'approval_status',
-                  'approval_details', 'time', 'moderator', 'template', 'author', 'keywords', 'reacts']  # , 'comments'
-        # [f.name for f in Post._meta.get_fields()]
-        # ['id','caption','image_url','nviews','is_adult','is_adult']
+        fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent',
+                  'configuration_head', 'configuration_over', 'configuration_tail',
+                  'approval_status', 'approval_details', 'time', 'moderator',
+                  'template', 'is_template', 'author', 'keywords', 'reacts', 'react_count',
+                  'url_view', 'url_edit', 'url_template']  # , 'comments'
+
+    def get_react_count(self, post):
+        from memesbd.utils_db import get_react_count_post
+        return get_react_count_post(post.id)

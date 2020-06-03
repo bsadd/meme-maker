@@ -90,6 +90,9 @@ class Post(models.Model):
         from PIL import Image
         return Image.open(self.image).size
 
+    def is_active(self):
+        return self.approval_status == ApprovalStatus.APPROVED
+
 
 class KeywordList(models.Model):
     """
@@ -120,6 +123,9 @@ class PostReact(models.Model):
         verbose_name = "Post React"
         verbose_name_plural = "Post Reacts"
         unique_together = [['post', 'user']]
+
+    def react_name(self):
+        return Reacts.REACT_NAMES[self.react]
 
     def get_absolute_url(self):
         return reverse("memesbd:PostReact", kwargs={"id": self.pk})

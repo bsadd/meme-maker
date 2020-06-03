@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     'tagconstants',  # template const.
 
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth',
 ]
 
 MIDDLEWARE = [
@@ -158,9 +160,13 @@ SASS_PROCESSOR_ROOT = os.path.join(BASE_DIR, 'static')
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    # ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # 'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    )
 }
 
 AUTHENTICATION_BACKENDS = (
@@ -201,6 +207,7 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 AUTH_USER_MODEL = 'accounts.User'
 
 from django.urls import reverse_lazy
+
 LOGIN_REDIRECT_URL = reverse_lazy('accounts:login')
 
 STATIC_URL = '/static/'
