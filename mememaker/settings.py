@@ -140,9 +140,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
 STATIC_URL = '/static/'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
@@ -163,9 +160,10 @@ REST_FRAMEWORK = {
     # 'DEFAULT_PERMISSION_CLASSES': [
     #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     # ],
+    # 'DEFAULT_PAGINATION_CLASS': 'apps.core.pagination.StandardResultsSetPagination',
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        # 'rest_framework.authentication.TokenAuthentication',
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
     )
 }
 
@@ -205,10 +203,6 @@ AUTHENTICATION_BACKENDS = (
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 #
 AUTH_USER_MODEL = 'accounts.User'
-
-from django.urls import reverse_lazy
-
-LOGIN_REDIRECT_URL = reverse_lazy('accounts:login')
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'

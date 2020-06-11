@@ -1,5 +1,6 @@
 from functools import wraps
 from django.core.exceptions import PermissionDenied
+from rest_framework import exceptions
 
 
 def ajax_login_required(view):
@@ -22,16 +23,24 @@ def moderator_login_required(view):
     return wrapper
 
 
-from rest_framework import exceptions
-
-
 def api_auth_required(view):
     @wraps(view)
     def wrapper(request, *args, **kwargs):
         print(request.user)
         if request.user.is_authenticated:
             return view(request, *args, **kwargs)
-        raise PermissionDenied
+        raise exceptions.NotAuthenticated
+
+    return wrapper
+
+
+def api_moderator_required(view):
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        print(request.user)
+        if request.user.is_authenticated and (request.user.is_moderator or request.user.is_superuser):
+            return view(request, *args, **kwargs)
+        raise exceptions.NotAuthenticated
 
     return wrapper
 
@@ -44,7 +53,7 @@ def route_permissions(permission):
             if self.request.user.has_perm(permission):
                 return drf_custom_method(self, *args, **kwargs)
             else:
-                raise PermissionDenied()
+                raise exceptions.PermissionDenied
 
         return _decorator
 

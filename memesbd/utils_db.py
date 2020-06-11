@@ -46,6 +46,9 @@ def update_react_post(user, post_id, react):
     from memesbd.models import PostReact
     from memesbd.models import Post
     post = Post.objects.get(id=post_id)
+    if post.approval_status != ApprovalStatus.APPROVED:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
     post_react, _ = PostReact.objects.get_or_create(post=post, user=user)
     post_react.react = react
     post_react.save()

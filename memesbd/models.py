@@ -114,10 +114,12 @@ class PostReact(models.Model):
     """
     Like, Dislike reacts of viewers on a post
     """
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE,
+                             validators=[lambda post: post.approval_status == ApprovalStatus.APPROVED])
+    user = models.ForeignKey(User, on_delete=models.CASCADE, validators=[lambda user: not user.is_suspended])
 
-    react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE)
+    react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE,
+                                validators=[lambda react: Reacts.is_valid_react(react)])
 
     class Meta:
         verbose_name = "Post React"

@@ -23,6 +23,7 @@ class PostReactSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostReact
         fields = ['react', 'user']
+        read_only_fields = ('user',)
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -48,6 +49,8 @@ class PostSerializer(serializers.ModelSerializer):
                   'approval_status', 'approval_details', 'time', 'moderator',
                   'template', 'is_template', 'author', 'keywords', 'reacts', 'react_count',
                   'url_view', 'url_edit', 'url_template']  # , 'comments'
+        read_only_fields = ('id', 'nviews', 'approval_status', 'approval_details', 'moderator',
+                            'is_template', 'author', 'reacts', 'react_count', 'url_view', 'url_edit', 'url_template')
 
     def get_react_count(self, post):
         from memesbd.utils_db import get_react_count_post
