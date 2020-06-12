@@ -6,7 +6,7 @@
 			<img class="card-img-top" src="{{ post.image.url }}" alt="Card image cap">
 			<div class="card-body">
 				<a href="{{ post.get_absolute_url }}" class="card-link">{{ post.caption }}</a>
-				<p class="card-text">{{ post.time }}</p>
+				<p class="card-text">{{ post.uploaded_at }}</p>
 			</div>
 		</div>
 	{% endfor %}

@@ -4,6 +4,8 @@ from django.urls import reverse
 
 from accounts.models import User
 from memesbd.consts_db import Reacts, ApprovalStatus
+from memesbd.managers import *
+from memesbd import validators
 
 
 class Keyword(models.Model):
@@ -37,12 +39,12 @@ class Post(models.Model):
     configuration_over = models.CharField(max_length=1000, default='', verbose_name='Text-Boxes on image')
     configuration_tail = models.CharField(max_length=100, default='', verbose_name='Text-Boxes below of image')
 
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
     approval_status = models.CharField(max_length=2, verbose_name="Approval Status",
                                        choices=ApprovalStatus.approval_status(), default=ApprovalStatus.PENDING)
-
     approval_details = models.CharField(max_length=200, verbose_name="Approval Verdict Reason", default='')
-
-    time = models.DateTimeField(auto_now_add=True)
+    approval_at = models.DateTimeField(null=True, blank=True)
 
     moderator = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='moderator')
 
@@ -55,9 +57,15 @@ class Post(models.Model):
     reacts = models.ManyToManyField(User, through='memesbd.PostReact', related_name='post_react_user')
     comments = models.ManyToManyField(User, through='memesbd.PostComment', related_name='post_comment_user')
 
+    objects = models.Manager()
+    approved = ApprovedPostManager()
+    pending = PendingPostManager()
+
     class Meta:
         verbose_name = "Post"
         verbose_name_plural = "Posts"
+        # default_manager_name = models.Manager()
+        # base_manager_name = models.Manager()
 
     def __str__(self):
         return "%s %s" % (self.caption, self.author)
@@ -79,10 +87,6 @@ class Post(models.Model):
 
     def is_template_post(self):
         return self.template is None
-
-    def related_posts(self):
-        from memesbd import utils_db
-        return utils_db.get_related_posts(self.id, self)
 
     def image_shape(self):
         if self.image is None:
@@ -114,12 +118,12 @@ class PostReact(models.Model):
     """
     Like, Dislike reacts of viewers on a post
     """
-    post = models.ForeignKey(Post, on_delete=models.CASCADE,
-                             validators=[lambda post: post.approval_status == ApprovalStatus.APPROVED])
-    user = models.ForeignKey(User, on_delete=models.CASCADE, validators=[lambda user: not user.is_suspended])
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)  # , validators=[__is_approved_post]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # , validators=[__is_allowed_user]
 
     react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE,
-                                validators=[lambda react: Reacts.is_valid_react(react)])
+                                validators=[validators.is_valid_react])
 
     class Meta:
         verbose_name = "Post React"

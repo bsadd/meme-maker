@@ -25,10 +25,10 @@ urlpatterns = [
     path(r'accounts/', include('accounts.urls'), name="accounts"),
     path('accounts/', include('allauth.urls')),
 
-    path('api/', include('coreapp.urls'), name='api'),
-    path(r'rest-auth/', include('rest_auth.urls')),
-    path(r'rest-auth/registration/', include('rest_auth.registration.urls')),
-    # path('', include(router.urls)),
+    path('api/', include(('coreapp.urls', 'coreapp'), namespace='api')),
+    path(r'rest-auth/', include(('rest_auth.urls', 'rest_auth'), namespace='rest-auth')),  # rest_login
+    path(r'rest-auth/registration/', include(('rest_auth.registration.urls', 'rest_auth'),
+                                             namespace='rest-auth-registration')),
     # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]
 
