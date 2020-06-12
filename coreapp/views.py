@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import exceptions
 
 from coreapp.decorators import *
+from coreapp.permissions import IsModerator
 from memesbd import utils_db
 from memesbd.models import *
 from memesbd.serializers import *
@@ -32,6 +33,7 @@ class PostViewSet(viewsets.ModelViewSet):
     }
     default_serializer_class = PostSerializer  # default serializer
     pagination_class = StandardResultsSetPagination
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     queryset = Post.approved.order_by('id')
 
@@ -63,9 +65,8 @@ class PostViewSet(viewsets.ModelViewSet):
         except (ValidationError, KeyError):
             raise exceptions.ValidationError
 
-    @action(detail=True, methods=['POST'],
+    @action(detail=True, methods=['POST'], permission_classes=[IsModerator],
             url_path='approval', url_name='approval')
-    @method_decorator(moderator_login_required)
     def approval(self, request, pk):
         try:
             post = Post.objects.get(id=pk)
@@ -97,9 +98,8 @@ class PostViewSet(viewsets.ModelViewSet):
         except Post.DoesNotExist:
             raise exceptions.NotFound
 
-    @action(detail=False, methods=['GET'],
+    @action(detail=False, methods=['GET'], permission_classes=[IsModerator],
             url_path='pending', url_name='pending-posts')
-    @method_decorator(moderator_login_required)
     def pending(self, request):
         posts = Post.objects.filter(approval_status=ApprovalStatus.PENDING)
         serializer = PostSerializer(posts, many=True)
