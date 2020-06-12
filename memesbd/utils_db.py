@@ -126,9 +126,9 @@ def get_related_posts(post_id, post=None):
     if post is None:
         post = Post.objects.get(id=post_id)
     if post.is_template_post():
-        return Post.objects.filter(template=post)
+        return Post.approved.filter(template=post)
     else:
-        return Post.objects.exclude(id=post.id).filter(template=post.template)
+        return Post.approved.exclude(id=post.id).filter(template=post.template)
 
 
 #  ----------------------- Insert utils -------------------------

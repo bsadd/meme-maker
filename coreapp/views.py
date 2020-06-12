@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.utils import timezone
 from django.utils.decorators import method_decorator
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
@@ -8,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework import exceptions
 
 from coreapp.decorators import *
+from memesbd import utils_db
 from memesbd.models import *
 from memesbd.serializers import *
 
@@ -23,7 +25,7 @@ class PostViewSet(viewsets.ModelViewSet):
     API endpoint that allows users to be viewed or edited.
     TODO: validation using models
     """
-    search_fields = ['caption', 'author__username']  # , 'author'
+    search_fields = ['caption', 'author__username', 'keywordlist__keyword__name']
     filter_backends = (filters.SearchFilter,)
     serializer_classes = {
         'react': PostReactSerializer,
@@ -31,16 +33,15 @@ class PostViewSet(viewsets.ModelViewSet):
     default_serializer_class = PostSerializer  # default serializer
     pagination_class = StandardResultsSetPagination
 
+    queryset = Post.approved.order_by('id')
+
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
-    queryset = Post.objects.filter(approval_status=ApprovalStatus.APPROVED).order_by('id')
-
-    # serializer_class = PostSerializer
-
-    @action(detail=True, methods=['GET', 'POST', 'PUT', 'DELETE'])
-    @method_decorator(api_auth_required)
+    @action(detail=True, methods=['GET', 'POST', 'PUT', 'DELETE'], permission_classes=[permissions.IsAuthenticated],
+            url_path='react', url_name='react')
     def react(self, request, pk):
+        """post/1/react"""
         try:
             react = Reacts.NONE
             if request.method == 'GET':
@@ -54,7 +55,7 @@ class PostViewSet(viewsets.ModelViewSet):
                 react = Reacts.REACT_VALUE[react_name.upper()]
             from memesbd.utils_db import update_react_post
             post_react = update_react_post(user=request.user, post_id=pk, react=react)
-            return Response(PostReactSerializer(post_react).data, status=status.HTTP_202_ACCEPTED)
+            return Response(PostReactSerializer(post_react).data, status=status.HTTP_200_OK)
         except Post.DoesNotExist:
             raise exceptions.NotFound(detail="No such post exists with this id")
         except PostReact.DoesNotExist:
@@ -62,37 +63,54 @@ class PostViewSet(viewsets.ModelViewSet):
         except (ValidationError, KeyError):
             raise exceptions.ValidationError
 
-    @action(detail=True, methods=['POST'])
+    @action(detail=True, methods=['POST'],
+            url_path='approval', url_name='approval')
     @method_decorator(moderator_login_required)
-    def approve(self, request, pk):
+    def approval(self, request, pk):
         try:
             post = Post.objects.get(id=pk)
-            # if 'set' not in request.GET:
-            #     raise exceptions.NotAcceptable(detail="'set' field not submitted")
-            # is_approved = bool(request.GET['set'])
-            # print(is_approved)
-            if post.approval_status == ApprovalStatus.APPROVED:
+            approval_status = str(request.data['approval_status']).lower()
+            if approval_status not in ['approve', 'reject']:
+                raise exceptions.ValidationError(detail="Invalid 'approval_status'")
+            elif post.approval_status == ApprovalStatus.APPROVED and approval_status == 'approve':
                 raise exceptions.NotAcceptable(detail="Already approved")
-            post.approval_status = ApprovalStatus.APPROVED
-            post.moderator = request.user
-            post.save()
-            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+            elif post.approval_status == ApprovalStatus.REJECTED and approval_status == 'reject':
+                raise exceptions.NotAcceptable(detail="Already rejected")
+            else:
+                post.approval_status = ApprovalStatus.APPROVED if approval_status == 'approve' else ApprovalStatus.REJECTED
+                post.moderator = request.user
+                post.approval_at = timezone.now()
+                post.save()
+                return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+        except Post.DoesNotExist:
+            raise exceptions.NotFound
+        except KeyError:
+            raise exceptions.NotAcceptable(detail="'approval_status' field must be provided")
+
+    @action(detail=True, methods=['GET'],
+            url_path='related', url_name='related-posts')
+    def related(self, request, pk):
+        try:
+            posts = utils_db.get_related_posts(post_id=pk)
+            serializer = PostSerializer(posts, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         except Post.DoesNotExist:
             raise exceptions.NotFound
 
-    @action(detail=True, methods=['POST'])
+    @action(detail=False, methods=['GET'],
+            url_path='pending', url_name='pending-posts')
     @method_decorator(moderator_login_required)
-    def reject(self, request, pk):
-        try:
-            post = Post.objects.get(id=pk)
-            if post.approval_status == ApprovalStatus.APPROVED:
-                raise exceptions.NotAcceptable(detail="Already rejected")
-            post.approval_status = ApprovalStatus.REJECTED
-            post.moderator = request.user
-            post.save()
-            return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
-        except Post.DoesNotExist:
-            raise exceptions.NotFound
+    def pending(self, request):
+        posts = Post.objects.filter(approval_status=ApprovalStatus.PENDING)
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
+            url_path='my-posts', url_name='my-posts')
+    def my_posts(self, request):
+        posts = Post.objects.filter(author=request.user)
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class KeywordViewSet(viewsets.ModelViewSet):
@@ -109,3 +127,8 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
+            url_path='current', url_name='current')
+    def current_user(self, request):
+        return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
