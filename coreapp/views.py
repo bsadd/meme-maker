@@ -40,31 +40,6 @@ class PostViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.default_serializer_class)
 
-    @action(detail=True, methods=['GET', 'POST', 'PUT', 'DELETE'], permission_classes=[permissions.IsAuthenticated],
-            url_path='react', url_name='react')
-    def react(self, request, pk):
-        """post/1/react"""
-        try:
-            react = Reacts.NONE
-            if request.method == 'GET':
-                return Response(
-                    PostReactSerializer(PostReact.objects.get(post=Post.objects.get(id=pk), user=request.user)).data,
-                    status=status.HTTP_200_OK)
-            if request.method != 'DELETE':
-                react_name = str(request.data['react'])
-                if react_name is None or react_name == '':
-                    raise exceptions.ValidationError(detail="Not a valid react")
-                react = Reacts.REACT_VALUE[react_name.upper()]
-            from memesbd.utils_db import update_react_post
-            post_react = update_react_post(user=request.user, post_id=pk, react=react)
-            return Response(PostReactSerializer(post_react).data, status=status.HTTP_200_OK)
-        except Post.DoesNotExist:
-            raise exceptions.NotFound(detail="No such post exists with this id")
-        except PostReact.DoesNotExist:
-            raise exceptions.NotFound(detail="No react on the post from this user")
-        except (ValidationError, KeyError):
-            raise exceptions.ValidationError
-
     @action(detail=True, methods=['POST'], permission_classes=[IsModerator],
             url_path='approval', url_name='approval')
     def approval(self, request, pk):
@@ -132,3 +107,56 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path='current', url_name='current')
     def current_user(self, request):
         return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
+
+
+class PostReactViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint that allows users to be viewed or edited.
+    """
+    queryset = PostReact.objects.filter(post__approval_status=ApprovalStatus.APPROVED)
+    serializer_class = PostReactSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+
+    # lookup_field = 'post__id'
+
+    def get_queryset(self):
+        return PostReact.objects.filter(post_id=self.kwargs['post_pk'], post__approval_status=ApprovalStatus.APPROVED)
+
+    @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
+            url_path='user', url_name='user')
+    def user(self, request, post_pk=None):
+        """post/1/react/user
+        current user's react only
+        """
+        try:
+            '''
+            TODO: should check post existence?
+            '''
+            post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
+            return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user)).data,
+                            status=status.HTTP_200_OK)
+        except Post.DoesNotExist:
+            raise exceptions.NotFound(detail="No such react-able post exists with this id")
+        except PostReact.DoesNotExist:
+            raise exceptions.NotFound(detail="No react on the post from this user")
+
+    def create(self, request, *args, **kwargs):
+        post = Post.objects.get(id=kwargs['post_pk'])#, approval_status=ApprovalStatus.APPROVED
+        react = str(request.data['react']).upper()
+        # request.data = {'react': react, 'post': post.id, 'user': request.user.id}
+        return super().create(request, args, kwargs)
+        # try:
+        #     post = Post.objects.get(id=kwargs['post_pk'], approval_status=ApprovalStatus.APPROVED)
+        #     react = str(request.data['react']).upper()
+        #     data = {'react': react, 'post': post.id, 'user': request.user.id}
+        #     serializer = PostReactSerializer(data=data)
+        #     if serializer.is_valid():
+        #         serializer.save()
+        #         return Response(serializer.data, status=status.HTTP_200_OK)
+        #     # react = PostReact(post=post, react=react)
+        #     # return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user)).data,
+        #     #                 status=status.HTTP_200_OK)
+        # except Post.DoesNotExist:
+        #     raise exceptions.NotFound(detail="No such react-able post exists with this id")
+        # except ValidationError:
+        #     raise exceptions.ValidationError
