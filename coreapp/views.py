@@ -25,20 +25,15 @@ class PostViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     TODO: validation using models
+    TODO: enforce author edit only
     """
     search_fields = ['caption', 'author__username', 'keywordlist__keyword__name']
     filter_backends = (filters.SearchFilter,)
-    serializer_classes = {
-        'react': PostReactSerializer,
-    }
-    default_serializer_class = PostSerializer  # default serializer
+    serializer_class = PostSerializer  # default serializer
     pagination_class = StandardResultsSetPagination
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     queryset = Post.approved.order_by('id')
-
-    def get_serializer_class(self):
-        return self.serializer_classes.get(self.action, self.default_serializer_class)
 
     @action(detail=True, methods=['POST'], permission_classes=[IsModerator],
             url_path='approval', url_name='approval')

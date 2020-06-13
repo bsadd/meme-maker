@@ -4,7 +4,7 @@ Contains constants/wrapper classes for database model's fields like CHOICE_FIELD
 
 
 class Reacts:
-    __slots__ = ()
+    """TODO: convert to enum"""
     NONE, LIKE, LOVE, HAHA, WOW, SAD, ANGRY = range(0, 7)
     __MAX = ANGRY
 
