@@ -5,6 +5,7 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework import permissions
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework import exceptions
 
@@ -40,15 +41,15 @@ class PostViewSet(viewsets.ModelViewSet):
     def approval(self, request, pk):
         try:
             post = Post.objects.get(id=pk)
-            approval_status = str(request.data['approval_status']).lower()
-            if approval_status not in ['approve', 'reject']:
+            approval_status = str(request.data['approval_status']).upper()
+            if approval_status not in ['APPROVE', 'REJECT']:
                 raise exceptions.ValidationError(detail="Invalid 'approval_status'")
-            elif post.approval_status == ApprovalStatus.APPROVED and approval_status == 'approve':
+            elif post.approval_status == ApprovalStatus.APPROVED and approval_status == 'APPROVE':
                 raise exceptions.NotAcceptable(detail="Already approved")
-            elif post.approval_status == ApprovalStatus.REJECTED and approval_status == 'reject':
+            elif post.approval_status == ApprovalStatus.REJECTED and approval_status == 'REJECT':
                 raise exceptions.NotAcceptable(detail="Already rejected")
             else:
-                post.approval_status = ApprovalStatus.APPROVED if approval_status == 'approve' else ApprovalStatus.REJECTED
+                post.approval_status = ApprovalStatus.APPROVED if approval_status == 'APPROVE' else ApprovalStatus.REJECTED
                 post.moderator = request.user
                 post.approval_at = timezone.now()
                 post.save()
@@ -85,10 +86,12 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class KeywordViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    API endpoint that allows keywords to be viewed or created but not to be modified.
     """
     queryset = Keyword.objects.all()
     serializer_class = KeywordSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    # http_method_names = ('GET', 'POST',)
 
 
 class UserViewSet(viewsets.ModelViewSet):

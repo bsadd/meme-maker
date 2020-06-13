@@ -1,35 +1,75 @@
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.authtoken.models import Token
-from rest_framework.test import APITestCase, APIClient
+from django.conf import settings
+from rest_framework.test import APITestCase
+from django.core.files.uploadedfile import SimpleUploadedFile
 
 from accounts.models import User
+from memesbd.consts_db import ApprovalStatus
+from memesbd.models import Post
+
+from PIL import Image
+import tempfile
+import io
+import base64
 
 
 class PostTests(APITestCase):
     def setUp(self):
-        self.admin = User.objects.create_user(username='admin', password='admin', email='admin@localhost')
+        settings.MEDIA_ROOT = tempfile.mkdtemp()
+        self.admin = User.objects.create_superuser(username='admin', password='admin', email='admin@localhost')
         self.moderator = User.objects.create_user(username='moderator', password='moderator', email='admin@localhost')
+        self.moderator.is_moderator = True
+        self.moderator.save()
         self.key_admin = Token.objects.create(user=self.admin).key
         self.key_moderator = Token.objects.create(user=self.moderator).key
 
         url = reverse('rest-auth-registration:rest_register')
         self.keys = []
         users = [
-            User(username='user1', password='Xy12Pq341'),
-            User(username='user2', password='Xy12Pq342'),
-            User(username='user3', password='Xy12Pq343')
+            User(username='user0', password='Xy12Pq341'),
+            User(username='user1', password='Xy12Pq342'),
+            User(username='user2', password='Xy12Pq343')
         ]
         for user in users:
             response = self.client.post(url, data={'username': user.username, 'password1': user.password,
                                                    'password2': user.password}, format='json')
             self.keys.append(str(response.data['key']))
 
-    def test_create(self):
+        self.tmp_file = SimpleUploadedFile("file.jpg", b"file_content", content_type="image/jpg")
+
+        self.post_unapproved = Post.objects.create(caption='unapproved_post',
+                                                   author=User.objects.get(username='user2'))
+
+    def generate_photo_file(self):
+        file = io.BytesIO()
+        image = Image.new('RGBA', size=(4096, 2160), color=(155, 170, 150))
+        image.save(file, 'png')
+        file.name = 'test.png'
+        file.seek(0)
+        return file
+
+    def test_new_create(self):
         """
         Ensure we can create a new post object.
+        TODO: file upload support
         """
-        pass
+        ## user0
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-list')
+        payload = {'caption': 'new_post',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['author']['username'], 'user0')
+        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertTrue(
+            all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
 
     def test_update(self):
         """
@@ -49,8 +89,57 @@ class PostTests(APITestCase):
         """
         pass
 
-    def test_approve(self):
+    def test_approval(self):
         """
         Ensure only moderators can approve/reject a post object
         """
-        pass
+        # initially pending & hence cannot get the post
+        url = reverse('api:post-detail', args=[self.post_unapproved.id])
+        self.assertEqual(self.post_unapproved.approval_status, ApprovalStatus.PENDING)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # normal user cannot approve the post
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])
+        url = reverse('api:post-approval', args=[self.post_unapproved.id])
+        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+        # moderator approves the post
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
+        url = reverse('api:post-approval', args=[self.post_unapproved.id])
+        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['approval_status'], 'APPROVED')
+
+        # moderator tries to approve the already approved post
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
+        url = reverse('api:post-approval', args=[self.post_unapproved.id])
+        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+        # post is accessible after being approved
+        self.client.credentials(HTTP_AUTHORIZATION='')
+        url = reverse('api:post-detail', args=[self.post_unapproved.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['approval_status'], 'APPROVED')
+
+        # admin rejects the post
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_admin)
+        url = reverse('api:post-approval', args=[self.post_unapproved.id])
+        response = self.client.post(url, data={'approval_status': 'REJECT'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['approval_status'], 'REJECTED')
+
+        # post is not accessible after being rejected
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])
+        url = reverse('api:post-detail', args=[self.post_unapproved.id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+        # moderator tries to reject the already rejected post
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
+        url = reverse('api:post-approval', args=[self.post_unapproved.id])
+        response = self.client.post(url, data={'approval_status': 'REJECT'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)

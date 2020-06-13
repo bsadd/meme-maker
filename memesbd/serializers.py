@@ -1,4 +1,6 @@
+from django.db import transaction
 from django.db.models import Count
+from drf_extra_fields import fields as extra_fields
 from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
 from rest_framework import serializers
 from rest_framework.fields import Field
@@ -23,10 +25,10 @@ class ChoiceField(serializers.ChoiceField):
 class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
     class Meta:
         model = Keyword
-        fields = '__all__'
+        fields = ('name',)  # '__all__'
 
-    def to_representation(self, value):
-        return value.name
+    # def to_representation(self, value):
+    #     return value.name
 
 
 class PostReactSerializer(serializers.ModelSerializer):
@@ -48,11 +50,12 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     author = UserSerializer(default=serializers.CurrentUserDefault())
     approval_status = ChoiceField(choices=ApprovalStatus.approval_status(), read_only=True)
     moderator = UserSerializer(read_only=True)
-    keywords = KeywordSerializer(many=True)
+    keywords = KeywordSerializer(many=True, required=False)
+    image = extra_fields.HybridImageField()  # image file / base64
 
     # reacts = PostReactSerializer(source='postreact_set', many=True)
 
-    is_template = serializers.CharField(source='is_template_post', required=False)
+    is_template = serializers.CharField(source='is_template_post', read_only=True)
 
     react_count = serializers.SerializerMethodField()
 
@@ -66,16 +69,21 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         read_only_fields = ('uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {
             'caption': {'required': True},
+            'image': {'required': True},
         }
 
     def get_react_count(self, post):
         from memesbd.utils_db import get_react_count_post
         return get_react_count_post(post.id)
 
+    @transaction.atomic
     def create(self, validated_data):
-        keywords_data = validated_data.pop('keywords')
-        post = Post.objects.create(**validated_data)
-        for keyword_data in keywords_data:
-            keyword, _ = Keyword.objects.get_or_create(**keyword_data)
-            KeywordList.objects.get_or_create(post=post, keyword=keyword)
-        return post
+        try:
+            keywords_data = validated_data.pop('keywords')
+            post = Post.objects.create(**validated_data)
+            for keyword_data in keywords_data:
+                keyword, _ = Keyword.objects.get_or_create(**keyword_data)
+                KeywordList.objects.get_or_create(post=post, keyword=keyword)
+            return post
+        except KeyError:
+            return Post.objects.create(**validated_data)
