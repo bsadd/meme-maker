@@ -4,7 +4,7 @@ Contains constants/wrapper classes for database model's fields like CHOICE_FIELD
 
 
 class Reacts:
-    __slots__ = ()
+    """TODO: convert to enum"""
     NONE, LIKE, LOVE, HAHA, WOW, SAD, ANGRY = range(0, 7)
     __MAX = ANGRY
 
@@ -25,31 +25,7 @@ class Reacts:
         return Reacts.NONE <= react <= Reacts.__MAX
 
 
-class TextPositions:
-    HEAD = 'h'
-    TAIL = 't'
-    OVER = 'o'
-
-    @staticmethod
-    def position_choices():
-        # TEXT_POSITIONS = (
-        #     (TextPositions.EXTRA_TOP, 'Above image'), (TextPositions.EXTRA_BOTTOM, 'Below Image'),
-        #     (TextPositions.TOP, 'Top on image'), (TextPositions.BOTTOM, 'Bottom on image'),
-        #     (TextPositions.CUSTOM, 'Custom Position'))
-        TEXT_POSITIONS = (
-            (TextPositions.HEAD, 'Above Image'),
-            (TextPositions.TAIL, 'Below Image'),
-            (TextPositions.OVER, 'Over Image')
-        )
-        return TEXT_POSITIONS
-
-    @staticmethod
-    def is_valid_position(position):
-        return position in [p[0] for p in TextPositions.position_choices()]
-
-
 class ApprovalStatus:
-    __slots__ = ()
     PENDING = 'p'
     APPROVED = 'a'
     REJECTED = 'r'
@@ -61,9 +37,9 @@ class ApprovalStatus:
     @staticmethod
     def approval_status():
         STATUS = (
-            (ApprovalStatus.PENDING, 'Pending'),
-            (ApprovalStatus.APPROVED, 'Approved'),
-            (ApprovalStatus.REJECTED, 'Rejected'))
+            (ApprovalStatus.PENDING, 'PENDING'),
+            (ApprovalStatus.APPROVED, 'APPROVED'),
+            (ApprovalStatus.REJECTED, 'REJECTED'))
         return STATUS
 
     @staticmethod

@@ -27,29 +27,28 @@ def namedtuplefetchall(query, param_list):
 def get_react_count_post(post_id):
     """
     :param post_id: id of the post
-    :returns an array with index as status-value and value as count
-    i.e. ret_val[Reacts.UPVOTE] is number of times this post had been up-voted
+    :returns a qset with each element as ({'react': 'wow', 'count': 1})
     """
     from django.db.models import Count
     qset = PostReact.objects.filter(post_id=post_id).annotate(count=Count('user')).values('react', 'count')
     from memesbd.consts_db import Reacts
-    react_counts = [0] * (Reacts.__MAX + 1)
     for q in qset:
-        react_counts[q['status']] = q['count']
-    return react_counts
+        q['react'] = Reacts.REACT_NAMES[q['react']]
+    return qset
 
 
 def update_react_post(user, post_id, react):
     """ create or update user status on post """
     from memesbd.consts_db import Reacts
     if not Reacts.is_valid_react(react):
-        return
+        from django.core.exceptions import ValidationError
+        raise ValidationError
     from memesbd.models import PostReact
     from memesbd.models import Post
-    try:
-        post = Post.objects.get(id=post_id)
-    except Post.DoesNotExist:
-        return None
+    post = Post.objects.get(id=post_id)
+    if post.approval_status != ApprovalStatus.APPROVED:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
     post_react, _ = PostReact.objects.get_or_create(post=post, user=user)
     post_react.react = react
     post_react.save()
@@ -107,7 +106,7 @@ def get_posts(key=''):
     caption = key.strip().lower()
     keywords = [k.lower() for k in key.split()]
     from memesbd.models import Post
-    return (Post.objects.filter(
+    return (Post.objects.filter(approval_status=ApprovalStatus.APPROVED).filter(
         caption__icontains=caption) | Post.objects.filter(
         keywords__keyword__name__in=keywords)).distinct()
 
@@ -127,9 +126,9 @@ def get_related_posts(post_id, post=None):
     if post is None:
         post = Post.objects.get(id=post_id)
     if post.is_template_post():
-        return Post.objects.filter(template=post)
+        return Post.approved.filter(template=post)
     else:
-        return Post.objects.exclude(id=post.id).filter(template=post.template)
+        return Post.approved.exclude(id=post.id).filter(template=post.template)
 
 
 #  ----------------------- Insert utils -------------------------

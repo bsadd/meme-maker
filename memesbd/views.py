@@ -82,7 +82,7 @@ class ViewMenusView(TemplateView):
     template_name = 'memesbd/index.html'
 
     def get_context_data(self, **kwargs):
-        obj_list = Post.objects.filter(author=self.request.user)  # .order_by('status', '-time')
+        obj_list = Post.objects.filter(author=self.request.user)  # .order_by('status', '-uploaded_at')
         print(obj_list)
         print('-----')
         return {'menu_list': obj_list}
