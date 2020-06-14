@@ -124,7 +124,7 @@ def update_react(request, id):
     react_name = str(request.POST.get('react')).upper()
     print(str(request.user) + ' ' + react_name + ' on ' + str(id))
     if Reacts.is_valid_react(Reacts.REACT_VALUE[react_name]):
-        from utils_db import update_react_post
+        from memesbd.utils_db import update_react_post
         post_react = update_react_post(user=request.user, post_id=id, react=Reacts.REACT_VALUE[react_name])
         if post_react is not None:
             return JsonResponse(

@@ -55,14 +55,15 @@ def update_react_post(user, post_id, react):
     return post_react
 
 
-def update_comment_post(user, pkg_id, comment):
-    """ create or update user comment on package """
+def update_comment_post(user, post_id, comment):
+    """ create or update user comment on post """
     from memesbd.models import PostComment
     from memesbd.models import Post
-    package = Post.objects.get(id=pkg_id)
-    post, _ = PostComment.objects.get_or_create(package=package, user=user)
+    post = Post.objects.get(id=post_id)
+    post, _ = PostComment.objects.get_or_create(post=post, user=user)
     post.comment = comment
     post.save()
+    return post
 
 
 def update_comment_react_post(user, comment_id, react_val):
