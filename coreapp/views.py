@@ -111,7 +111,7 @@ class PostReactViewSet(viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
-    queryset = PostReact.objects.filter(post__approval_status=ApprovalStatus.APPROVED)
+    # queryset = PostReact.objects.filter(post__approval_status=ApprovalStatus.APPROVED)
     serializer_class = PostReactSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 

@@ -44,7 +44,7 @@ class PostTests(APITestCase):
 
     def generate_photo_file(self):
         file = io.BytesIO()
-        image = Image.new('RGBA', size=(4096, 2160), color=(155, 170, 150))
+        image = Image.new('RGBA', size=(1024, 1024), color=(155, 0, 0))
         image.save(file, 'png')
         file.name = 'test.png'
         file.seek(0)
@@ -65,7 +65,6 @@ class PostTests(APITestCase):
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    }
         response = self.client.post(url, data=payload, format='json')
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['author']['username'], 'user0')
         self.assertEqual(response.data['approval_status'], 'PENDING')
@@ -114,6 +113,13 @@ class PostTests(APITestCase):
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        ## user0 react on unapproved post
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-react-list', args=[self.post_unapproved.id])
+        payload = {'react': 'like'}
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         ## user0 react on invalid post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-react-list', args=[100])
@@ -142,7 +148,6 @@ class PostTests(APITestCase):
         url = reverse('api:post-react-list', args=[post_approved.id])
         payload = {'react': 'haha'}
         response = self.client.post(url, data=payload, format='json')
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['post'], post_approved.id)
         self.assertEqual(response.data['react'], 'HAHA')

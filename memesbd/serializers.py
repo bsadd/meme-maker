@@ -3,6 +3,7 @@ from django.db.models import Count
 from drf_extra_fields import fields as extra_fields
 from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
 from rest_framework import serializers
+from rest_framework import exceptions
 from rest_framework.fields import Field
 
 from memesbd.models import *
@@ -31,7 +32,7 @@ class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
     #     return value.name
 
 
-class PostReactSerializer(NestedUpdateMixin, serializers.ModelSerializer):
+class PostReactSerializer(serializers.ModelSerializer):
     user = serializers.HiddenField(default=serializers.CurrentUserDefault())  # UserSerializer()
 
     react = ChoiceField(choices=Reacts.react_choices(), required=True)
@@ -41,14 +42,20 @@ class PostReactSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         fields = ['react', 'user', 'post']
         read_only_fields = ('user',)
 
+    def get_unique_together_validators(self):
+        """disable unique together checks for (user, post) for get_or_create operation in create"""
+        return []
+
     def create(self, validated_data):
-        try:
-            print(validated_data)
-            # post = Post.objects.get(id=validated_data.pop('post_pk'))
-            postReact, _ = PostReact.objects.get_or_create(**validated_data)
-            return postReact
-        except KeyError:
-            raise ValidationError
+        react = validated_data.pop('react')
+        post = validated_data.pop('post')
+        if post.approval_status != ApprovalStatus.APPROVED:
+            raise exceptions.ValidationError(detail='Post is not approved')
+        post_react, _ = PostReact.objects.get_or_create(**validated_data, post=post)
+        if post_react.react != react:
+            post_react.react = react
+            post_react.save()
+        return post_react
 
 
 class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):

@@ -29,8 +29,10 @@ def get_react_count_post(post_id):
     :param post_id: id of the post
     :returns a qset with each element as ({'react': 'wow', 'count': 1})
     """
+    from memesbd import consts_db
     from django.db.models import Count
-    qset = PostReact.objects.filter(post_id=post_id).annotate(count=Count('user')).values('react', 'count')
+    qset = PostReact.objects.filter(post_id=post_id).annotate(count=Count('user')).exclude(react=consts_db.Reacts.NONE).values(
+        'react', 'count')
     from memesbd.consts_db import Reacts
     for q in qset:
         q['react'] = Reacts.REACT_NAMES[q['react']]
