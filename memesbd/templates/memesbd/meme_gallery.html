@@ -93,13 +93,6 @@
         integrity="sha256-Qp8DnNDYDDwTWO5OCw8HFoCJOqO1l4OmcIlIZNfi6tI=" crossorigin="anonymous"></script>
 
 <script>
-		var infinite = new Waypoint.Infinite({
-			element: $(".infinite-container")[0]
-		});
-
-</script>
-
-<script>
 		const csrftoken = getCookie('csrftoken');
 		$.ajaxSetup({
 			beforeSend: function (xhr, settings) {
@@ -154,17 +147,26 @@
 			}
 		}
 
-		$(document).ready(function () {
-			"use strict";
-			$(".reaction").on("click", function () {   // like click
+		function refreshReactionHandlers(){
+		    $(".reaction").off("click").on("click", function () {   // like click
 				const data_id = $(this).attr("data-id");
 				var data_reaction = $(this).attr("data-reaction");
 				send_react(data_id, data_reaction, update_react_add);
 			});
-			$(".like-btn-text").on("click", function () { // undo like click
+			$(".like-btn-text").off("click").on("click", function () { // undo like click
 				const data_id = $(this).attr("data-id");
 				send_react(data_id, 'None', update_react_del);
 			});
+		}
+
+		$(document).ready(function () {
+			"use strict";
+			refreshReactionHandlers();
+
+			var infinite = new Waypoint.Infinite({
+                element: $(".infinite-container")[0],
+                onAfterPageLoad: refreshReactionHandlers,
+            });
 		});
 
 </script>
