@@ -139,22 +139,6 @@ class PostReactViewSet(viewsets.ModelViewSet):
             raise exceptions.NotFound(detail="No react on the post from this user")
 
     def create(self, request, *args, **kwargs):
-        post = Post.objects.get(id=kwargs['post_pk'])#, approval_status=ApprovalStatus.APPROVED
-        react = str(request.data['react']).upper()
-        # request.data = {'react': react, 'post': post.id, 'user': request.user.id}
+        request.data['react'] = str(request.data['react']).upper()
+        request.data['post'] = kwargs['post_pk']
         return super().create(request, args, kwargs)
-        # try:
-        #     post = Post.objects.get(id=kwargs['post_pk'], approval_status=ApprovalStatus.APPROVED)
-        #     react = str(request.data['react']).upper()
-        #     data = {'react': react, 'post': post.id, 'user': request.user.id}
-        #     serializer = PostReactSerializer(data=data)
-        #     if serializer.is_valid():
-        #         serializer.save()
-        #         return Response(serializer.data, status=status.HTTP_200_OK)
-        #     # react = PostReact(post=post, react=react)
-        #     # return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user)).data,
-        #     #                 status=status.HTTP_200_OK)
-        # except Post.DoesNotExist:
-        #     raise exceptions.NotFound(detail="No such react-able post exists with this id")
-        # except ValidationError:
-        #     raise exceptions.ValidationError

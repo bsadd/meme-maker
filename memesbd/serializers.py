@@ -31,15 +31,24 @@ class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
     #     return value.name
 
 
-class PostReactSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+class PostReactSerializer(NestedUpdateMixin, serializers.ModelSerializer):
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())  # UserSerializer()
 
-    react = serializers.CharField(source='react_name')
+    react = ChoiceField(choices=Reacts.react_choices(), required=True)
 
     class Meta:
         model = PostReact
-        fields = ['react', 'user']
+        fields = ['react', 'user', 'post']
         read_only_fields = ('user',)
+
+    def create(self, validated_data):
+        try:
+            print(validated_data)
+            # post = Post.objects.get(id=validated_data.pop('post_pk'))
+            postReact, _ = PostReact.objects.get_or_create(**validated_data)
+            return postReact
+        except KeyError:
+            raise ValidationError
 
 
 class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
