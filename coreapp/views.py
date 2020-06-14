@@ -30,9 +30,11 @@ class PostViewSet(viewsets.ModelViewSet):
     """
     search_fields = ['caption', 'author__username', 'keywordlist__keyword__name']
     filter_backends = (filters.SearchFilter,)
+
     serializer_class = PostSerializer  # default serializer
     pagination_class = StandardResultsSetPagination
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    http_method_names = ['get', 'post']
 
     queryset = Post.approved.order_by('id')
 
@@ -91,7 +93,7 @@ class KeywordViewSet(viewsets.ModelViewSet):
     queryset = Keyword.objects.all()
     serializer_class = KeywordSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    # http_method_names = ('GET', 'POST',)
+    http_method_names = ['get', 'post']
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -100,6 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    http_method_names = ['get', 'post', 'put']
 
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='current', url_name='current')
@@ -114,6 +117,7 @@ class PostReactViewSet(viewsets.ModelViewSet):
     # queryset = PostReact.objects.filter(post__approval_status=ApprovalStatus.APPROVED)
     serializer_class = PostReactSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    http_method_names = ['get', 'post']
 
     # lookup_field = 'post__id'
 
