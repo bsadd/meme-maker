@@ -7,9 +7,8 @@ from collections import namedtuple
 from django.db import connection
 
 # ------------------ util functions --------------------------
-from accounts.models import User
 from memesbd.models import Post, PostReact
-from memesbd.consts_db import ApprovalStatus
+from memesbd.consts_db import ApprovalStatus, Reacts
 
 
 def namedtuplefetchall(query, param_list):
@@ -27,16 +26,17 @@ def namedtuplefetchall(query, param_list):
 def get_react_count_post(post_id):
     """
     :param post_id: id of the post
-    :returns a qset with each element as ({'react': 'wow', 'count': 1})
+    # :returns a qset with each element as ({'react': 'wow', 'count': 1})
+    :returns a dict with as ({'WOW': 1})
     """
-    from memesbd import consts_db
     from django.db.models import Count
-    qset = PostReact.objects.filter(post_id=post_id).annotate(count=Count('user')).exclude(react=consts_db.Reacts.NONE).values(
-        'react', 'count')
-    from memesbd.consts_db import Reacts
+    qset = PostReact.objects.filter(post_id=post_id).exclude(react=Reacts.NONE).values('react').annotate(
+        count=Count('user'))
+    rset = {}
     for q in qset:
+        rset[Reacts.REACT_NAMES[q['react']]] = q['count']
         q['react'] = Reacts.REACT_NAMES[q['react']]
-    return qset
+    return rset
 
 
 def update_react_post(user, post_id, react):

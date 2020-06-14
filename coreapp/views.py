@@ -53,7 +53,7 @@ class PostViewSet(viewsets.ModelViewSet):
                 post.moderator = request.user
                 post.approval_at = timezone.now()
                 post.save()
-                return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
+                return Response(PostSerializer(post, context={'request': request}).data, status=status.HTTP_200_OK)
         except Post.DoesNotExist:
             raise exceptions.NotFound
         except KeyError:

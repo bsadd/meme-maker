@@ -73,24 +73,37 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     is_template = serializers.CharField(source='is_template_post', read_only=True)
 
-    react_count = serializers.SerializerMethodField()
+    react_counts = serializers.SerializerMethodField()
+
+    react_user = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent',
                   'configuration_head', 'configuration_over', 'configuration_tail',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
-                  'template', 'is_template', 'author', 'react_count',  # , 'reacts'
+                  'template', 'is_template', 'author', 'react_counts', 'react_user',  # , 'reacts'
                   'keywords', ]
         read_only_fields = ('uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {
             'caption': {'required': True},
             'image': {'required': True},
+            'configuration_over': {'write_only': True},
+            'configuration_head': {'write_only': True},
+            'configuration_tail': {'write_only': True},
         }
 
-    def get_react_count(self, post):
+    def get_react_counts(self, post):
         from memesbd.utils_db import get_react_count_post
         return get_react_count_post(post.id)
+
+    def get_react_user(self, post):
+        try:
+            request = self.context['request']
+            post_react = PostReact.objects.get(post=post, user=request.user)
+            return post_react.react_name()
+        except (PostReact.DoesNotExist, KeyError, TypeError):  # TypeError for Anonymous User
+            return None
 
     @transaction.atomic
     def create(self, validated_data):
