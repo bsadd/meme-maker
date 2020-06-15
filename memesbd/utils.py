@@ -6,6 +6,13 @@ import json
 from rest_framework import parsers
 
 
+def to_bool(val):
+    """Parse the string and return true only if ivalue is in true/t/1"""
+    if val and str(val).lower() in ['true', 't', '1']:
+        return True
+    return False
+
+
 def pretty_request(request):
     headers = ''
     for header, value in request.META.items():

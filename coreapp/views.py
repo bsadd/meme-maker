@@ -1,42 +1,65 @@
-from django.shortcuts import render
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from rest_framework import viewsets, status, filters
+from filters.mixins import FiltersMixin
+from rest_framework import viewsets, status, filters, exceptions, permissions
 from rest_framework.decorators import action
-from rest_framework import permissions
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
-from rest_framework import exceptions
 
-from coreapp.decorators import *
 from coreapp.permissions import IsModerator
 from memesbd import utils_db
+from memesbd.filters import *
 from memesbd.models import *
 from memesbd.serializers import *
+from memesbd.utils import to_bool
+from memesbd.validators import post_query_schema
 
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 3
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+    page_size_query_param = 'page-size'
+    max_page_size = 10
 
 
-class PostViewSet(viewsets.ModelViewSet):
+class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     TODO: validation using models
     TODO: enforce author edit only
+    TODO: check timezone
     """
+    filter_backends = (PostCategoryFilter, PostSearchFilter, filters.OrderingFilter)
+    filter_mappings = {
+        'uploader': 'author_id__in',
+        'violent': 'is_violent',
+        'adult': 'is_adult',
+        'keyword': 'keywordlist__keyword__name__in',
+        'uploaded-before': 'uploaded_at__lt',
+        'uploaded-after': 'uploaded_at__gte',
+        'uploaded-on': 'uploaded_at__date',
+        'template': 'template__isnull',
+    }
+    filter_value_transformations = {
+        'violent': lambda val: to_bool(val),
+        'adult': lambda val: to_bool(val),
+        'template': lambda val: to_bool(val),
+        'keyword': lambda val: filter(None, val.strip().lower().split(',')),
+    }
+    filter_validation_schema = post_query_schema
     search_fields = ['caption', 'author__username', 'keywordlist__keyword__name']
-    filter_backends = (filters.SearchFilter,)
+    search_fields_mappings = {'caption': 'caption',
+                              'uploader': 'author__username',
+                              'keyword': 'keywordlist__keyword__name'}
+    search_param = 'q'
+    ordering_fields = ['uploaded_at', 'nviews']
+    ordering = ['-uploaded_at']
 
-    serializer_class = PostSerializer  # default serializer
     pagination_class = StandardResultsSetPagination
+    serializer_class = PostSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     http_method_names = ['get', 'post']
 
-    queryset = Post.approved.order_by('id')
+    queryset = Post.objects.prefetch_related('reacts', 'author').all()
 
     @action(detail=True, methods=['POST'], permission_classes=[IsModerator],
             url_path='approval', url_name='approval')
