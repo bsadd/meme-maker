@@ -235,22 +235,22 @@ class PostTests(APITestCase):
 
         # normal user cannot approve the post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.post(url, data={'approval_status': 'APPROVED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # moderator approves the post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.put(url, data={'approval_status': 'APPROVED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['approval_status'], 'APPROVED')
 
         # moderator tries to approve the already approved post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.put(url, data={'approval_status': 'APPROVED'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # post is accessible after being approved
         self.client.credentials(HTTP_AUTHORIZATION='')
@@ -261,8 +261,8 @@ class PostTests(APITestCase):
 
         # admin rejects the post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_admin)
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'REJECT'}, format='json')
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.put(url, data={'approval_status': 'REJECTED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['approval_status'], 'REJECTED')
 
@@ -274,6 +274,6 @@ class PostTests(APITestCase):
 
         # moderator tries to reject the already rejected post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'REJECT'}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.put(url, data={'approval_status': 'REJECTED'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

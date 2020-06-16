@@ -5,6 +5,7 @@ from coreapp import views
 
 router = routers.SimpleRouter()
 router.register(r'post', views.PostViewSet, basename='post')
+router.register(r'moderation/post', views.PostModerationViewSet, basename='moderation-post')
 
 router.register(r'keyword', views.KeywordViewSet, basename='keyword')
 router.register(r'user', views.UserViewSet, basename='user')

@@ -1,7 +1,7 @@
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from filters.mixins import FiltersMixin
-from rest_framework import viewsets, status, filters, exceptions, permissions
+from rest_framework import viewsets, status, filters, exceptions, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
@@ -56,33 +56,17 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
 
     pagination_class = StandardResultsSetPagination
     serializer_class = PostSerializer
+    serializer_classes = {
+        'pending': PostModerationSerializer,
+    }
+
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    http_method_names = ['get', 'post']
+    http_method_names = ['get', 'post', 'put']
 
     queryset = Post.objects.prefetch_related('reacts', 'author').all()
 
-    @action(detail=True, methods=['POST'], permission_classes=[IsModerator],
-            url_path='approval', url_name='approval')
-    def approval(self, request, pk):
-        try:
-            post = Post.objects.get(id=pk)
-            approval_status = str(request.data['approval_status']).upper()
-            if approval_status not in ['APPROVE', 'REJECT']:
-                raise exceptions.ValidationError(detail="Invalid 'approval_status'")
-            elif post.approval_status == ApprovalStatus.APPROVED and approval_status == 'APPROVE':
-                raise exceptions.NotAcceptable(detail="Already approved")
-            elif post.approval_status == ApprovalStatus.REJECTED and approval_status == 'REJECT':
-                raise exceptions.NotAcceptable(detail="Already rejected")
-            else:
-                post.approval_status = ApprovalStatus.APPROVED if approval_status == 'APPROVE' else ApprovalStatus.REJECTED
-                post.moderator = request.user
-                post.approval_at = timezone.now()
-                post.save()
-                return Response(PostSerializer(post, context={'request': request}).data, status=status.HTTP_200_OK)
-        except Post.DoesNotExist:
-            raise exceptions.NotFound
-        except KeyError:
-            raise exceptions.NotAcceptable(detail="'approval_status' field must be provided")
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, self.serializer_class)
 
     @action(detail=True, methods=['GET'],
             url_path='related', url_name='related-posts')
@@ -97,9 +81,11 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], permission_classes=[IsModerator],
             url_path='pending', url_name='pending-posts')
     def pending(self, request):
-        posts = Post.objects.filter(approval_status=ApprovalStatus.PENDING)
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        is_mutable = request.query_params._mutable
+        request.query_params._mutable = True
+        request.query_params['approval-status'] = 'PENDING'
+        request.query_params._mutable = is_mutable
+        return super().list(request)
 
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='my-posts', url_name='my-posts')
@@ -169,3 +155,11 @@ class PostReactViewSet(viewsets.ModelViewSet):
         request.data['react'] = str(request.data['react']).upper()
         request.data['post'] = kwargs['post_pk']
         return super().create(request, args, kwargs)
+
+
+class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
+                            viewsets.GenericViewSet):
+    pagination_class = StandardResultsSetPagination
+    serializer_class = PostModerationSerializer
+    permission_classes = (IsModerator,)
+    queryset = Post.objects.prefetch_related('reacts', 'author').all()

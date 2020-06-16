@@ -1,5 +1,6 @@
 from django.db import transaction
 from django.db.models import Count
+from django.utils import timezone
 from drf_extra_fields import fields as extra_fields
 from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
 from rest_framework import serializers
@@ -116,3 +117,19 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             return post
         except KeyError:
             return Post.objects.create(**validated_data)
+
+
+class PostModerationSerializer(serializers.ModelSerializer):
+    author = UserSerializer(read_only=True)
+    moderator = UserSerializer(default=serializers.CurrentUserDefault())
+    approval_at = serializers.DateTimeField(default=timezone.now())
+    approval_status = ChoiceField(choices=ApprovalStatus.approval_status())
+    keywords = KeywordSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'author',
+                  'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
+                  'template', 'author', 'keywords', ]
+        read_only_fields = ('caption', 'image', 'nviews', 'author', 'uploaded_at', 'moderator', 'template', 'keywords',)
+        extra_kwargs = {}
