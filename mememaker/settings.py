@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'rest_auth',
 
     'filters',
+
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [

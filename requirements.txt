@@ -15,6 +15,7 @@ djangorestframework==3.11.0
 drf-nested-routers==0.91
 drf-url-filters==0.5.1
 drf-writable-nested==0.6.0
+drf-yasg==1.17.1
 idna==2.9
 libsass==0.20.0
 oauthlib==3.1.0
