@@ -1,5 +1,3 @@
-from django.utils import timezone
-from django.utils.decorators import method_decorator
 from filters.mixins import FiltersMixin
 from rest_framework import viewsets, status, filters, exceptions, permissions, mixins
 from rest_framework.decorators import action
@@ -7,9 +5,9 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from coreapp.permissions import IsModerator
+from memesbd.models import *
 from memesbd import utils_db
 from memesbd.filters import *
-from memesbd.models import *
 from memesbd.serializers import *
 from memesbd.utils import to_bool
 from memesbd.validators import post_query_schema
