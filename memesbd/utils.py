@@ -1,6 +1,16 @@
 """
 Contains utility functions to preprocess for variable data in `utils_db.py`, `views.py` w/o any relation to db
 """
+import json
+
+from rest_framework import parsers
+
+
+def to_bool(val):
+    """Parse the string and return true only if ivalue is in true/t/1"""
+    if val and str(val).lower() in ['true', 't', '1']:
+        return True
+    return False
 
 
 def pretty_request(request):
@@ -97,19 +107,53 @@ def add_text_on_border(img_pil, text, border_pos='top', color_text_hex='#ffffff'
     return add_text_on_image(img, x=x, y=y, text=text, color_hex=color_text_hex, font=font)
 
 
-# ------------------- Pagination --------------------
-def get_page_objects(qset, page, items_per_page=0):
+# ------------------- Parsers --------------------
+from rest_framework import parsers
+
+
+class NestedMultipartParser(parsers.MultiPartParser):
     """
-    https://docs.djangoproject.com/en/2.2/topics/pagination/
-    :param qset: queryset or array
-    :param page: page no to view
-    :param items_per_page: no of items per page
-    :return: page object which is iterable
+    Parser for processing nested field values as well as multipart files.
+    Author: Ahmed H. Ismail.
     """
-    if page is None or page == 0:
-        page = 1
-    if items_per_page is None or items_per_page == 0:
-        from webAdmin.utils import get_no_items_per_page
-        items_per_page = get_no_items_per_page()
-    from django.core.paginator import Paginator
-    return Paginator(qset, items_per_page).get_page(page)
+
+    def parse(self, stream, media_type=None, parser_context=None):
+        result = super().parse(stream=stream, media_type=media_type, parser_context=parser_context)
+        data = {}
+        for key, value in result.data.items():
+            if '[' in key and ']' in key:
+                # nested
+                index_left_bracket = key.index('[')
+                index_right_bracket = key.index(']')
+                nested_dict_key = key[:index_left_bracket]
+                nested_value_key = key[index_left_bracket + 1:index_right_bracket]
+                if nested_dict_key not in data:
+                    data[nested_dict_key] = {}
+                data[nested_dict_key][nested_value_key] = value
+            else:
+                data[key] = value
+        return parsers.DataAndFiles(data, result.files)
+
+
+class MultipartJsonParser(parsers.MultiPartParser):
+
+    def parse(self, stream, media_type=None, parser_context=None):
+        result = super().parse(
+            stream,
+            media_type=media_type,
+            parser_context=parser_context
+        )
+        data = {}
+
+        for key, value in result.data.items():
+            if type(value) != str:
+                data[key] = value
+                continue
+            if '{' in value or "[" in value:
+                try:
+                    data[key] = json.loads(value)
+                except ValueError:
+                    data[key] = value
+            else:
+                data[key] = value
+        return parsers.DataAndFiles(data, result.files)

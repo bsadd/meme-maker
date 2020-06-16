@@ -17,9 +17,9 @@ class User(AbstractUser):
         verbose_name = "User"
         verbose_name_plural = "Users"
 
-    def get_rating(self):
-        rating = 0
-        return round(rating, 2)
+    @property
+    def moderator_account(self):
+        return not self.is_suspended and self.is_superuser or self.is_moderator
 
     def get_image(self):
         return self.socialaccount_set.all[0].get_avatar_url  # 'default.png'
