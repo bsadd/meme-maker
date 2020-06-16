@@ -6,6 +6,7 @@ from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
 from rest_framework import serializers
 from rest_framework import exceptions
 from rest_framework.fields import Field
+from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 
 from memesbd.models import *
 from accounts.serializers import UserSerializer
@@ -34,13 +35,17 @@ class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
 
 
 class PostReactSerializer(serializers.ModelSerializer):
-    user = serializers.HiddenField(default=serializers.CurrentUserDefault())  # UserSerializer()
-
+    user = serializers.HyperlinkedRelatedField(queryset=User.objects.all(),
+                                               view_name='api:user-detail',
+                                               default=serializers.CurrentUserDefault())
+    post = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail', required=True)
     react = ChoiceField(choices=Reacts.react_choices(), required=True)
+    url = NestedHyperlinkedIdentityField(view_name='api:post-react-detail',
+                                         parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True)
 
     class Meta:
         model = PostReact
-        fields = ['react', 'user', 'post']
+        fields = ['react', 'user', 'post', 'url']
         read_only_fields = ('user',)
 
     def get_unique_together_validators(self):
@@ -49,10 +54,7 @@ class PostReactSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         react = validated_data.pop('react')
-        post = validated_data.pop('post')
-        if post.approval_status != ApprovalStatus.APPROVED:
-            raise exceptions.ValidationError(detail='Post is not approved')
-        post_react, _ = PostReact.objects.get_or_create(**validated_data, post=post)
+        post_react, _ = PostReact.objects.get_or_create(**validated_data)
         if post_react.react != react:
             post_react.react = react
             post_react.save()
@@ -64,13 +66,19 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     TODO:https://github.com/beda-software/drf-writable-nested/issues/46#issuecomment-415632868
     TODO: generic https://github.com/Ian-Foote/rest-framework-generic-relations
     """
-    author = UserSerializer(default=serializers.CurrentUserDefault())
+    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    publisher = serializers.SerializerMethodField()
+
     approval_status = ChoiceField(choices=ApprovalStatus.approval_status(), read_only=True)
-    moderator = UserSerializer(read_only=True)
+    moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
+
     keywords = KeywordSerializer(many=True, required=False)
     image = extra_fields.HybridImageField()  # image file / base64
 
     # reacts = PostReactSerializer(source='postreact_set', many=True)
+
+    template = serializers.HyperlinkedRelatedField(read_only=True, view_name='api:post-detail')
+    url = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-detail')
 
     is_template = serializers.CharField(source='is_template_post', read_only=True)
 
@@ -83,8 +91,10 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent',
                   'configuration_head', 'configuration_over', 'configuration_tail',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
-                  'template', 'is_template', 'author', 'react_counts', 'react_user',  # , 'reacts'
-                  'keywords', ]
+                  'author', 'publisher', 'url',
+                  'template', 'is_template', 'react_counts', 'react_user',  # , 'reacts'
+                  'keywords',
+                  ]
         read_only_fields = ('uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {
             'caption': {'required': True},
@@ -93,6 +103,10 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             'configuration_head': {'write_only': True},
             'configuration_tail': {'write_only': True},
         }
+
+    def get_publisher(self, post):
+        return {'username': post.author.username,
+                'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author.id]))}
 
     def get_react_counts(self, post):
         from memesbd.utils_db import get_react_count_post

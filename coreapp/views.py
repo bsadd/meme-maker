@@ -73,7 +73,7 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     def related(self, request, pk):
         try:
             posts = utils_db.get_related_posts(post_id=pk)
-            serializer = PostSerializer(posts, many=True)
+            serializer = PostSerializer(posts, many=True, context={'request': request})
             return Response(serializer.data, status=status.HTTP_200_OK)
         except Post.DoesNotExist:
             raise exceptions.NotFound
@@ -91,7 +91,7 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
             url_path='my-posts', url_name='my-posts')
     def my_posts(self, request):
         posts = Post.objects.filter(author=request.user)
-        serializer = PostSerializer(posts, many=True)
+        serializer = PostSerializer(posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -116,7 +116,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='current', url_name='current')
     def current_user(self, request):
-        return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
+        return Response(UserSerializer(request.user, context={'request': request}).data, status=status.HTTP_200_OK)
 
 
 class PostReactViewSet(viewsets.ModelViewSet):
@@ -140,11 +140,9 @@ class PostReactViewSet(viewsets.ModelViewSet):
         current user's react only
         """
         try:
-            '''
-            TODO: should check post existence?
-            '''
             post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
-            return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user)).data,
+            return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user),
+                                                context={'request': request}).data,
                             status=status.HTTP_200_OK)
         except Post.DoesNotExist:
             raise exceptions.NotFound(detail="No such react-able post exists with this id")
@@ -152,8 +150,13 @@ class PostReactViewSet(viewsets.ModelViewSet):
             raise exceptions.NotFound(detail="No react on the post from this user")
 
     def create(self, request, *args, **kwargs):
+        is_mutable = True if getattr(request.data, '_mutable', True) else request.data._mutable
+        if not is_mutable:
+            request.data._mutable = True
         request.data['react'] = str(request.data['react']).upper()
-        request.data['post'] = kwargs['post_pk']
+        request.data['post'] = reverse('api:post-detail', args=[kwargs['post_pk']])
+        if not is_mutable:
+            request.data._mutable = False
         return super().create(request, args, kwargs)
 
 

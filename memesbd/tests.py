@@ -66,7 +66,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user0')
+        self.assertEqual(response.data['publisher']['username'], 'user0')
         self.assertEqual(response.data['approval_status'], 'PENDING')
         # self.assertEqual(str(response.data['image']).split('/')[-1], self.generate_photo_file().name)
         self.assertTrue(
@@ -83,7 +83,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user1')
+        self.assertEqual(response.data['publisher']['username'], 'user1')
         self.assertEqual(response.data['approval_status'], 'PENDING')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -133,7 +133,6 @@ class PostTests(APITestCase):
         payload = {'react': 'love'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['post'], post_approved.id)
         self.assertEqual(response.data['react'], 'LOVE')
 
         ## user0 - check react LOVE
@@ -149,7 +148,6 @@ class PostTests(APITestCase):
         payload = {'react': 'haha'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['post'], post_approved.id)
         self.assertEqual(response.data['react'], 'HAHA')
 
         ## user0 - check react HAHA
