@@ -16,6 +16,8 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
+
+from accounts.views import FacebookLogin, FacebookConnect, GoogleLogin, GoogleConnect
 from mememaker import settings
 from django.conf.urls.static import static
 from rest_framework import permissions
@@ -45,6 +47,10 @@ urlpatterns = [
     path(r'rest-auth/', include(('rest_auth.urls', 'rest_auth'), namespace='rest-auth')),  # rest_login
     path(r'rest-auth/registration/', include(('rest_auth.registration.urls', 'rest_auth'),
                                              namespace='rest-auth-registration')),
+    url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='rest-auth-facebook-login'),
+    url(r'^rest-auth/facebook-connect/$', FacebookConnect.as_view(), name='rest-auth-facebook-connect'),
+    url(r'^rest-auth/google/$', GoogleLogin.as_view(), name='rest-auth-google-login'),
+    url(r'^rest-auth/google-connect/$', GoogleConnect.as_view(), name='rest-auth-google-connect'),
     # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
