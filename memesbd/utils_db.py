@@ -130,36 +130,11 @@ def get_related_posts(post_id, post=None):
     if post.is_template_post():
         return Post.approved.filter(template=post)
     else:
-        return Post.approved.exclude(id=post.id).filter(template=post.template)
+        return Post.approved.exclude(id=post.id).filter(template_id=post.template_id)
 
 
 #  ----------------------- Insert utils -------------------------
-def insert_template_post(caption, keyword_list, image_base64, is_adult, user_id):
-    """
-    :param text_boxes: a list of TextBox objects
-    :param caption: caption
-    :param keyword_list: list of keywords
-    :param image_base64: js image data
-    :param is_adult: is adult content
-    :param user_id: author id
-    """
-    from memesbd.models import Post
-    from memesbd.utils import trim_replace_wsp
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id)
-    post.is_adult = is_adult
-    for gen in keyword_list:
-        from memesbd.models import Keyword, KeywordList
-        gen = str(gen).strip().lower()
-        keyword, _ = Keyword.objects.get_or_create(name=gen)
-        KeywordList.objects.get_or_create(post=post, keyword=keyword)
-    from memesbd.utils import image_to_file
-    img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
-    post.image.save(img_filename, img_data, save=True)
-    post.save()
-    return post
-
-
-def insert_template_post_path(caption, keyword_list, image_path, is_adult, user_id):
+def insert_post_path(caption, keyword_list, image_path, is_adult, user_id):
     """
     :param text_boxes: a list of TextBox objects
     :param caption: caption

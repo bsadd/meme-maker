@@ -21,7 +21,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    API endpoint that allows Post to be created/viewed/edited.
     TODO: validation using models
     TODO: enforce author edit only
     TODO: check timezone
@@ -119,7 +119,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class PostReactViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    API endpoint that allows users to react or view reacts on approved posts.
     """
     # queryset = PostReact.objects.filter(post__approval_status=ApprovalStatus.APPROVED)
     serializer_class = PostReactSerializer
@@ -134,8 +134,8 @@ class PostReactViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='user', url_name='user')
     def user(self, request, post_pk=None):
-        """post/1/react/user
-        current user's react only
+        """
+        currently authenticated user's react only
         """
         try:
             post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
@@ -160,6 +160,9 @@ class PostReactViewSet(viewsets.ModelViewSet):
 
 class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
                             viewsets.GenericViewSet):
+    """
+    API endpoint to allow moderators to approve/moderate posts
+    """
     pagination_class = StandardResultsSetPagination
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)

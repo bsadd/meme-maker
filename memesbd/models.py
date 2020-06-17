@@ -81,7 +81,7 @@ class Post(models.Model):
         """Blank Template id for an image. Own id if itself is a template"""
         if self.is_template_post():
             return self.id
-        return self.template.id
+        return self.template_id
 
     def is_template_post(self):
         return self.template is None

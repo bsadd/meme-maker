@@ -74,7 +74,8 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     # reacts = PostReactSerializer(source='postreact_set', many=True)
 
-    template = serializers.HyperlinkedRelatedField(read_only=True, view_name='api:post-detail')
+    template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
+                                                   required=False)
     url = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-detail')
 
     is_template = serializers.CharField(source='is_template_post', read_only=True)
@@ -103,7 +104,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     def get_publisher(self, post):
         return {'username': post.author.username,
-                'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author.id]))}
+                'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author_id]))}
 
     def get_react_counts(self, post):
         from memesbd.utils_db import get_react_count_post
