@@ -108,8 +108,7 @@ def get_posts(key=''):
     caption = key.strip().lower()
     keywords = [k.lower() for k in key.split()]
     from memesbd.models import Post
-    return (Post.objects.filter(approval_status=ApprovalStatus.APPROVED).filter(
-        caption__icontains=caption) | Post.objects.filter(
+    return (Post.approved.filter(caption__icontains=caption) | Post.objects.filter(
         keywords__keyword__name__in=keywords)).distinct()
 
 
@@ -157,25 +156,29 @@ def insert_post_path(caption, keyword_list, image_path, is_adult, user_id):
     return post
 
 
-def insert_meme_post(caption, keyword_list, image_base64, is_adult, user_id, template_id):
+def insert_post(caption, user_id, image_base64, keyword_list=None, is_adult=False, is_violent=False, template_id=None):
     """
     :param text_boxes: a list of TextBox objects
     :param caption: caption
     :param keyword_list: list of keywords
     :param image_base64: js image data
     :param is_adult: is adult content
+    :param is_violent: is violent content
     :param user_id: author id
     :param template_id: id of the meme on which it had been edited on
     """
+    if keyword_list is None:
+        keyword_list = []
     from memesbd.models import Post
-    template_id = Post.objects.get(id=template_id).get_template_id()
     from memesbd.utils import trim_replace_wsp
+    if template_id:
+        template_id = Post.objects.get(id=template_id).get_template_id()
     post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id, template_id=template_id)
     post.is_adult = is_adult
-    for gen in keyword_list:
+    post.is_violent = is_violent
+    for key in keyword_list:
         from memesbd.models import Keyword, KeywordList
-        gen = str(gen).strip().lower()
-        keyword, _ = Keyword.objects.get_or_create(name=gen)
+        keyword, _ = Keyword.objects.get_or_create(name=str(key).strip().lower())
         KeywordList.objects.get_or_create(post=post, keyword=keyword)
     from memesbd.utils import image_to_file
     img_filename, img_data = image_to_file(img_base64=image_base64, file_id=post.id)
