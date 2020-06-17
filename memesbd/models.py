@@ -55,9 +55,9 @@ class Post(models.Model):
     reacts = models.ManyToManyField(User, through='memesbd.PostReact', related_name='post_react_user')
     comments = models.ManyToManyField(User, through='memesbd.PostComment', related_name='post_comment_user')
 
-    objects = models.Manager()
-    approved = ApprovedPostManager()
-    pending = PendingPostManager()
+    objects = PostManager()
+    approved = PostManager(approval_status=ApprovalStatus.APPROVED)
+    pending = PostManager(approval_status=ApprovalStatus.PENDING)
 
     class Meta:
         verbose_name = "Post"
