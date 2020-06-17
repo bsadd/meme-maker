@@ -57,33 +57,6 @@ def update_react_post(user, post_id, react):
     return post_react
 
 
-def update_comment_post(user, pkg_id, comment):
-    """ create or update user comment on package """
-    from memesbd.models import PostComment
-    from memesbd.models import Post
-    package = Post.objects.get(id=pkg_id)
-    post, _ = PostComment.objects.get_or_create(package=package, user=user)
-    post.comment = comment
-    post.save()
-
-
-def update_comment_react_post(user, comment_id, react_val):
-    """
-    create or update status on existing post of any user on package
-    :returns updated (likes_count, dislikes_count) of that post
-    """
-    from memesbd.models import PostComment, PostCommentReact
-    post = PostComment.objects.get(id=comment_id)
-    if react_val in ['like', 'dislike']:
-        react, _ = PostCommentReact.objects.get_or_create(post=post, user=user)
-        print(react)
-
-        react.liked = (react_val == 'like')
-        react.disliked = (react_val == 'dislike')
-        react.save()
-    return get_react_count_post(post)
-
-
 # ------------ User Profile -----------------------------
 
 def get_pending_posts(user_id):
