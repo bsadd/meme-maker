@@ -72,7 +72,8 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     keywords = KeywordSerializer(many=True, required=False)
     image = extra_fields.HybridImageField()  # image file / base64
 
-    # reacts = PostReactSerializer(source='postreact_set', many=True)
+    reacts = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-react-list',
+                                                  lookup_url_kwarg='post_pk')
 
     template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
                                                    required=False)
@@ -91,7 +92,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
                   'author', 'publisher', 'url',
                   'template', 'is_template', 'react_counts', 'react_user',  # , 'reacts'
-                  'keywords',
+                  'keywords', 'reacts',
                   ]
         read_only_fields = ('uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {
@@ -124,10 +125,14 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         try:
             keywords_data = validated_data.pop('keywords')
+            keyword_names_given = list(set([keyword['name'].lower() for keyword in keywords_data]))
+            Keyword.objects.bulk_create([Keyword(name=name) for name in keyword_names_given], ignore_conflicts=True)
+            keywords = Keyword.objects.filter(name__in=keyword_names_given)
+            keyword_names_saved = list({keyword.name for keyword in keywords})
+            if keyword_names_given != keyword_names_saved:
+                raise exceptions.APIException(detail='could not save keyword in the database')
             post = Post.objects.create(**validated_data)
-            for keyword_data in keywords_data:
-                keyword, _ = Keyword.objects.get_or_create(**keyword_data)
-                KeywordList.objects.get_or_create(post=post, keyword=keyword)
+            post.keywords.set(keywords)
             return post
         except KeyError:
             return Post.objects.create(**validated_data)
