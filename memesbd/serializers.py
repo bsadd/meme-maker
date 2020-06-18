@@ -107,13 +107,15 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                 'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author_id]))}
 
     def get_react_counts(self, post):
-        from memesbd.utils_db import get_react_count_post
-        return get_react_count_post(post.id)
+        rset = {}
+        for q in PostReact.of_post(post.id).all().without_removed_reacts().react_counts().values_list('react', 'count'):
+            rset[Reacts.REACT_NAMES[q[0]]] = q[1]
+        return rset
 
     def get_react_user(self, post):
         try:
             request = self.context['request']
-            post_react = PostReact.objects.get(post=post, user=request.user)
+            post_react = PostReact.of_post(post.id).all().of_user(user_id=request.user).get()
             return post_react.react_name()
         except (PostReact.DoesNotExist, KeyError, TypeError):  # TypeError for Anonymous User
             return None

@@ -62,8 +62,6 @@ class Post(models.Model):
     class Meta:
         verbose_name = "Post"
         verbose_name_plural = "Posts"
-        # default_manager_name = models.Manager()
-        # base_manager_name = models.Manager()
 
     def __str__(self):
         return "%s %s" % (self.caption, self.author)
@@ -112,6 +110,10 @@ class KeywordList(models.Model):
         return reverse("memesbd:keywords", kwargs={"pk": self.pk})
 
 
+def factory_manager_for_postreact(post_id):
+    return PostReactManager.factory(model=PostReact, post_id=post_id)
+
+
 class PostReact(models.Model):
     """
     Like, Dislike reacts of viewers on a post
@@ -120,8 +122,10 @@ class PostReact(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)  # , validators=[__is_approved_post]
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # , validators=[__is_allowed_user]
 
-    react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE,
-                                validators=[validators.is_valid_react])
+    react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE)
+
+    objects = PostReactManager()
+    of_post = factory_manager_for_postreact
 
     class Meta:
         verbose_name = "Post React"

@@ -19,4 +19,6 @@ initdb2.json
 
 node_modules/
 
+__temp__/
+
 
