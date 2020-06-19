@@ -76,7 +76,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                                                   lookup_url_kwarg='post_pk')
 
     template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
-                                                   required=False)
+                                                   required=False)  # Post.approved restricts unapproved as template ref
     url = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-detail')
 
     is_template = serializers.CharField(source='is_template_post', read_only=True)
@@ -123,15 +123,20 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        template_id = None
+        if 'template' in validated_data:
+            template = validated_data.pop('template')
+            template_id = template.id if template.template_id is None else template.template_id
         try:
             keywords_data = validated_data.pop('keywords')
-            keyword_names_given = list(set([keyword['name'].lower() for keyword in keywords_data]))
+            keyword_names_given = [keyword['name'].lower() for keyword in keywords_data if keyword['name'] != '']
+            keyword_names_given = sorted(set(keyword_names_given), key=lambda x: keyword_names_given.index(x))
             Keyword.objects.bulk_create([Keyword(name=name) for name in keyword_names_given], ignore_conflicts=True)
-            keywords = Keyword.objects.filter(name__in=keyword_names_given)
-            keyword_names_saved = list({keyword.name for keyword in keywords})
+            keywords = Keyword.objects.filter(name__in=keyword_names_given).order_by('name')
+            keyword_names_saved = sorted({keyword.name for keyword in keywords})
             if keyword_names_given != keyword_names_saved:
                 raise exceptions.APIException(detail='could not save keyword in the database')
-            post = Post.objects.create(**validated_data)
+            post = Post.objects.create(**validated_data, template_id=template_id)
             post.keywords.set(keywords)
             return post
         except KeyError:

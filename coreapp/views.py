@@ -4,6 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
+from coreapp import constants
 from coreapp.permissions import IsModerator
 from memesbd.models import *
 from memesbd import utils_db
@@ -14,9 +15,9 @@ from memesbd.validators import post_query_schema
 
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 3
+    page_size = constants.DEFAULT_PAGE_SIZE
     page_size_query_param = 'page-size'
-    max_page_size = 10
+    max_page_size = constants.MAX_PAGE_SIZE
 
 
 class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
