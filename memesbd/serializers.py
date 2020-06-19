@@ -2,6 +2,7 @@ from django.db import transaction
 from django.utils import timezone
 from drf_extra_fields import fields as extra_fields
 from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers, exceptions
 from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 
@@ -38,7 +39,8 @@ class PostReactSerializer(serializers.ModelSerializer):
     post = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail', required=True)
     react = ChoiceField(choices=Reacts.react_choices(), required=True)
     url = NestedHyperlinkedIdentityField(view_name='api:post-react-detail',
-                                         parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True)
+                                         parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True,
+                                         label="reaction's view url")
 
     class Meta:
         model = PostReact
@@ -65,13 +67,13 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     image = extra_fields.HybridImageField()  # image file / base64
 
     reacts = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-react-list',
-                                                  lookup_url_kwarg='post_pk')
+                                                  lookup_url_kwarg='post_pk', help_text="all reactions for this post")
 
     template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
                                                    required=False)  # Post.approved restricts unapproved as template ref
     url = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-detail')
 
-    is_template = serializers.CharField(source='is_template_post', read_only=True)
+    is_template = serializers.BooleanField(source='is_template_post', read_only=True)
 
     react_counts = serializers.SerializerMethodField()
 
@@ -95,14 +97,27 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             'configuration_tail': {'write_only': True},
         }
 
-    def get_publisher(self, post):
+    @swagger_serializer_method(serializer_or_field=serializers.JSONField())
+    def get_publisher(self, post) -> dict:
+        """Returns uploader info
+        :return {'username':current user name, 'url': user-profile link}
+        """
         return {'username': post.author.username,
                 'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author_id]))}
 
-    def get_react_counts(self, post):
+    @swagger_serializer_method(serializer_or_field=serializers.JSONField())
+    def get_react_counts(self, post) -> dict:
+        """Returns all reactions:count map for this post
+        :return: {'WOW':10, 'HAHA':4}
+        """
         return PostReact.objects.reacts_count_map(post_id=post.id)
 
+    @swagger_serializer_method(
+        serializer_or_field=serializers.StringRelatedField(help_text="name of reaction of current user"))
     def get_react_user(self, post):
+        """Returns current user's reaction on this posts
+        :return: reaction-name or null if no reaction from the user
+        """
         try:
             request = self.context['request']
             post_react = post.postreact_set.all().without_removed_reacts().get(user_id=request.user.id)
@@ -132,11 +147,13 @@ class PostModerationSerializer(serializers.ModelSerializer):
     approval_at = serializers.DateTimeField(default=timezone.now())
     approval_status = ChoiceField(choices=ApprovalStatus.approval_status())
     keywords = KeywordSerializer(many=True, read_only=True)
+    template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
+                                                   required=False)
 
     class Meta:
         model = Post
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'author',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
                   'template', 'author', 'keywords', ]
-        read_only_fields = ('caption', 'image', 'nviews', 'author', 'uploaded_at', 'moderator', 'template', 'keywords',)
+        read_only_fields = ('caption', 'image', 'nviews', 'author', 'uploaded_at', 'moderator', 'keywords',)
         extra_kwargs = {}

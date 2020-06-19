@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 from filters.mixins import FiltersMixin
 from rest_framework import viewsets, status, filters, exceptions, permissions, mixins
 from rest_framework.decorators import action
@@ -119,11 +121,12 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(UserSerializer(request.user, context={'request': request}).data, status=status.HTTP_200_OK)
 
 
+@method_decorator(name='list',
+                  decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 class PostReactViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows users to react or view reacts on approved posts.
+    API endpoint that allows users to react or view reactions on approved posts.
     """
-    # queryset = PostReact.objects.filter(post__approval_status=ApprovalStatus.APPROVED)
     serializer_class = PostReactSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     http_method_names = ['get', 'post']
@@ -131,6 +134,8 @@ class PostReactViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return PostReact.objects.all().of_approved_posts().of_post(self.kwargs['post_pk'])
 
+    @swagger_auto_schema(method='get', operation_description="Returns current user's reaction on the post",
+                         responses={status.HTTP_404_NOT_FOUND: 'Post/Reaction Not found'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='user', url_name='user')
     def user(self, request, post_pk=None):
@@ -147,6 +152,7 @@ class PostReactViewSet(viewsets.ModelViewSet):
         except PostReact.DoesNotExist:
             raise exceptions.NotFound(detail="No react on the post from this user")
 
+    @swagger_auto_schema(operation_description="Create/Change/Remove current user's reaction on the post")
     def create(self, request, *args, **kwargs):
         is_mutable = True if getattr(request.data, '_mutable', True) else request.data._mutable
         if not is_mutable:
