@@ -34,6 +34,9 @@ class PostQuerySet(models.QuerySet):
     def with_comments_count(self):
         return self.annotate(comment_count=Count('postcomment'))
 
+    def approved_only(self):
+        return self.filter(approval_status=ApprovalStatus.APPROVED)
+
 
 class PostManager(models.Manager):
     def __init__(self, approval_status=None, *args, **kwargs):
@@ -45,6 +48,9 @@ class PostManager(models.Manager):
         if self.approval_status is not None:
             qs = qs.filter(approval_status=self.approval_status)
         return qs
+
+    def get_related_posts(self, post_id: int) -> QuerySet:
+        return self.get_queryset().related_with(post_id)
 
     @classmethod
     def factory(cls, model, approval_status=None):
@@ -103,6 +109,9 @@ class PostReactQuerySet(models.QuerySet):
     def react_counts(self):
         return self.values('react').annotate(count=Count('user'))
 
+    def of_approved_posts(self):
+        return self.filter(post__approval_status=ApprovalStatus.APPROVED)
+
 
 class PostReactManager(models.Manager):
     def __init__(self, post_id=None, *args, **kwargs):
@@ -122,6 +131,9 @@ class PostReactManager(models.Manager):
         return manager
 
     def reacts_count_map(self, post_id: int) -> dict:
+        """
+        :returns a dict with as ({'WOW': 1})
+        """
         rset = {}
         for q in self.get_queryset().of_post(post_id).without_removed_reacts().react_counts().values_list('react',
                                                                                                           'count'):

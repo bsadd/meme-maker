@@ -62,7 +62,10 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     http_method_names = ['get', 'post', 'put']
 
-    queryset = Post.objects.prefetch_related('reacts', 'author').all()
+    def get_queryset(self):
+        if self.action == 'related':
+            return Post.objects.get_related_posts(post_id=self.kwargs['pk']).prefetch_related('reacts', 'author')
+        return Post.objects.prefetch_related('reacts', 'author').all()
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.serializer_class)
@@ -71,11 +74,9 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
             url_path='related', url_name='related-posts')
     def related(self, request, pk):
         try:
-            posts = utils_db.get_related_posts(post_id=pk)
-            serializer = PostSerializer(posts, many=True, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return super().list(request, pk=pk)
         except Post.DoesNotExist:
-            raise exceptions.NotFound
+            raise exceptions.NotFound(detail='No such post exists with id=%s' % pk)
 
     @action(detail=False, methods=['GET'], permission_classes=[IsModerator],
             url_path='pending', url_name='pending-posts')
@@ -127,10 +128,8 @@ class PostReactViewSet(viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     http_method_names = ['get', 'post']
 
-    # lookup_field = 'post__id'
-
     def get_queryset(self):
-        return PostReact.objects.filter(post_id=self.kwargs['post_pk'], post__approval_status=ApprovalStatus.APPROVED)
+        return PostReact.objects.all().of_approved_posts().of_post(self.kwargs['post_pk'])
 
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='user', url_name='user')

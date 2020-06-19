@@ -2,41 +2,16 @@
 Contains utility functions for database query maintenance i.e. Insert/Update
 """
 
-from collections import namedtuple
-
-from django.db import connection
-
 # ------------------ util functions --------------------------
 from memesbd.models import Post, PostReact
 from memesbd.consts_db import ApprovalStatus, Reacts
 
 
-def namedtuplefetchall(query, param_list):
-    """Return all rows from a cursor as a namedtuple"""
-    with connection.cursor() as cursor:
-        cursor.execute(query, param_list)
-        desc = cursor.description
-        nt_result = namedtuple('Result', [col[0] for col in desc])
-        return [nt_result(*row) for row in cursor.fetchall()]
-
-
-# ------------------- Review Ratings -------------------------
+# ------------------- Review -------------------------
 
 
 def get_react_count_post(post_id):
-    """
-    :param post_id: id of the post
-    # :returns a qset with each element as ({'react': 'wow', 'count': 1})
-    :returns a dict with as ({'WOW': 1})
-    """
-    from django.db.models import Count
-    qset = PostReact.objects.filter(post_id=post_id).exclude(react=Reacts.NONE).values('react').annotate(
-        count=Count('user'))
-    rset = {}
-    for q in qset:
-        rset[Reacts.REACT_NAMES[q['react']]] = q['count']
-        q['react'] = Reacts.REACT_NAMES[q['react']]
-    return rset
+    return PostReact.objects.reacts_count_map(post_id)
 
 
 def update_react_post(user, post_id, react):
@@ -51,24 +26,7 @@ def update_react_post(user, post_id, react):
     if post.approval_status != ApprovalStatus.APPROVED:
         from django.core.exceptions import PermissionDenied
         raise PermissionDenied
-    post_react, _ = PostReact.objects.get_or_create(post=post, user=user)
-    post_react.react = react
-    post_react.save()
-    return post_react
-
-
-# ------------ User Profile -----------------------------
-
-def get_pending_posts(user_id):
-    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.PENDING)
-
-
-def get_approved_posts(user_id):
-    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.APPROVED)
-
-
-def get_rejected_posts(user_id):
-    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.REJECTED)
+    return PostReact.objects.all().of_approved_posts().create(post=post, user=user, react=react)
 
 
 # ------------ Posts -----------------------------
