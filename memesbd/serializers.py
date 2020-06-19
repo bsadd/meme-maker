@@ -49,14 +49,6 @@ class PostReactSerializer(serializers.ModelSerializer):
         """disable unique together checks for (user, post) for get_or_create operation in create"""
         return []
 
-    def create(self, validated_data):
-        react = validated_data.pop('react')
-        post_react, _ = PostReact.objects.get_or_create(**validated_data)
-        if post_react.react != react:
-            post_react.react = react
-            post_react.save()
-        return post_react
-
 
 class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     """
@@ -108,25 +100,18 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                 'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author_id]))}
 
     def get_react_counts(self, post):
-        rset = {}
-        for q in PostReact.of_post(post.id).all().without_removed_reacts().react_counts().values_list('react', 'count'):
-            rset[Reacts.REACT_NAMES[q[0]]] = q[1]
-        return rset
+        return PostReact.objects.reacts_count_map(post_id=post.id)
 
     def get_react_user(self, post):
         try:
             request = self.context['request']
-            post_react = PostReact.of_post(post.id).all().of_user(user_id=request.user).get()
+            post_react = post.postreact_set.all().without_removed_reacts().get(user_id=request.user.id)
             return post_react.react_name()
         except (PostReact.DoesNotExist, KeyError, TypeError):  # TypeError for Anonymous User
             return None
 
     @transaction.atomic
     def create(self, validated_data):
-        template_id = None
-        if 'template' in validated_data:
-            template = validated_data.pop('template')
-            template_id = template.id if template.template_id is None else template.template_id
         try:
             keywords_data = validated_data.pop('keywords')
             keyword_names_given = [keyword['name'].lower() for keyword in keywords_data if keyword['name'] != '']
@@ -136,9 +121,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             keyword_names_saved = sorted({keyword.name for keyword in keywords})
             if keyword_names_given != keyword_names_saved:
                 raise exceptions.APIException(detail='could not save keyword in the database')
-            post = Post.objects.create(**validated_data, template_id=template_id)
-            post.keywords.set(keywords)
-            return post
+            return Post.objects.create(**validated_data, keywords=keywords)
         except KeyError:
             return Post.objects.create(**validated_data)
 

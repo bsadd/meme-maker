@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.db.models import QuerySet, Count, Case, When
 
 from memesbd.consts_db import *
@@ -52,6 +52,25 @@ class PostManager(models.Manager):
         manager.model = model
         return manager
 
+    @transaction.atomic
+    def create(self, **kwargs):
+        """
+        Overwritten to maintain nested template reference concept
+        """
+        template_id = kwargs.pop('template_id', None)
+        template = kwargs.pop('template', None)
+        keywords = kwargs.pop('keywords', [])
+
+        if template is not None:
+            template_id = template.id if template.template_id is None else template.template_id
+        elif template_id is not None:
+            template = self.get_queryset().get(id=template_id)
+            template_id = template.id if template.template_id is None else template.template_id
+        obj = super().create(**kwargs, template_id=template_id)
+        if keywords:
+            obj.keywords.set(keywords)
+        return obj
+
 
 class PostReactQuerySet(models.QuerySet):
     def like(self):
@@ -74,6 +93,9 @@ class PostReactQuerySet(models.QuerySet):
 
     def of_user(self, user_id):
         return self.filter(user_id=user_id)
+
+    def of_post(self, post_id):
+        return self.filter(post_id=post_id)
 
     def without_removed_reacts(self):
         return self.exclude(react=Reacts.NONE)
@@ -98,3 +120,21 @@ class PostReactManager(models.Manager):
         manager = cls(post_id)
         manager.model = model
         return manager
+
+    def reacts_count_map(self, post_id: int) -> dict:
+        rset = {}
+        for q in self.get_queryset().of_post(post_id).without_removed_reacts().react_counts().values_list('react',
+                                                                                                          'count'):
+            rset[Reacts.REACT_NAMES[q[0]]] = q[1]
+        return rset
+
+    def react_user(self, post_id: int, user_id: int) -> QuerySet:
+        return self.get_queryset().of_post(post_id).all().without_removed_reacts().of_user(user_id=user_id)
+
+    def create(self, **kwargs):
+        react = kwargs.pop('react')
+        obj, created = super().update_or_create(
+            **kwargs,
+            defaults={'react': react},
+        )
+        return obj
