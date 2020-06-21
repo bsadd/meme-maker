@@ -44,13 +44,13 @@ class PostTests(APITestCase):
 
     def generate_photo_file(self):
         file = io.BytesIO()
-        image = Image.new('RGBA', size=(4096, 2160), color=(155, 170, 150))
+        image = Image.new('RGBA', size=(1024, 1024), color=(155, 0, 0))
         image.save(file, 'png')
         file.name = 'test.png'
         file.seek(0)
         return file
 
-    def test_new_create(self):
+    def test_create_template(self):
         """
         Ensure we can create a new post object.
         TODO: file upload support
@@ -65,11 +65,9 @@ class PostTests(APITestCase):
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    }
         response = self.client.post(url, data=payload, format='json')
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user0')
+        self.assertEqual(response.data['publisher']['username'], 'user0')
         self.assertEqual(response.data['approval_status'], 'PENDING')
-        # self.assertEqual(str(response.data['image']).split('/')[-1], self.generate_photo_file().name)
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
 
@@ -84,10 +82,138 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user1')
+        self.assertEqual(response.data['publisher']['username'], 'user1')
         self.assertEqual(response.data['approval_status'], 'PENDING')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
+
+        ## user1 w/o keywords
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'new_post',
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['approval_status'], 'PENDING')
+        payload['keywords'] = []
+        payload['template'] = None
+        payload['is_adult'] = payload['is_violent'] = False
+        self.assertTrue(
+            all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
+
+    def test_create_from_template(self):
+        """
+        Ensure we can create a post object from a template.
+        """
+        template_post = Post.objects.create(caption="template_approved_post", author=User.objects.get(username='user0'),
+                                            moderator=self.moderator, approval_status=ApprovalStatus.APPROVED)
+        template_post_url = self.client.get(reverse('api:post-detail', args=[template_post.id])).data['url']
+
+        ## user0
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_template_post',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': template_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['publisher']['username'], 'user0')
+        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertTrue(
+            all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
+
+        ## user1 on repeated keyword
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_template_post2',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me3'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': template_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertTrue(
+            all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
+
+        ## create from non-existing template post
+        template_post_url = "http://testserver" + reverse('api:post-detail', args=[1000])
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_template_post2',
+                   'keywords': [{'name': 'me'}, {'name': 'me1'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': template_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        ## create from unapproved template post
+        template_post_url = "http://testserver" + reverse('api:post-detail', args=[self.post_unapproved.id])
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_template_post2',
+                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': template_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_from_nested_template(self):
+        """
+        Ensure base template reference is maintained when we create a post object from another post which is itself created from a template.
+        """
+        base_template = Post.objects.create(caption="template_approved_post",
+                                            author=User.objects.get(username='user0'),
+                                            moderator=self.moderator, approval_status=ApprovalStatus.APPROVED,
+                                            template_id=None)
+        generated_post = Post.objects.create(caption="template_approved_post",
+                                             author=User.objects.get(username='user0'),
+                                             moderator=self.moderator, approval_status=ApprovalStatus.APPROVED,
+                                             template=base_template)
+        template_post_url = self.client.get(reverse('api:post-detail', args=[base_template.id])).data['url']
+        generated_post_url = self.client.get(reverse('api:post-detail', args=[generated_post.id])).data['url']
+
+        ## user0
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_generated_post',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': generated_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['template'], template_post_url)
+
+        ## user1 on repeated keyword
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_generated_post2',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me3'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': generated_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['template'], template_post_url)
 
     def test_update(self):
         """
@@ -114,6 +240,13 @@ class PostTests(APITestCase):
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        ## user0 react on unapproved post
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-react-list', args=[self.post_unapproved.id])
+        payload = {'react': 'like'}
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
         ## user0 react on invalid post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-react-list', args=[100])
@@ -127,7 +260,6 @@ class PostTests(APITestCase):
         payload = {'react': 'love'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['post'], post_approved.id)
         self.assertEqual(response.data['react'], 'LOVE')
 
         ## user0 - check react LOVE
@@ -142,9 +274,7 @@ class PostTests(APITestCase):
         url = reverse('api:post-react-list', args=[post_approved.id])
         payload = {'react': 'haha'}
         response = self.client.post(url, data=payload, format='json')
-        print(response.data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['post'], post_approved.id)
         self.assertEqual(response.data['react'], 'HAHA')
 
         ## user0 - check react HAHA
@@ -158,7 +288,65 @@ class PostTests(APITestCase):
         """
         Ensure react count only increases/decreases with authenticated user's react
         """
-        pass
+        post_approved = Post.objects.create(caption='approved_post', approval_status=ApprovalStatus.APPROVED,
+                                            author=User.objects.get(username='user2'))
+        post_approved_2 = Post.objects.create(caption='approved_post_2', approval_status=ApprovalStatus.APPROVED,
+                                              author=User.objects.get(username='user2'))
+        ## initially no react
+        url = reverse('api:post-detail', args=[post_approved.id])
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(response.data['react_counts'], {})
+
+        ## user0 - react LOVE - post1
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-react-list', args=[post_approved.id])
+        response = self.client.post(url, data={'react': 'love'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        ## user0 - react LIKE - post2
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-react-list', args=[post_approved_2.id])
+        response = self.client.post(url, data={'react': 'like'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        url = reverse('api:post-detail', args=[post_approved.id])
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(response.data['react_counts'], {'LOVE': 1})
+
+        ## user1 - react LOVE - post1
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-react-list', args=[post_approved.id])
+        response = self.client.post(url, data={'react': 'love'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        url = reverse('api:post-detail', args=[post_approved.id])
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(response.data['react_counts'], {'LOVE': 2})
+
+        ## user2 - react HAHA - post1
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])
+        url = reverse('api:post-react-list', args=[post_approved.id])
+        response = self.client.post(url, data={'react': 'haha'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        url = reverse('api:post-detail', args=[post_approved.id])
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(response.data['react_counts'], {'LOVE': 2, 'HAHA': 1})
+
+        ## user0 - unreact LOVE - post1
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-react-list', args=[post_approved.id])
+        response = self.client.post(url, data={'react': 'none'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        url = reverse('api:post-detail', args=[post_approved.id])
+        response = self.client.get(url, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertDictEqual(response.data['react_counts'], {'LOVE': 1, 'HAHA': 1})
 
     def test_approval(self):
         """
@@ -172,22 +360,22 @@ class PostTests(APITestCase):
 
         # normal user cannot approve the post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.post(url, data={'approval_status': 'APPROVED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
         # moderator approves the post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.put(url, data={'approval_status': 'APPROVED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['approval_status'], 'APPROVED')
 
         # moderator tries to approve the already approved post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'APPROVE'}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.put(url, data={'approval_status': 'APPROVED'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         # post is accessible after being approved
         self.client.credentials(HTTP_AUTHORIZATION='')
@@ -198,8 +386,8 @@ class PostTests(APITestCase):
 
         # admin rejects the post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_admin)
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'REJECT'}, format='json')
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.put(url, data={'approval_status': 'REJECTED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['approval_status'], 'REJECTED')
 
@@ -211,6 +399,6 @@ class PostTests(APITestCase):
 
         # moderator tries to reject the already rejected post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
-        url = reverse('api:post-approval', args=[self.post_unapproved.id])
-        response = self.client.post(url, data={'approval_status': 'REJECT'}, format='json')
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+        url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
+        response = self.client.put(url, data={'approval_status': 'REJECTED'}, format='json')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)

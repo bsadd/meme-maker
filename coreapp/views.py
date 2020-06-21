@@ -1,86 +1,99 @@
-from django.shortcuts import render
-from django.utils import timezone
 from django.utils.decorators import method_decorator
-from rest_framework import viewsets, status, filters
+from drf_yasg.utils import swagger_auto_schema
+from filters.mixins import FiltersMixin
+from rest_framework import viewsets, status, filters, exceptions, permissions, mixins
 from rest_framework.decorators import action
-from rest_framework import permissions
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
-from rest_framework import exceptions
 
-from coreapp.decorators import *
+from coreapp import constants
 from coreapp.permissions import IsModerator
-from memesbd import utils_db
 from memesbd.models import *
+from memesbd import utils_db
+from memesbd.filters import *
 from memesbd.serializers import *
+from memesbd.utils import to_bool
+from memesbd.validators import post_query_schema
 
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 3
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+    page_size = constants.DEFAULT_PAGE_SIZE
+    page_size_query_param = 'page-size'
+    max_page_size = constants.MAX_PAGE_SIZE
 
 
-class PostViewSet(viewsets.ModelViewSet):
+class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    API endpoint that allows Post to be created/viewed/edited.
     TODO: validation using models
     TODO: enforce author edit only
+    TODO: check timezone
     """
+    filter_backends = (PostCategoryFilter, PostSearchFilter, filters.OrderingFilter)
+    filter_mappings = {
+        'uploader': 'author_id__in',
+        'violent': 'is_violent',
+        'adult': 'is_adult',
+        'keyword': 'keywordlist__keyword__name__in',
+        'uploaded-before': 'uploaded_at__lt',
+        'uploaded-after': 'uploaded_at__gte',
+        'uploaded-on': 'uploaded_at__date',
+        'template': 'template__isnull',
+    }
+    filter_value_transformations = {
+        'violent': lambda val: to_bool(val),
+        'adult': lambda val: to_bool(val),
+        'template': lambda val: to_bool(val),
+        'keyword': lambda val: filter(None, val.strip().lower().split(',')),
+    }
+    filter_validation_schema = post_query_schema
     search_fields = ['caption', 'author__username', 'keywordlist__keyword__name']
-    filter_backends = (filters.SearchFilter,)
-    serializer_class = PostSerializer  # default serializer
+    search_fields_mappings = {'caption': 'caption',
+                              'uploader': 'author__username',
+                              'keyword': 'keywordlist__keyword__name'}
+    search_param = 'q'
+    ordering_fields = ['uploaded_at', 'nviews']
+    ordering = ['-uploaded_at']
+
     pagination_class = StandardResultsSetPagination
+    serializer_class = PostSerializer
+    serializer_classes = {
+        'pending': PostModerationSerializer,
+    }
+
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    http_method_names = ['get', 'post', 'put']
 
-    queryset = Post.approved.order_by('id')
+    def get_queryset(self):
+        if self.action == 'related':
+            return Post.objects.get_related_posts(post_id=self.kwargs['pk']).prefetch_related('reacts', 'author')
+        return Post.objects.prefetch_related('reacts', 'author').all()
 
-    @action(detail=True, methods=['POST'], permission_classes=[IsModerator],
-            url_path='approval', url_name='approval')
-    def approval(self, request, pk):
-        try:
-            post = Post.objects.get(id=pk)
-            approval_status = str(request.data['approval_status']).upper()
-            if approval_status not in ['APPROVE', 'REJECT']:
-                raise exceptions.ValidationError(detail="Invalid 'approval_status'")
-            elif post.approval_status == ApprovalStatus.APPROVED and approval_status == 'APPROVE':
-                raise exceptions.NotAcceptable(detail="Already approved")
-            elif post.approval_status == ApprovalStatus.REJECTED and approval_status == 'REJECT':
-                raise exceptions.NotAcceptable(detail="Already rejected")
-            else:
-                post.approval_status = ApprovalStatus.APPROVED if approval_status == 'APPROVE' else ApprovalStatus.REJECTED
-                post.moderator = request.user
-                post.approval_at = timezone.now()
-                post.save()
-                return Response(PostSerializer(post).data, status=status.HTTP_200_OK)
-        except Post.DoesNotExist:
-            raise exceptions.NotFound
-        except KeyError:
-            raise exceptions.NotAcceptable(detail="'approval_status' field must be provided")
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, self.serializer_class)
 
     @action(detail=True, methods=['GET'],
             url_path='related', url_name='related-posts')
     def related(self, request, pk):
         try:
-            posts = utils_db.get_related_posts(post_id=pk)
-            serializer = PostSerializer(posts, many=True)
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return super().list(request, pk=pk)
         except Post.DoesNotExist:
-            raise exceptions.NotFound
+            raise exceptions.NotFound(detail='No such post exists with id=%s' % pk)
 
     @action(detail=False, methods=['GET'], permission_classes=[IsModerator],
             url_path='pending', url_name='pending-posts')
     def pending(self, request):
-        posts = Post.objects.filter(approval_status=ApprovalStatus.PENDING)
-        serializer = PostSerializer(posts, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        is_mutable = request.query_params._mutable
+        request.query_params._mutable = True
+        request.query_params['approval-status'] = 'PENDING'
+        request.query_params._mutable = is_mutable
+        return super().list(request)
 
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='my-posts', url_name='my-posts')
     def my_posts(self, request):
         posts = Post.objects.filter(author=request.user)
-        serializer = PostSerializer(posts, many=True)
+        serializer = PostSerializer(posts, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -91,7 +104,7 @@ class KeywordViewSet(viewsets.ModelViewSet):
     queryset = Keyword.objects.all()
     serializer_class = KeywordSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    # http_method_names = ('GET', 'POST',)
+    http_method_names = ['get', 'post']
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -100,45 +113,63 @@ class UserViewSet(viewsets.ModelViewSet):
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
+    http_method_names = ['get', 'post', 'put']
 
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='current', url_name='current')
     def current_user(self, request):
-        return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
+        return Response(UserSerializer(request.user, context={'request': request}).data, status=status.HTTP_200_OK)
 
 
+@method_decorator(name='list',
+                  decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 class PostReactViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    API endpoint that allows users to react or view reactions on approved posts.
     """
-    queryset = PostReact.objects.filter(post__approval_status=ApprovalStatus.APPROVED)
     serializer_class = PostReactSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-
-    # lookup_field = 'post__id'
+    http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return PostReact.objects.filter(post_id=self.kwargs['post_pk'], post__approval_status=ApprovalStatus.APPROVED)
+        return PostReact.objects.all().of_approved_posts().of_post(self.kwargs['post_pk'])
 
+    @swagger_auto_schema(method='get', operation_description="Returns current user's reaction on the post",
+                         responses={status.HTTP_404_NOT_FOUND: 'Post/Reaction Not found'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='user', url_name='user')
     def user(self, request, post_pk=None):
-        """post/1/react/user
-        current user's react only
+        """
+        currently authenticated user's react only
         """
         try:
-            '''
-            TODO: should check post existence?
-            '''
             post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
-            return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user)).data,
+            return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user),
+                                                context={'request': request}).data,
                             status=status.HTTP_200_OK)
         except Post.DoesNotExist:
             raise exceptions.NotFound(detail="No such react-able post exists with this id")
         except PostReact.DoesNotExist:
             raise exceptions.NotFound(detail="No react on the post from this user")
 
+    @swagger_auto_schema(operation_description="Create/Change/Remove current user's reaction on the post")
     def create(self, request, *args, **kwargs):
+        is_mutable = True if getattr(request.data, '_mutable', True) else request.data._mutable
+        if not is_mutable:
+            request.data._mutable = True
         request.data['react'] = str(request.data['react']).upper()
-        request.data['post'] = kwargs['post_pk']
+        request.data['post'] = reverse('api:post-detail', args=[kwargs['post_pk']])
+        if not is_mutable:
+            request.data._mutable = False
         return super().create(request, args, kwargs)
+
+
+class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
+                            viewsets.GenericViewSet):
+    """
+    API endpoint to allow moderators to approve/moderate posts
+    """
+    pagination_class = StandardResultsSetPagination
+    serializer_class = PostModerationSerializer
+    permission_classes = (IsModerator,)
+    queryset = Post.objects.prefetch_related('reacts', 'author').all()

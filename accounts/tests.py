@@ -9,8 +9,8 @@ from accounts.models import User
 class UserTests(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(username='mainuser', password='password', email="testuser@localhost")
+        self.user_data = {'username': 'mainuser', 'first_name': '', 'last_name': ''}
         Token.objects.create(user=self.user)
-        # print(self.user.username)
 
     def test_user_register(self):
         """
@@ -43,7 +43,8 @@ class UserTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + token.key)
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {'username': 'mainuser', 'first_name': '', 'last_name': ''})
+        self.assertTrue(
+            all(self.user_data[k] == response.data[k] for k in self.user_data.keys() & response.data.keys()))
 
     def test_login(self):
         """
@@ -59,7 +60,8 @@ class UserTests(APITestCase):
         url = reverse('api:user-current')
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data, {'username': 'mainuser', 'first_name': '', 'last_name': ''})
+        self.assertTrue(
+            all(self.user_data[k] == response.data[k] for k in self.user_data.keys() & response.data.keys()))
         self.client.logout()
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

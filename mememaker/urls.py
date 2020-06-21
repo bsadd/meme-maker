@@ -13,11 +13,29 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls import url
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework import routers
+
+from accounts.views import FacebookLogin, FacebookConnect, GoogleLogin, GoogleConnect
 from mememaker import settings
 from django.conf.urls.static import static
+from rest_framework import permissions
+from drf_yasg.views import get_schema_view
+from drf_yasg import openapi
+
+schema_view = get_schema_view(
+    openapi.Info(
+        title="Snippets API",
+        default_version='v1',
+        description="Meme Creation/Editing Platform API",
+        terms_of_service="https://www.google.com/policies/terms/",
+        contact=openapi.Contact(email="contact@snippets.local"),
+        license=openapi.License(name="BSD License"),
+    ),
+    public=True,
+    permission_classes=(permissions.IsAuthenticatedOrReadOnly,),
+)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,7 +47,15 @@ urlpatterns = [
     path(r'rest-auth/', include(('rest_auth.urls', 'rest_auth'), namespace='rest-auth')),  # rest_login
     path(r'rest-auth/registration/', include(('rest_auth.registration.urls', 'rest_auth'),
                                              namespace='rest-auth-registration')),
+    url(r'^rest-auth/facebook/$', FacebookLogin.as_view(), name='rest-auth-facebook-login'),
+    url(r'^rest-auth/facebook-connect/$', FacebookConnect.as_view(), name='rest-auth-facebook-connect'),
+    url(r'^rest-auth/google/$', GoogleLogin.as_view(), name='rest-auth-google-login'),
+    url(r'^rest-auth/google-connect/$', GoogleConnect.as_view(), name='rest-auth-google-connect'),
     # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+
+    url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
+    url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
+    url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 
 if settings.DEBUG:
