@@ -1,0 +1,262 @@
+{% extends fullLoad|yesno:"memesbd/base.html,memesbd/empty.html" %}
+
+{% load static %}
+
+{% load tagconstants %}
+
+
+{% block header %}
+{% if fullLoad  %}
+
+<script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+<script src="https://code.jquery.com/ui/1.11.4/jquery-ui.min.js"></script>
+<script src="{% static 'memesbd/js/spectrum.js' %}"></script>
+
+<script src="{% static 'memesbd/js/jquery.memegenerator.min.js' %}" type="text/javascript"></script>
+
+<link href="{% static 'memesbd/css/jquery.memegenerator.min.css' %}" rel="stylesheet" type="text/css">
+<link href="{% static 'memesbd/css/spectrum.css' %}" rel="stylesheet" type="text/css">
+<link href="https://code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css">
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+            h2 {
+                display: block;
+                text-align: center;
+            }
+
+            .example {
+                margin: 0 0 10% 0;
+            }
+
+            .bootstrap {
+                width: 600px;
+                margin-right: auto;
+                margin-left: auto;
+            }
+
+            .save button {
+                display: block;
+                width: 100%;
+                margin-bottom: 15px;
+                font-size: 24px;
+            }
+
+            #preview {
+                min-height: 200px;
+                background-color: #EFEFEF;
+                font-family: monospace;
+                overflow-y: auto;
+            }
+
+            #preview img {
+                max-width: 100%;
+            }
+
+
+</style>
+
+<title>Upload Meme | {% constant "Website_Name" %}</title>
+{% endif %}
+
+{% endblock %}
+
+
+{% block body-content %}
+{#<script src="{%static 'memesbd/js/html2canvas.js' %}"></script>#}
+
+
+<div class="container" style="max-width: 95%">
+
+    <h1>Edit Meme</h1>
+
+    <hr>
+
+
+    <form class="form-horizontal" enctype="multipart/form-data" method="post" role="form">
+        {% csrf_token %}
+        <div class="example horizontal row">
+            <img id='memeImg'  class="memeImg" src="{{ post.image.url }}" style="float: left; width: 50vw">
+
+
+            <div class=" mg-controls ">
+
+                <h3>Template info</h3>
+
+                {% include "memesbd/meme_info.html" %}
+
+            </div>
+        </div>
+
+        <div style="width: 60vw; padding-left: 20%">
+            <input class="btn btn-primary btn-lg btn-block" id="confirm_upload" type="submit" value="Upload">
+
+        </div>
+
+
+    </form>
+
+
+</div>
+
+
+<script type="text/javascript">
+        $(".example.default img").memeGenerator({});
+
+		$(".example.bootstrap img").memeGenerator({
+			useBootstrap: true
+		});
+
+		$(".example.horizontal img").memeGenerator({
+			useBootstrap: true,
+			layout: "horizontal",
+			previewMode: "css",
+			defaultTextStyle: {
+				font: "'Comic Sans', Arial",
+				lineHeight: 2
+			},
+			captions: [
+				"PREDEFINED text on top"
+			]
+		});
+
+
+		$("#example-save").memeGenerator({
+			useBootstrap: true
+		});
+
+		var imageDataUrl = $("#example-save").memeGenerator("save");
+
+		$("#save").click(function (e) {
+			e.preventDefault();
+
+			var imageDataUrl = $("#example-save").memeGenerator("save");
+
+			$.ajax({
+				url: "http://127.0.0.1:8000/save-img",
+				type: "POST",
+				data: {
+					image: imageDataUrl
+				},
+				dataType: "json",
+				success: function (response) {
+					$("#preview").html(
+						$("<img>").attr("src", response.filename)
+					);
+				},
+				error: function () {
+					alert('This demo uses communication with the server which is not implemented here.');
+				}
+			});
+		});
+
+		$("#download").click(function (e) {
+			e.preventDefault();
+			$("#example-save").memeGenerator("download");
+		});
+
+		$("#serialize").click(function (e) {
+			$("#preview").html($("#example-save").memeGenerator("serialize"));
+		});
+
+
+
+
+</script>
+
+
+<script src="{% static 'coreapp/js/ajax_request.js' %}"></script>
+<script language="javascript" src="{% static 'memesbd/js/lz-string.js' %}"></script>
+
+<script>
+
+
+        function getBase64Image(imgElem) {
+            var c = document.createElement('canvas');
+            var img = document.getElementById(imgElem);
+            c.height = img.naturalHeight;
+            c.width = img.naturalWidth;
+            var ctx = c.getContext('2d');
+
+            ctx.drawImage(img, 0, 0, c.width, c.height);
+            return c.toDataURL();
+        }
+
+        function dataURLtoBlob(dataurl) {
+            var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+                bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+            while (n--) {
+                u8arr[n] = bstr.charCodeAt(n);
+            }
+            return new Blob([u8arr], {type: mime});
+        }
+
+        var csrftoken = getCookie('csrftoken');
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
+        });
+
+
+        $("#confirm_upload").on('click', function (e) {
+            e.preventDefault();
+            alert('here');
+            var category = $('#category').val();
+            var caption = $('#tmplt_caption').val();
+            var keywords = '';
+            var memeImage = $("#memeImg").memeGenerator("save");
+
+            {#var compressed = LZString.compress(imageEditor.toDataURL());#}
+            {#console.log("Size of compressed sample is: " + compressed.length);#}
+            {#var dcmp = LZString.decompress(compressed);#}
+            {#console.log("Sample is: " + dcmp.length);#}
+
+
+            $('#added_keywords').each(function () {// id of ul
+                var li = $(this).find('li')//get each li in ul
+                li.each(function () {// id of ul
+                    keywords += '\'' + $(this).text().trim().slice(0, -1).trim() + '\','
+                });
+                $('#ingrds').val(keywords.slice(0, -1));
+
+
+            });
+
+
+            $.ajax({
+                type: "POST",
+                headers: {
+                    "X-CSRFToken": csrftoken
+                },
+                url: '/memesbd/upload-image-edited/',
+                data: {
+                    'caption': caption,
+                    'keywords': keywords,
+                    'memeImg': memeImage,
+					'template-id': {{ post.id }}
+
+                },
+                success: function (data) {
+                    alert('success');
+
+                }
+            });
+            console.log(keywords);
+
+
+        });
+
+
+</script>
+
+
+{% endblock %}
+
+
+
+
+
+

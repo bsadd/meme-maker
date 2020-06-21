@@ -19,4 +19,4 @@ initdb2.json
 
 node_modules/
 
-
+venv/

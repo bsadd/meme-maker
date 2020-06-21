@@ -1,141 +1,34 @@
-{% extends 'memesbd/base-banner.html' %}
+{% extends 'memesbd/base.html' %}
 {% load static %}
 {% load sass_tags %}
 {{% load tagconstants %}
 }
 {% block header %}
-    <title>Memes | {% constant "Website_Name" %}</title>
-
-    <!--price range-->
-    <link rel="stylesheet" type="text/css" href="{% static 'memesbd/toys_shop/css/jquery-ui1.css' %}">
-    <!--//price range-->
+	<title>Memes | {% constant "Website_Name" %}</title>
 {% endblock %}
 
-
-{% block body-js %}
-    {#    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>#}
-    {#    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">#}
-
-    <!-- price range (top products) -->
-    <script src="{% static 'memesbd/toys_shop/js/jquery-ui.js' %}"></script>
-    <script>
-        //<![CDATA[
-        $(window).load(function () {
-            $("#slider-range").slider({
-                range: true,
-                min: 0,
-                max: 2000,
-                values: [10, 600],
-                slide: function (event, ui) {
-                    $("#amount").val("$" + ui.values[0] + " - $" + ui.values[1]);
-                }
-            });
-            $("#amount").val("$" + $("#slider-range").slider("values", 0) + " - $" + $("#slider-range").slider("values", 1));
-
-        }); //]]>
-    </script>
-    <!-- //price range (top products) -->
-{% endblock %}
 
 {% block body-content %}
 
-    <section class="contact py-lg-4 py-md-3 py-sm-3 py-3">
-        <div class="container-fluid py-lg-5 py-md-4 py-sm-4 py-3">
-            <h3 class="title text-center mb-lg-5 mb-md-4 mb-sm-4 mb-3">Memes</h3>
-            <div class="row">
-                <div class="">
+	<section class="contact py-lg-4 py-md-3 py-sm-3 py-3">
+		<div class="container-fluid py-lg-5 py-md-4 py-sm-4 py-3">
+			<h3 class="title text-center mb-lg-5 mb-md-4 mb-sm-4 mb-3">Memes</h3>
+			<div class="row">
+				<div class="">
 
-                    <link href="{% sass_src 'memesbd/css/utility.scss' %}" rel="stylesheet" type="text/css"/>
+					<link href="{% sass_src 'memesbd/css/utility.scss' %}" rel="stylesheet" type="text/css"/>
 
+					<link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,900' rel='stylesheet'
+					      type='text/css'>
+					<link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css">
 
-                    <link href='https://fonts.googleapis.com/css?family=Lato:300,400,700,900' rel='stylesheet'
-                          type='text/css'>
-                    <link rel="stylesheet" href="http://fontawesome.io/assets/font-awesome/css/font-awesome.css">
-
-{#                    <dropdown id="category_drop">#}
-{#                        <input id="toggle2" type="checkbox">#}
-{#                        <label for="toggle2" class="animate">Select Category<i#}
-{#                                class="fa fa-list float-right"></i></label>#}
-{#                        <ul class="animate" style="padding-left: 0px" id="cat_list">#}
-{#                            <li class="animate">Source</li>#}
-{#                            <li class="animate">Fullpage</li>#}
-{#                            <li class="animate">Debug</li>#}
-{#                        </ul>#}
-{#                    </dropdown>#}
-{##}
-                </div>
-            </div>
-            <div class="row">
-                <div class="left-ads-display col-lg-9 product_list">
-
-                    {% include "memesbd/meme_list.html" %}
-
-                </div>
-
-
-                <script>
-                    var ratingVal = 0;
-                    var min_range = 0;
-                    var max_range = 10000;
-                    var menu_name;
-                    var rest_name;
-                    var category;
-                    var only_offer;
-                    $(document).ready(function () {
-                        $('#rest_select').on('change', function () {
-                            alert(this.value);
-                        });
-                        $(".rating_group button").click(function () {
-                            ratingVal = this.name;
-                            $('#get_menus').click();
-                            {#alert(rating);#}
-                        });
-                        $(".price_range button").click(function () {
-                            min_range = $('#min_range').val();
-                            max_range = $('#max_range').val();
-                            {#$('#get_menus').click();#}
-
-                        });
-
-                        $('#menu_search').on('keypress', function (e) {
-                            var code = e.keyCode || e.which;
-                            if (code == 13) {
-                                menu_name = $("#menu_search").val();
-                                $('#get_menus').click();
-                            }
-                        });
-                        $('.category_dropdown').on('click', function () {
-                            category = this.innerHTML;
-                            $('#get_menus').click();
-
-                        });
-                        $("#get_menus").click(function () {
-                            {#alert(rating);#}
-
-                            $.ajax({
-                                method: "GET",
-                                url: 'filter/',
-                                data: {
-                                    'rating': ratingVal,
-                                    'min_range': min_range,
-                                    'max_range': max_range,
-                                    'menu_name': menu_name,
-                                    'category': category
-                                    {#'only_offer': only_offer#}
-                                },
-                                responseTime: 200,
-
-                                success: function (data) {
-                                    {#console.log(data);#}
-                                    {#document.getElementsByClassName('product_list').innerHTML = data;#}
-
-                                    $('.product_list').empty().append(data);
-                                }
-                            });
-                        });
-                    });
-                </script>
-            </div>
-        </div>
-    </section>
+				</div>
+			</div>
+			<div class="row">
+				<div class="left-ads-display col-lg-9 product_list">
+					{% include "memesbd/meme_list.html" %}
+				</div>
+			</div>
+		</div>
+	</section>
 {% endblock %}

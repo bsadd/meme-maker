@@ -9,6 +9,7 @@ from django.db import connection
 # ------------------ util functions --------------------------
 from accounts.models import User
 from memesbd.models import Post, PostReact
+from memesbd.consts_db import ApprovalStatus
 
 
 def namedtuplefetchall(query, param_list):
@@ -26,43 +27,48 @@ def namedtuplefetchall(query, param_list):
 def get_react_count_post(post_id):
     """
     :param post_id: id of the post
-    :returns an array with index as react-value and value as count
-    i.e. ret_val[Reacts.UPVOTE] is number of times this post had been up-voted
+    :returns a qset with each element as ({'react': 'wow', 'count': 1})
     """
     from django.db.models import Count
     qset = PostReact.objects.filter(post_id=post_id).annotate(count=Count('user')).values('react', 'count')
     from memesbd.consts_db import Reacts
-    react_counts = [0] * (Reacts.MAX + 1)
     for q in qset:
-        react_counts[q['react']] = q['count']
-    return react_counts
+        q['react'] = Reacts.REACT_NAMES[q['react']]
+    return qset
 
 
 def update_react_post(user, post_id, react):
-    """ create or update user react on post """
+    """ create or update user status on post """
     from memesbd.consts_db import Reacts
     if not Reacts.is_valid_react(react):
-        return
+        from django.core.exceptions import ValidationError
+        raise ValidationError
     from memesbd.models import PostReact
     from memesbd.models import Post
-    post, _ = PostReact.objects.get_or_create(post=Post.objects.get(id=post_id), user=user)
-    post.react = react
-    post.save()
+    post = Post.objects.get(id=post_id)
+    if post.approval_status != ApprovalStatus.APPROVED:
+        from django.core.exceptions import PermissionDenied
+        raise PermissionDenied
+    post_react, _ = PostReact.objects.get_or_create(post=post, user=user)
+    post_react.react = react
+    post_react.save()
+    return post_react
 
 
-def update_comment_post(user, pkg_id, comment):
-    """ create or update user comment on package """
+def update_comment_post(user, post_id, comment):
+    """ create or update user comment on post """
     from memesbd.models import PostComment
     from memesbd.models import Post
-    package = Post.objects.get(id=pkg_id)
-    post, _ = PostComment.objects.get_or_create(package=package, user=user)
+    post = Post.objects.get(id=post_id)
+    post, _ = PostComment.objects.get_or_create(post=post, user=user)
     post.comment = comment
     post.save()
+    return post
 
 
 def update_comment_react_post(user, comment_id, react_val):
     """
-    create or update react on existing post of any user on package
+    create or update status on existing post of any user on package
     :returns updated (likes_count, dislikes_count) of that post
     """
     from memesbd.models import PostComment, PostCommentReact
@@ -77,6 +83,20 @@ def update_comment_react_post(user, comment_id, react_val):
     return get_react_count_post(post)
 
 
+# ------------ User Profile -----------------------------
+
+def get_pending_posts(user_id):
+    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.PENDING)
+
+
+def get_approved_posts(user_id):
+    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.APPROVED)
+
+
+def get_rejected_posts(user_id):
+    return Post.objects.filter(author_id=user_id, approval_status=ApprovalStatus.REJECTED)
+
+
 # ------------ Posts -----------------------------
 
 def get_posts(key=''):
@@ -87,7 +107,7 @@ def get_posts(key=''):
     caption = key.strip().lower()
     keywords = [k.lower() for k in key.split()]
     from memesbd.models import Post
-    return (Post.objects.filter(
+    return (Post.objects.filter(approval_status=ApprovalStatus.APPROVED).filter(
         caption__icontains=caption) | Post.objects.filter(
         keywords__keyword__name__in=keywords)).distinct()
 
@@ -107,9 +127,9 @@ def get_related_posts(post_id, post=None):
     if post is None:
         post = Post.objects.get(id=post_id)
     if post.is_template_post():
-        return Post.objects.filter(template=post)
+        return Post.approved.filter(template=post)
     else:
-        return Post.objects.exclude(id=post.id).filter(template=post.template)
+        return Post.approved.exclude(id=post.id).filter(template=post.template)
 
 
 #  ----------------------- Insert utils -------------------------
@@ -124,8 +144,7 @@ def insert_template_post(caption, keyword_list, image_base64, is_adult, user_id)
     """
     from memesbd.models import Post
     from memesbd.utils import trim_replace_wsp
-    user = User.objects.get(id=user_id)
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id)
     post.is_adult = is_adult
     for gen in keyword_list:
         from memesbd.models import Keyword, KeywordList
@@ -150,8 +169,7 @@ def insert_template_post_path(caption, keyword_list, image_path, is_adult, user_
     """
     from memesbd.models import Post
     from memesbd.utils import trim_replace_wsp
-    user = User.objects.get(id=user_id)
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id)
     post.is_adult = is_adult
     for gen in keyword_list:
         from memesbd.models import Keyword, KeywordList
@@ -174,10 +192,9 @@ def insert_meme_post(caption, keyword_list, image_base64, is_adult, user_id, tem
     :param template_id: id of the meme on which it had been edited on
     """
     from memesbd.models import Post
-    user = User.objects.get(id=user_id)
     template_id = Post.objects.get(id=template_id).get_template_id()
     from memesbd.utils import trim_replace_wsp
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author=user, template_id=template_id)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id, template_id=template_id)
     post.is_adult = is_adult
     for gen in keyword_list:
         from memesbd.models import Keyword, KeywordList

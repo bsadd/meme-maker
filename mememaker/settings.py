@@ -52,6 +52,9 @@ INSTALLED_APPS = [
 
     'tagconstants',  # template const.
 
+    'rest_framework',
+    'rest_framework.authtoken',
+    'rest_auth',
 ]
 
 MIDDLEWARE = [
@@ -137,9 +140,6 @@ USE_L10N = True
 
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/2.2/howto/static-files/
-
 STATIC_URL = '/static/'
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880
 
@@ -157,9 +157,14 @@ SASS_PROCESSOR_ROOT = os.path.join(BASE_DIR, 'static')
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
+    # 'DEFAULT_PERMISSION_CLASSES': [
+    #     'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
+    # ],
+    # 'DEFAULT_PAGINATION_CLASS': 'apps.core.pagination.StandardResultsSetPagination',
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        # 'rest_framework.authentication.SessionAuthentication',
+    )
 }
 
 AUTHENTICATION_BACKENDS = (
@@ -199,8 +204,6 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 #
 AUTH_USER_MODEL = 'accounts.User'
 
-LOGIN_REDIRECT_URL = '/'
-
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -219,5 +222,5 @@ SITE_ID = 4
 # Template Constant
 TAG_CONSTANTS = {
     'Website_Name': 'MemesBD',
-    'MAX_IMGSIZE': 2,
+    'MAX_IMGSIZE': 10,
 }
