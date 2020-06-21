@@ -47,6 +47,6 @@ class PostCategoryFilter(filters.BaseFilterBackend):
                     raise exceptions.ValidationError(detail='Invalid requested approval-status')
             queryset = queryset.filter(approval_status__in=approval_status)
         else:
-            queryset = queryset.filter(approval_status=ApprovalStatus.APPROVED)
+            queryset = queryset.approved_only()
 
         return queryset

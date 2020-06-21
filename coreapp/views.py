@@ -1,9 +1,12 @@
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 from filters.mixins import FiltersMixin
 from rest_framework import viewsets, status, filters, exceptions, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
+from coreapp import constants
 from coreapp.permissions import IsModerator
 from memesbd.models import *
 from memesbd import utils_db
@@ -14,14 +17,14 @@ from memesbd.validators import post_query_schema
 
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 3
+    page_size = constants.DEFAULT_PAGE_SIZE
     page_size_query_param = 'page-size'
-    max_page_size = 10
+    max_page_size = constants.MAX_PAGE_SIZE
 
 
 class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    API endpoint that allows Post to be created/viewed/edited.
     TODO: validation using models
     TODO: enforce author edit only
     TODO: check timezone
@@ -61,7 +64,10 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     http_method_names = ['get', 'post', 'put']
 
-    queryset = Post.objects.prefetch_related('reacts', 'author').all()
+    def get_queryset(self):
+        if self.action == 'related':
+            return Post.objects.get_related_posts(post_id=self.kwargs['pk']).prefetch_related('reacts', 'author')
+        return Post.objects.prefetch_related('reacts', 'author').all()
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.serializer_class)
@@ -70,11 +76,9 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
             url_path='related', url_name='related-posts')
     def related(self, request, pk):
         try:
-            posts = utils_db.get_related_posts(post_id=pk)
-            serializer = PostSerializer(posts, many=True, context={'request': request})
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return super().list(request, pk=pk)
         except Post.DoesNotExist:
-            raise exceptions.NotFound
+            raise exceptions.NotFound(detail='No such post exists with id=%s' % pk)
 
     @action(detail=False, methods=['GET'], permission_classes=[IsModerator],
             url_path='pending', url_name='pending-posts')
@@ -117,25 +121,26 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(UserSerializer(request.user, context={'request': request}).data, status=status.HTTP_200_OK)
 
 
+@method_decorator(name='list',
+                  decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 class PostReactViewSet(viewsets.ModelViewSet):
     """
-    API endpoint that allows users to be viewed or edited.
+    API endpoint that allows users to react or view reactions on approved posts.
     """
-    # queryset = PostReact.objects.filter(post__approval_status=ApprovalStatus.APPROVED)
     serializer_class = PostReactSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     http_method_names = ['get', 'post']
 
-    # lookup_field = 'post__id'
-
     def get_queryset(self):
-        return PostReact.objects.filter(post_id=self.kwargs['post_pk'], post__approval_status=ApprovalStatus.APPROVED)
+        return PostReact.objects.all().of_approved_posts().of_post(self.kwargs['post_pk'])
 
+    @swagger_auto_schema(method='get', operation_description="Returns current user's reaction on the post",
+                         responses={status.HTTP_404_NOT_FOUND: 'Post/Reaction Not found'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='user', url_name='user')
     def user(self, request, post_pk=None):
-        """post/1/react/user
-        current user's react only
+        """
+        currently authenticated user's react only
         """
         try:
             post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
@@ -147,6 +152,7 @@ class PostReactViewSet(viewsets.ModelViewSet):
         except PostReact.DoesNotExist:
             raise exceptions.NotFound(detail="No react on the post from this user")
 
+    @swagger_auto_schema(operation_description="Create/Change/Remove current user's reaction on the post")
     def create(self, request, *args, **kwargs):
         is_mutable = True if getattr(request.data, '_mutable', True) else request.data._mutable
         if not is_mutable:
@@ -160,6 +166,9 @@ class PostReactViewSet(viewsets.ModelViewSet):
 
 class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
                             viewsets.GenericViewSet):
+    """
+    API endpoint to allow moderators to approve/moderate posts
+    """
     pagination_class = StandardResultsSetPagination
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)

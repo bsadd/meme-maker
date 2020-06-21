@@ -50,7 +50,7 @@ class PostTests(APITestCase):
         file.seek(0)
         return file
 
-    def test_new_create(self):
+    def test_create_template(self):
         """
         Ensure we can create a new post object.
         TODO: file upload support
@@ -68,7 +68,6 @@ class PostTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['publisher']['username'], 'user0')
         self.assertEqual(response.data['approval_status'], 'PENDING')
-        # self.assertEqual(str(response.data['image']).split('/')[-1], self.generate_photo_file().name)
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
 
@@ -87,6 +86,134 @@ class PostTests(APITestCase):
         self.assertEqual(response.data['approval_status'], 'PENDING')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
+
+        ## user1 w/o keywords
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'new_post',
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['approval_status'], 'PENDING')
+        payload['keywords'] = []
+        payload['template'] = None
+        payload['is_adult'] = payload['is_violent'] = False
+        self.assertTrue(
+            all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
+
+    def test_create_from_template(self):
+        """
+        Ensure we can create a post object from a template.
+        """
+        template_post = Post.objects.create(caption="template_approved_post", author=User.objects.get(username='user0'),
+                                            moderator=self.moderator, approval_status=ApprovalStatus.APPROVED)
+        template_post_url = self.client.get(reverse('api:post-detail', args=[template_post.id])).data['url']
+
+        ## user0
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_template_post',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': template_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['publisher']['username'], 'user0')
+        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertTrue(
+            all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
+
+        ## user1 on repeated keyword
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_template_post2',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me3'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': template_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertTrue(
+            all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
+
+        ## create from non-existing template post
+        template_post_url = "http://testserver" + reverse('api:post-detail', args=[1000])
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_template_post2',
+                   'keywords': [{'name': 'me'}, {'name': 'me1'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': template_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        ## create from unapproved template post
+        template_post_url = "http://testserver" + reverse('api:post-detail', args=[self.post_unapproved.id])
+
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_template_post2',
+                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': template_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_from_nested_template(self):
+        """
+        Ensure base template reference is maintained when we create a post object from another post which is itself created from a template.
+        """
+        base_template = Post.objects.create(caption="template_approved_post",
+                                            author=User.objects.get(username='user0'),
+                                            moderator=self.moderator, approval_status=ApprovalStatus.APPROVED,
+                                            template_id=None)
+        generated_post = Post.objects.create(caption="template_approved_post",
+                                             author=User.objects.get(username='user0'),
+                                             moderator=self.moderator, approval_status=ApprovalStatus.APPROVED,
+                                             template=base_template)
+        template_post_url = self.client.get(reverse('api:post-detail', args=[base_template.id])).data['url']
+        generated_post_url = self.client.get(reverse('api:post-detail', args=[generated_post.id])).data['url']
+
+        ## user0
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_generated_post',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': generated_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['template'], template_post_url)
+
+        ## user1 on repeated keyword
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
+        url = reverse('api:post-list')
+        payload = {'caption': 'from_generated_post2',
+                   'is_adult': True,
+                   'is_violent': False,
+                   'keywords': [{'name': 'me'}, {'name': 'me3'}],
+                   'image': base64.b64encode(self.generate_photo_file().read()),
+                   'template': generated_post_url,
+                   }
+        response = self.client.post(url, data=payload, format='json')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['template'], template_post_url)
 
     def test_update(self):
         """

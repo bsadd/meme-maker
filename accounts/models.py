@@ -1,5 +1,6 @@
 import datetime
 
+from allauth.socialaccount.models import SocialAccount
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import AbstractUser
 from django.db import models
@@ -21,8 +22,12 @@ class User(AbstractUser):
     def moderator_account(self):
         return not self.is_suspended and self.is_superuser or self.is_moderator
 
-    def get_image(self):
-        return self.socialaccount_set.all[0].get_avatar_url  # 'default.png'
+    @property
+    def avatar(self):
+        try:
+            return self.socialaccount_set.all()[:1].get().get_avatar_url()
+        except SocialAccount.DoesNotExist:
+            return 'https://www.netclipart.com/pp/m/232-2329525_person-svg-shadow-default-profile-picture-png.png'
 
     def send_mail(self, subject, message, from_email='admin@mememaker'):
         print('sending mail to', self)

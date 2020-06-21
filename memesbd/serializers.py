@@ -2,6 +2,7 @@ from django.db import transaction
 from django.utils import timezone
 from drf_extra_fields import fields as extra_fields
 from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers, exceptions
 from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 
@@ -38,7 +39,8 @@ class PostReactSerializer(serializers.ModelSerializer):
     post = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail', required=True)
     react = ChoiceField(choices=Reacts.react_choices(), required=True)
     url = NestedHyperlinkedIdentityField(view_name='api:post-react-detail',
-                                         parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True)
+                                         parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True,
+                                         label="reaction's view url")
 
     class Meta:
         model = PostReact
@@ -48,14 +50,6 @@ class PostReactSerializer(serializers.ModelSerializer):
     def get_unique_together_validators(self):
         """disable unique together checks for (user, post) for get_or_create operation in create"""
         return []
-
-    def create(self, validated_data):
-        react = validated_data.pop('react')
-        post_react, _ = PostReact.objects.get_or_create(**validated_data)
-        if post_react.react != react:
-            post_react.react = react
-            post_react.save()
-        return post_react
 
 
 class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
@@ -72,12 +66,14 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     keywords = KeywordSerializer(many=True, required=False)
     image = extra_fields.HybridImageField()  # image file / base64
 
-    # reacts = PostReactSerializer(source='postreact_set', many=True)
+    reacts = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-react-list',
+                                                  lookup_url_kwarg='post_pk', help_text="all reactions for this post")
 
-    template = serializers.HyperlinkedRelatedField(read_only=True, view_name='api:post-detail')
+    template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
+                                                   required=False)  # Post.approved restricts unapproved as template ref
     url = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-detail')
 
-    is_template = serializers.CharField(source='is_template_post', read_only=True)
+    is_template = serializers.BooleanField(source='is_template_post', read_only=True)
 
     react_counts = serializers.SerializerMethodField()
 
@@ -90,7 +86,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
                   'author', 'publisher', 'url',
                   'template', 'is_template', 'react_counts', 'react_user',  # , 'reacts'
-                  'keywords',
+                  'keywords', 'reacts',
                   ]
         read_only_fields = ('uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {
@@ -101,18 +97,30 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             'configuration_tail': {'write_only': True},
         }
 
-    def get_publisher(self, post):
+    @swagger_serializer_method(serializer_or_field=serializers.JSONField())
+    def get_publisher(self, post) -> dict:
+        """Returns uploader info
+        :return {'username':current user name, 'url': user-profile link}
+        """
         return {'username': post.author.username,
-                'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author.id]))}
+                'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author_id]))}
 
-    def get_react_counts(self, post):
-        from memesbd.utils_db import get_react_count_post
-        return get_react_count_post(post.id)
+    @swagger_serializer_method(serializer_or_field=serializers.JSONField())
+    def get_react_counts(self, post) -> dict:
+        """Returns all reactions:count map for this post
+        :return: {'WOW':10, 'HAHA':4}
+        """
+        return PostReact.objects.reacts_count_map(post_id=post.id)
 
+    @swagger_serializer_method(
+        serializer_or_field=serializers.StringRelatedField(help_text="name of reaction of current user"))
     def get_react_user(self, post):
+        """Returns current user's reaction on this posts
+        :return: reaction-name or null if no reaction from the user
+        """
         try:
             request = self.context['request']
-            post_react = PostReact.objects.get(post=post, user=request.user)
+            post_react = post.postreact_set.all().without_removed_reacts().get(user_id=request.user.id)
             return post_react.react_name()
         except (PostReact.DoesNotExist, KeyError, TypeError):  # TypeError for Anonymous User
             return None
@@ -121,11 +129,14 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     def create(self, validated_data):
         try:
             keywords_data = validated_data.pop('keywords')
-            post = Post.objects.create(**validated_data)
-            for keyword_data in keywords_data:
-                keyword, _ = Keyword.objects.get_or_create(**keyword_data)
-                KeywordList.objects.get_or_create(post=post, keyword=keyword)
-            return post
+            keyword_names_given = [keyword['name'].lower() for keyword in keywords_data if keyword['name'] != '']
+            keyword_names_given = sorted(set(keyword_names_given), key=lambda x: keyword_names_given.index(x))
+            Keyword.objects.bulk_create([Keyword(name=name) for name in keyword_names_given], ignore_conflicts=True)
+            keywords = Keyword.objects.filter(name__in=keyword_names_given).order_by('name')
+            keyword_names_saved = sorted({keyword.name for keyword in keywords})
+            if keyword_names_given != keyword_names_saved:
+                raise exceptions.APIException(detail='could not save keyword in the database')
+            return Post.objects.create(**validated_data, keywords=keywords)
         except KeyError:
             return Post.objects.create(**validated_data)
 
@@ -136,11 +147,13 @@ class PostModerationSerializer(serializers.ModelSerializer):
     approval_at = serializers.DateTimeField(default=timezone.now())
     approval_status = ChoiceField(choices=ApprovalStatus.approval_status())
     keywords = KeywordSerializer(many=True, read_only=True)
+    template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
+                                                   required=False)
 
     class Meta:
         model = Post
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'author',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
                   'template', 'author', 'keywords', ]
-        read_only_fields = ('caption', 'image', 'nviews', 'author', 'uploaded_at', 'moderator', 'template', 'keywords',)
+        read_only_fields = ('caption', 'image', 'nviews', 'author', 'uploaded_at', 'moderator', 'keywords',)
         extra_kwargs = {}

@@ -55,15 +55,13 @@ class Post(models.Model):
     reacts = models.ManyToManyField(User, through='memesbd.PostReact', related_name='post_react_user')
     comments = models.ManyToManyField(User, through='memesbd.PostComment', related_name='post_comment_user')
 
-    objects = models.Manager()
-    approved = ApprovedPostManager()
-    pending = PendingPostManager()
+    objects = PostManager()
+    approved = PostManager(approval_status=ApprovalStatus.APPROVED)
+    pending = PostManager(approval_status=ApprovalStatus.PENDING)
 
     class Meta:
         verbose_name = "Post"
         verbose_name_plural = "Posts"
-        # default_manager_name = models.Manager()
-        # base_manager_name = models.Manager()
 
     def __str__(self):
         return "%s %s" % (self.caption, self.author)
@@ -81,7 +79,7 @@ class Post(models.Model):
         """Blank Template id for an image. Own id if itself is a template"""
         if self.is_template_post():
             return self.id
-        return self.template.id
+        return self.template_id
 
     def is_template_post(self):
         return self.template is None
@@ -112,6 +110,10 @@ class KeywordList(models.Model):
         return reverse("memesbd:keywords", kwargs={"pk": self.pk})
 
 
+def factory_manager_for_postreact(post_id):
+    return PostReactManager.factory(model=PostReact, post_id=post_id)
+
+
 class PostReact(models.Model):
     """
     Like, Dislike reacts of viewers on a post
@@ -120,8 +122,10 @@ class PostReact(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)  # , validators=[__is_approved_post]
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # , validators=[__is_allowed_user]
 
-    react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE,
-                                validators=[validators.is_valid_react])
+    react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE)
+
+    objects = PostReactManager()
+    of_post = factory_manager_for_postreact
 
     class Meta:
         verbose_name = "Post React"
