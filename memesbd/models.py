@@ -1,9 +1,9 @@
-from django.core.exceptions import ValidationError
-from django.db import models
 from django.urls import reverse
 
 from accounts.models import User
-from memesbd.consts_db import Reacts, TextPositions
+from memesbd.consts_db import Reacts, ApprovalStatus
+from memesbd.managers import *
+from memesbd import validators
 
 
 class Keyword(models.Model):
@@ -37,14 +37,27 @@ class Post(models.Model):
     configuration_over = models.CharField(max_length=1000, default='', verbose_name='Text-Boxes on image')
     configuration_tail = models.CharField(max_length=100, default='', verbose_name='Text-Boxes below of image')
 
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    approval_status = models.CharField(max_length=2, verbose_name="Approval Status",
+                                       choices=ApprovalStatus.approval_status(), default=ApprovalStatus.PENDING)
+    approval_details = models.CharField(max_length=200, verbose_name="Approval Verdict Reason", default='')
+    approval_at = models.DateTimeField(null=True, blank=True)
+
+    moderator = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='moderator')
+
     template = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author')
 
     keywords = models.ManyToManyField(Keyword, through='memesbd.KeywordList', related_name='post_keywords')
 
     reacts = models.ManyToManyField(User, through='memesbd.PostReact', related_name='post_react_user')
     comments = models.ManyToManyField(User, through='memesbd.PostComment', related_name='post_comment_user')
+
+    objects = PostManager()
+    approved = PostManager(approval_status=ApprovalStatus.APPROVED)
+    pending = PostManager(approval_status=ApprovalStatus.PENDING)
 
     class Meta:
         verbose_name = "Post"
@@ -66,20 +79,19 @@ class Post(models.Model):
         """Blank Template id for an image. Own id if itself is a template"""
         if self.is_template_post():
             return self.id
-        return self.template.id
+        return self.template_id
 
     def is_template_post(self):
         return self.template is None
-
-    def related_posts(self):
-        from memesbd import utils_db
-        return utils_db.get_related_posts(self.id, self)
 
     def image_shape(self):
         if self.image is None:
             return 0, 0
         from PIL import Image
         return Image.open(self.image).size
+
+    def is_active(self):
+        return self.approval_status == ApprovalStatus.APPROVED
 
 
 class KeywordList(models.Model):
@@ -98,19 +110,30 @@ class KeywordList(models.Model):
         return reverse("memesbd:keywords", kwargs={"pk": self.pk})
 
 
+def factory_manager_for_postreact(post_id):
+    return PostReactManager.factory(model=PostReact, post_id=post_id)
+
+
 class PostReact(models.Model):
     """
     Like, Dislike reacts of viewers on a post
     """
-    post = models.ForeignKey(Post, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)  # , validators=[__is_approved_post]
+    user = models.ForeignKey(User, on_delete=models.CASCADE)  # , validators=[__is_allowed_user]
 
     react = models.IntegerField(verbose_name="React", choices=Reacts.react_choices(), default=Reacts.NONE)
+
+    objects = PostReactManager()
+    of_post = factory_manager_for_postreact
 
     class Meta:
         verbose_name = "Post React"
         verbose_name_plural = "Post Reacts"
         unique_together = [['post', 'user']]
+
+    def react_name(self):
+        return Reacts.REACT_NAMES[self.react]
 
     def get_absolute_url(self):
         return reverse("memesbd:PostReact", kwargs={"id": self.pk})

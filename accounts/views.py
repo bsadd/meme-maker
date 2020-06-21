@@ -1,3 +1,4 @@
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import HttpResponse
@@ -6,31 +7,15 @@ from django.urls import reverse
 from django.views.generic import TemplateView
 from django.views.generic.base import View
 
-#
-# def recoveryRender(request):
-# 	return HttpResponse("Enter email to recover !!!")
-#
-#
-# def homepageRender(request):
-# 	return render(request, USER_DASHBOARD_PAGE)
 from accounts.forms import UserForm
 
 
 class LoginView(TemplateView):
     template_name = 'accounts/Registration.html'
 
-    def get(self, request, *args, **kwargs):
-        # if self.request.user.is_authenticated:
-        # 	return redirect('/')
-        # else:
-        return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        ctx = {'loggedIn': self.request.user.is_authenticated}
-        return ctx
-
     def post(self, request, *args, **kwargs):
         # print(pretty_request(request))
+        redirect_url = request.GET.get('next')
         username = request.POST.get('username', False)
         password = request.POST.get('pass', False)
         if username and password:
@@ -38,7 +23,7 @@ class LoginView(TemplateView):
             if user is not None:
                 login(request, user)
                 print('Signing in: ' + str(request.user))
-                return redirect('/')
+                return redirect(redirect_url if redirect_url is not None else '/')
             elif user is None:
                 return render(request, 'accounts/message_page.html',
                               {'header': "Error !", 'details': 'Invalid Username or Password',
@@ -65,21 +50,9 @@ class LogoutView(View, LoginRequiredMixin):
 class SignupLoginView(TemplateView):
     template_name = 'accounts/Registration.html'
 
-    def get(self, request, *args, **kwargs):
-        if self.request.user.is_authenticated:
-            return redirect('/')
-        else:
-            return super().get(request, *args, **kwargs)
-
-    def get_context_data(self, **kwargs):
-        ctx = super(SignupLoginView, self).get_context_data(**kwargs)
-        # ctx['user_form'] = UserForm(prefix='user')
-        # ctx['profile_form'] = ProfileForm(prefix='profile')
-        ctx = {'loggedIn': self.request.user.is_authenticated}
-        return ctx
-
     def post(self, request, *args, **kwargs):
         # print(pretty_request(request))
+        redirect_url = request.GET.get('next')
         formName = request.POST.get('formName', False)
         print(formName)
 
@@ -91,7 +64,7 @@ class SignupLoginView(TemplateView):
                 if user is not None:
                     login(request, user)
                     print('Signing in: ' + str(request.user))
-                    return redirect('/')
+                    return redirect(redirect_url if redirect_url is not None else '/')
                 elif user is None:
                     return render(request, 'accounts/message_page.html',
                                   {'header': "Error !", 'details': 'Invalid Username or Password',
@@ -118,3 +91,26 @@ class SignupLoginView(TemplateView):
                 # return render(request, 'accounts/message_page.html',
                 #               {'header': "Error !", 'details': ' signup'})
                 return HttpResponse("Error ! signup")
+
+
+# ------------------------------ Rest Auth Social Login ------------------------------
+from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
+from rest_auth.registration.views import SocialConnectView
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from rest_auth.registration.views import SocialLoginView
+
+
+class FacebookLogin(SocialLoginView):
+    adapter_class = FacebookOAuth2Adapter
+
+
+class FacebookConnect(SocialConnectView):
+    adapter_class = FacebookOAuth2Adapter
+
+
+class GoogleLogin(SocialLoginView):
+    adapter_class = GoogleOAuth2Adapter
+
+
+class GoogleConnect(SocialConnectView):
+    adapter_class = GoogleOAuth2Adapter

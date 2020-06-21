@@ -1,10 +1,11 @@
+{% load tagconstants %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 	<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03"
 	        aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
 		<span class="navbar-toggler-icon"></span>
 	</button>
 	<i class="cil-mood-very-good"></i>
-	<a class="navbar-brand" href="#">Memesbd</a>
+	<a class="navbar-brand" href="/">{% constant "Website_Name" %}</a>
 	<form class="form-inline my-2 my-lg-0">
 		<input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
 		<button class="btn btn-outline-success my-2 my-sm-0 px-4" type="submit">Search</button>
@@ -19,9 +20,24 @@
 			<li class="nav-item px-2">
 				<a class="nav-link" href="{% url 'memesbd:upload-page' %}">Upload a Meme</a>
 			</li>
-			{% if loggedIn %}
+			{% if request.user.is_authenticated %}
+				{% if request.user.is_superuser or request.user.is_moderator %}
+					<li class="nav-item px-2">
+						<a class="nav-link" href="{% url 'memesbd:pending-posts-moderator' %}">Pending Posts for
+							Approval</a>
+					</li>
+				{% endif %}
+				<li class="nav-item px-2">
+					<a class="nav-link" href="{% url 'memesbd:approved-posts' %}">My Posts</a>
+				</li>
+				<li class="nav-item px-2">
+					<a class="nav-link" href="{% url 'memesbd:pending-posts' %}">My Pending Posts</a>
+				</li>
 				<li class="nav-item px-2">
 					<a class="nav-link" href="#">{{ request.user.username|upper }}</a>
+				</li>
+				<li class="nav-item px-2">
+					<a class="nav-link" href="{% url 'accounts:logout' %}">Logout</a>
 				</li>
 			{% else %}
 				<li class="nav-item px-2">
