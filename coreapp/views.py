@@ -22,6 +22,8 @@ class StandardResultsSetPagination(PageNumberPagination):
     max_page_size = constants.MAX_PAGE_SIZE
 
 
+@method_decorator(name='retrieve',
+                  decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows Post to be created/viewed/edited.
@@ -66,12 +68,16 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.action == 'related':
-            return Post.objects.get_related_posts(post_id=self.kwargs['pk']).prefetch_related('reacts', 'author')
+            return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reacts',
+                                                                                                        'author')
         return Post.objects.prefetch_related('reacts', 'author').all()
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.serializer_class)
 
+    @swagger_auto_schema(method='get',
+                         operation_description="Returns list of posts made on the same template of post=pk",
+                         responses={status.HTTP_404_NOT_FOUND: 'No such post exists with provided pk'})
     @action(detail=True, methods=['GET'],
             url_path='related', url_name='related-posts')
     def related(self, request, pk):
@@ -79,22 +85,6 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
             return super().list(request, pk=pk)
         except Post.DoesNotExist:
             raise exceptions.NotFound(detail='No such post exists with id=%s' % pk)
-
-    @action(detail=False, methods=['GET'], permission_classes=[IsModerator],
-            url_path='pending', url_name='pending-posts')
-    def pending(self, request):
-        is_mutable = request.query_params._mutable
-        request.query_params._mutable = True
-        request.query_params['approval-status'] = 'PENDING'
-        request.query_params._mutable = is_mutable
-        return super().list(request)
-
-    @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
-            url_path='my-posts', url_name='my-posts')
-    def my_posts(self, request):
-        posts = Post.objects.filter(author=request.user)
-        serializer = PostSerializer(posts, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class KeywordViewSet(viewsets.ModelViewSet):
@@ -115,6 +105,8 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     http_method_names = ['get', 'post', 'put']
 
+    @swagger_auto_schema(operation_description="Returns current user's reaction on the post",
+                         responses={status.HTTP_401_UNAUTHORIZED: 'User is not logged in'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='current', url_name='current')
     def current_user(self, request):
@@ -132,7 +124,10 @@ class PostReactViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post']
 
     def get_queryset(self):
-        return PostReact.objects.all().of_approved_posts().of_post(self.kwargs['post_pk'])
+        qs = PostReact.objects.all().of_approved_posts()
+        if 'post_pk' in self.kwargs:
+            qs = qs.of_post(self.kwargs['post_pk'])
+        return qs
 
     @swagger_auto_schema(method='get', operation_description="Returns current user's reaction on the post",
                          responses={status.HTTP_404_NOT_FOUND: 'Post/Reaction Not found'})
