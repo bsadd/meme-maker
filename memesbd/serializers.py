@@ -54,6 +54,7 @@ class PostReactSerializer(serializers.ModelSerializer):
 
 class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     """
+    TODO: optimize react count
     TODO:https://github.com/beda-software/drf-writable-nested/issues/46#issuecomment-415632868
     TODO: generic https://github.com/Ian-Foote/rest-framework-generic-relations
     """
