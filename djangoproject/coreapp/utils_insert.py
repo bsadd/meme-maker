@@ -1,5 +1,5 @@
 """
-Contains utility functions to insert bulk data via `utils_db.py` functions for testing purposes
+Contains utility functions to insert bulk data for testing purposes
 """
 
 

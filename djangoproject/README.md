@@ -1,5 +1,6 @@
 # MemesBD
-A simplified platform for meme lovers to upload/create/publish/share memes with ease.
+A simplified platform for meme lovers to upload/create/publish/share memes with ease.  
+This folder contains the Django REST API for MemesBD frontend.  
 
 ### How to run (First time):
 1. First create a virtual environment for the project & activate it.  
@@ -9,12 +10,16 @@ A simplified platform for meme lovers to upload/create/publish/share memes with 
    ```
 3. Now make migrations and migrate the models.
    ```shell script
-   python manage.py makemigrations coreapp accounts memesbd 
+   python manage.py makemigrations coreapp accounts 
    python manage.py migrate
    python manage.py runserver
    ```
 This will cause the server to run on localhost:8000 by default.  
-
+  
+After that, the openapi documentation can be accessed from the following links:  
+- swagger UI at http://localhost:8000/swagger/
+- redoc at http://localhost:8000/redoc/  
+  
 #### N.B.
 To login/register, a facebook social login app needs to be set up and its credentials are to be configured into the database via admin.
 For simplicity a sample data is already dumped to `db.json` with configurations set-up. You can simply load the data using the following command after setting up the project as instructed above.    
@@ -34,7 +39,7 @@ python manage.py loaddata db.json -e contenttypes -e auth -e sessions -e admin
 - Then go to the `Social applications` table.
 - Finally add a social app here with your facebook app's `Client id`, `Secret key`, provider as `facebook` and add the site `localhost` to it.  
   
-Now you should be able to login to the site at http://localhost:8000/accounts/login/
+Now you should be able to login to the site at http://localhost:8000/rest-auth/login/
   
   
 ### Resetting database:
