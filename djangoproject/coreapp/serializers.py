@@ -46,7 +46,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     author = serializers.HiddenField(default=serializers.CurrentUserDefault())
     publisher = serializers.SerializerMethodField()
 
-    approval_status = ChoiceField(choices=ApprovalStatus.approval_status(), read_only=True)
+    approval_status = ChoiceField(choices=ApprovalStatus.choices, read_only=True)
     moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
 
     keywords = KeywordSerializer(many=True, required=False)
@@ -136,7 +136,7 @@ class PostModerationSerializer(serializers.ModelSerializer):
     author = UserSerializer(read_only=True)
     moderator = UserSerializer(default=serializers.CurrentUserDefault())
     approval_at = serializers.DateTimeField(default=timezone.now())
-    approval_status = ChoiceField(choices=ApprovalStatus.approval_status())
+    approval_status = ChoiceField(choices=ApprovalStatus.choices)
     keywords = KeywordSerializer(many=True, read_only=True)
     template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
                                                    required=False)

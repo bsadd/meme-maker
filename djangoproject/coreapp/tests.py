@@ -67,7 +67,7 @@ class PostTests(APITestCase):
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['publisher']['username'], 'user0')
-        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
 
@@ -83,7 +83,7 @@ class PostTests(APITestCase):
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['publisher']['username'], 'user1')
-        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
 
@@ -96,7 +96,7 @@ class PostTests(APITestCase):
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['publisher']['username'], 'user1')
-        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertEqual(response.data['approval_status'], 'Pending')
         payload['keywords'] = []
         payload['template'] = None
         payload['is_adult'] = payload['is_violent'] = False
@@ -124,7 +124,7 @@ class PostTests(APITestCase):
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['publisher']['username'], 'user0')
-        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
 
@@ -141,7 +141,7 @@ class PostTests(APITestCase):
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(response.data['publisher']['username'], 'user1')
-        self.assertEqual(response.data['approval_status'], 'PENDING')
+        self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
 
@@ -242,7 +242,7 @@ class PostTests(APITestCase):
         url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
         response = self.client.put(url, data={'approval_status': 'APPROVED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['approval_status'], 'APPROVED')
+        self.assertEqual(response.data['approval_status'], 'Approved')
 
         # moderator tries to approve the already approved post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_moderator)
@@ -255,14 +255,14 @@ class PostTests(APITestCase):
         url = reverse('api:post-detail', args=[self.post_unapproved.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['approval_status'], 'APPROVED')
+        self.assertEqual(response.data['approval_status'], 'Approved')
 
         # admin rejects the post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.key_admin)
         url = reverse('api:moderation-post-detail', args=[self.post_unapproved.id])
         response = self.client.put(url, data={'approval_status': 'REJECTED'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['approval_status'], 'REJECTED')
+        self.assertEqual(response.data['approval_status'], 'Rejected')
 
         # post is not accessible after being rejected
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])

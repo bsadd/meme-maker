@@ -9,6 +9,7 @@ class ChoiceField(serializers.ChoiceField):
 
     def to_internal_value(self, data):
         """Used while storing value for the field."""
+        data = data.capitalize()
         for i in self._choices:
             if self._choices[i] == data:
                 return i
