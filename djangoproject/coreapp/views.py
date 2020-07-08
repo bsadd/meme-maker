@@ -103,16 +103,17 @@ class KeywordViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post']
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
+                  viewsets.GenericViewSet):
     """
     API endpoint that allows users to be viewed or edited.
     """
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    http_method_names = ['get', 'post', 'put']
+    pagination_class = StandardResultsSetPagination
 
-    @swagger_auto_schema(operation_description="Returns current user's reaction on the post",
-                         responses={status.HTTP_401_UNAUTHORIZED: 'User is not logged in'})
+    @swagger_auto_schema(operation_description="Returns current user profile's detail",
+                         responses={status.HTTP_401_UNAUTHORIZED: 'User is not authenticated'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='current', url_name='current')
     def current_user(self, request):

@@ -103,9 +103,8 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             rset[Reacts.REACT_NAMES[q[0]]] = q[1]
         return rset
 
-    @swagger_serializer_method(
-        serializer_or_field=ChoiceField(choices=Reacts.react_choices(),
-                                        help_text="name of reaction of current user"))
+    @swagger_serializer_method(serializer_or_field=ChoiceField(choices=Reacts.react_choices(),
+                                                               help_text="name of reaction of current user"))
     def get_react_user(self, post):
         """Returns current user's reaction on this posts
         :return: reaction-name or null if no reaction from the user
