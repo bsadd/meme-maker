@@ -11,6 +11,7 @@ from coreapp.permissions import IsModerator
 from coreapp.models import *
 from coreapp.filters import *
 from coreapp.serializers import *
+from coreapp.swagger import query_params
 from coreapp.utils import to_bool
 from coreapp.validators import post_query_schema
 
@@ -23,12 +24,19 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 @method_decorator(name='retrieve',
                   decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
+@method_decorator(name='list',
+                  decorator=swagger_auto_schema(manual_parameters=query_params.POST_LIST_QUERY_PARAMS))
+@method_decorator(name='create',
+                  decorator=swagger_auto_schema(manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER]))
+@method_decorator(name='update',
+                  decorator=swagger_auto_schema(manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER]))
 class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows Post to be created/viewed/edited.
     TODO: validation using models
     TODO: enforce author edit only
     TODO: check timezone
+    TODO: uploader=me
     """
     filter_backends = (PostCategoryFilter, PostSearchFilter, filters.OrderingFilter)
     filter_mappings = {
@@ -66,6 +74,8 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     http_method_names = ['get', 'post', 'put']
 
     def get_queryset(self):
+        if getattr(self, 'swagger_fake_view', False):
+            return Post.objects.all()
         if self.action == 'related':
             return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reacts',
                                                                                                         'author')
@@ -76,7 +86,8 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
 
     @swagger_auto_schema(method='get',
                          operation_description="Returns list of posts made on the same template of post=pk",
-                         responses={status.HTTP_404_NOT_FOUND: 'No such post exists with provided pk'})
+                         responses={status.HTTP_404_NOT_FOUND: 'No such post exists with provided pk'},
+                         manual_parameters=query_params.POST_LIST_QUERY_PARAMS)
     @action(detail=True, methods=['GET'],
             url_path='related', url_name='related-posts')
     def related(self, request, pk):
