@@ -45,7 +45,6 @@ class PostReactSerializer(serializers.ModelSerializer):
     class Meta:
         model = PostReact
         fields = ['react', 'user', 'post', 'url']
-        read_only_fields = ('user',)
 
     def get_unique_together_validators(self):
         """disable unique together checks for (user, post) for get_or_create operation in create"""

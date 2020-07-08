@@ -1,25 +1,20 @@
 from django.utils.decorators import method_decorator
+from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
 from filters.mixins import FiltersMixin
-from rest_framework import viewsets, status, filters, exceptions, permissions, mixins
+from rest_framework import viewsets, status, permissions, mixins
 from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
-from coreapp import constants
+from coreapp.pagination import StandardResultsSetPagination
 from coreapp.permissions import IsModerator
-from coreapp.models import *
 from coreapp.filters import *
 from coreapp.serializers import *
 from coreapp.swagger import query_params
+from coreapp.swagger.schema import PostReactCreateSchema
+from coreapp.swagger.serializers import PostReactRequestBodySerializer, PostReactResponseBodySerializer
 from coreapp.utils import to_bool
 from coreapp.validators import post_query_schema
-
-
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = constants.DEFAULT_PAGE_SIZE
-    page_size_query_param = 'page-size'
-    max_page_size = constants.MAX_PAGE_SIZE
 
 
 @method_decorator(name='retrieve',
@@ -29,7 +24,8 @@ class StandardResultsSetPagination(PageNumberPagination):
 @method_decorator(name='create',
                   decorator=swagger_auto_schema(manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER]))
 @method_decorator(name='update',
-                  decorator=swagger_auto_schema(manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER]))
+                  decorator=swagger_auto_schema(manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
+                                                responses={status.HTTP_404_NOT_FOUND: 'Post not found'}))
 class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows Post to be created/viewed/edited.
@@ -125,13 +121,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
 @method_decorator(name='list',
                   decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
-class PostReactViewSet(viewsets.ModelViewSet):
+class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
+                       viewsets.GenericViewSet):
     """
     API endpoint that allows users to react or view reactions on approved posts.
     """
     serializer_class = PostReactSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
-    http_method_names = ['get', 'post']
 
     def get_queryset(self):
         qs = PostReact.objects.all().of_approved_posts()
@@ -157,11 +153,19 @@ class PostReactViewSet(viewsets.ModelViewSet):
         except PostReact.DoesNotExist:
             raise exceptions.NotFound(detail="No react on the post from this user")
 
-    @swagger_auto_schema(operation_description="Create/Change/Remove current user's reaction on the post")
+    @swagger_auto_schema(request_body=PostReactRequestBodySerializer,
+                         operation_description="Create/Change/Remove current user's reaction on the post",
+                         manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
+                         responses={status.HTTP_201_CREATED: PostReactResponseBodySerializer,
+                                    status.HTTP_401_UNAUTHORIZED: 'User not authorized',
+                                    status.HTTP_400_BAD_REQUEST: 'post/user passed in request body',
+                                    status.HTTP_404_NOT_FOUND: 'Post Not found'})
     def create(self, request, *args, **kwargs):
         is_mutable = True if getattr(request.data, '_mutable', True) else request.data._mutable
         if not is_mutable:
             request.data._mutable = True
+        if getattr(request.data, 'user', None) or getattr(request.data, 'post', None):
+            raise exceptions.ValidationError(detail="Invalid body parameters: post/user cannot be specified")
         request.data['react'] = str(request.data['react']).upper()
         request.data['post'] = reverse('api:post-detail', args=[kwargs['post_pk']])
         if not is_mutable:
