@@ -8,9 +8,6 @@ from filters.validations import (
     DatetimeWithTZ
 )
 
-
-
-
 post_query_schema = base_query_params_schema.extend(
     {
         'uploader': CSVofIntegers(),

@@ -174,6 +174,13 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
         return super().create(request, args, kwargs)
 
 
+@method_decorator(name='retrieve',
+                  decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
+@method_decorator(name='list',
+                  decorator=swagger_auto_schema(operation_description='List of all posts'))
+@method_decorator(name='update',
+                  decorator=swagger_auto_schema(operation_description='Update Post Detail',
+                                                responses={status.HTTP_404_NOT_FOUND: 'Post not found'}))
 class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
                             viewsets.GenericViewSet):
     """
