@@ -7,7 +7,7 @@ from coreapp.serializer_fields import ChoiceField
 
 
 class PostReactRequestBodySerializer(serializers.ModelSerializer):
-    react = ChoiceField(choices=Reacts.react_choices(), required=True)
+    react = ChoiceField(choices=Reacts.choices, required=True)
 
     class Meta:
         model = PostReact
@@ -17,7 +17,7 @@ class PostReactRequestBodySerializer(serializers.ModelSerializer):
 class PostReactResponseBodySerializer(serializers.ModelSerializer):
     user = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
     post = serializers.HyperlinkedRelatedField(view_name='api:post-detail', read_only=True)
-    react = ChoiceField(choices=Reacts.react_choices(), read_only=True)
+    react = ChoiceField(choices=Reacts.choices, read_only=True)
     url = NestedHyperlinkedIdentityField(view_name='api:post-react-detail',
                                          parent_lookup_kwargs={'post_pk': 'post_id'},
                                          label="reaction's view url")

@@ -1,28 +1,11 @@
 """
 Contains constants/wrapper classes for database model's fields like CHOICE_FIELD etc.
 """
+from django.db import models
 
 
-class Reacts:
-    """TODO: convert to enum"""
+class Reacts(models.IntegerChoices):
     NONE, LIKE, LOVE, HAHA, WOW, SAD, ANGRY = range(0, 7)
-    __MAX = ANGRY
-
-    REACT_NAMES = dict(
-        [(NONE, 'NONE'), (LIKE, 'LIKE'), (LOVE, 'LOVE'), (HAHA, 'HAHA'), (WOW, 'WOW'), (SAD, 'SAD'), (ANGRY, 'ANGRY')])
-    REACT_VALUE = dict(
-        [('NONE', NONE), ('LIKE', LIKE), ('LOVE', LOVE), ('HAHA', HAHA), ('WOW', WOW), ('SAD', SAD), ('ANGRY', ANGRY)])
-
-    @staticmethod
-    def react_choices():
-        REACT_TYPES = tuple(Reacts.REACT_NAMES.items())
-        return REACT_TYPES
-
-    @staticmethod
-    def is_valid_react(react):
-        if react is None:
-            return False
-        return Reacts.NONE <= react <= Reacts.__MAX
 
 
 class ApprovalStatus:

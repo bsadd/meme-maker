@@ -137,7 +137,7 @@ class PostReactManager(models.Manager):
         rset = {}
         for q in self.get_queryset().of_post(post_id).without_removed_reacts().react_counts().values_list('react',
                                                                                                           'count'):
-            rset[Reacts.REACT_NAMES[q[0]]] = q[1]
+            rset[Reacts(q[0]).label] = q[1]
         return rset
 
     def react_user(self, post_id: int, user_id: int) -> QuerySet:

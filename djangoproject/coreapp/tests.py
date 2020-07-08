@@ -340,14 +340,14 @@ class PostReactTests(APITestCase):
         payload = {'react': 'love'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['react'], 'LOVE')
+        self.assertEqual(response.data['react'], 'Love')
 
         ## user0 - check react LOVE
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-react-user', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['react'], 'LOVE')
+        self.assertEqual(response.data['react'], 'Love')
 
         ## user0 change react to HAHA
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
@@ -355,14 +355,14 @@ class PostReactTests(APITestCase):
         payload = {'react': 'haha'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['react'], 'HAHA')
+        self.assertEqual(response.data['react'], 'Haha')
 
         ## user0 - check react HAHA
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-react-user', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['react'], 'HAHA')
+        self.assertEqual(response.data['react'], 'Haha')
 
     def test_reactCount(self):
         """
@@ -393,7 +393,7 @@ class PostReactTests(APITestCase):
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {'LOVE': 1})
+        self.assertDictEqual(response.data['react_counts'], {'Love': 1})
 
         ## user1 - react LOVE - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
@@ -404,7 +404,7 @@ class PostReactTests(APITestCase):
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {'LOVE': 2})
+        self.assertDictEqual(response.data['react_counts'], {'Love': 2})
 
         ## user2 - react HAHA - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])
@@ -415,7 +415,7 @@ class PostReactTests(APITestCase):
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {'LOVE': 2, 'HAHA': 1})
+        self.assertDictEqual(response.data['react_counts'], {'Love': 2, 'Haha': 1})
 
         ## user0 - unreact LOVE - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
@@ -426,4 +426,4 @@ class PostReactTests(APITestCase):
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {'LOVE': 1, 'HAHA': 1})
+        self.assertDictEqual(response.data['react_counts'], {'Love': 1, 'Haha': 1})

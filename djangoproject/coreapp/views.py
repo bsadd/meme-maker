@@ -167,7 +167,7 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
             request.data._mutable = True
         if getattr(request.data, 'user', None) or getattr(request.data, 'post', None):
             raise exceptions.ValidationError(detail="Invalid body parameters: post/user cannot be specified")
-        request.data['react'] = str(request.data['react']).upper()
+        request.data['react'] = str(request.data['react']).capitalize()
         request.data['post'] = reverse('api:post-detail', args=[kwargs['post_pk']])
         if not is_mutable:
             request.data._mutable = False

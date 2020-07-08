@@ -1,7 +1,6 @@
 from rest_framework import filters, exceptions
 
 from coreapp.consts_db import ApprovalStatus
-from coreapp.models import Post
 from coreapp.utils import to_bool
 
 
