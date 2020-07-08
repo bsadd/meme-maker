@@ -1,0 +1,25 @@
+from rest_framework import serializers
+from drf_extra_fields import fields as extra_fields
+
+
+class ChoiceField(serializers.ChoiceField):
+
+    def to_representation(self, obj):
+        return self._choices[obj]
+
+    def to_internal_value(self, data):
+        """Used while storing value for the field."""
+        for i in self._choices:
+            if self._choices[i] == data:
+                return i
+        raise serializers.ValidationError("Acceptable values are {0}.".format(list(self._choices.values())))
+
+
+class ImageBase64HybridFileField(extra_fields.Base64ImageField):
+    class Meta:
+        swagger_schema_fields = {
+            'type': 'string',
+            'title': 'Image Base64 Content',
+            'description': 'Content of the image as base64 encoded string or file itself',
+            'read_only': False  # <-- FIX
+        }

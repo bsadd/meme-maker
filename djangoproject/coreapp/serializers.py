@@ -1,6 +1,4 @@
-from django.db import transaction
 from django.utils import timezone
-from drf_extra_fields import fields as extra_fields
 from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers, exceptions
@@ -8,19 +6,7 @@ from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 
 from coreapp.models import *
 from accounts.serializers import UserSerializer
-
-
-class ChoiceField(serializers.ChoiceField):
-
-    def to_representation(self, obj):
-        return self._choices[obj]
-
-    def to_internal_value(self, data):
-        """Used while storing value for the field."""
-        for i in self._choices:
-            if self._choices[i] == data:
-                return i
-        raise serializers.ValidationError("Acceptable values are {0}.".format(list(self._choices.values())))
+from coreapp.serializer_fields import ChoiceField, ImageBase64HybridFileField
 
 
 class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
@@ -64,7 +50,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
 
     keywords = KeywordSerializer(many=True, required=False)
-    image = extra_fields.HybridImageField()  # image file / base64
+    image = ImageBase64HybridFileField()  # image file / base64
 
     reacts = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-react-list',
                                                   lookup_url_kwarg='post_pk', help_text="all reactions for this post")
@@ -88,7 +74,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                   'template', 'is_template', 'react_counts', 'react_user',  # , 'reacts'
                   'keywords', 'reacts',
                   ]
-        read_only_fields = ('uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
+        read_only_fields = ('nviews', 'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {
             'caption': {'required': True},
             'image': {'required': True},
@@ -97,7 +83,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             'configuration_tail': {'write_only': True},
         }
 
-    @swagger_serializer_method(serializer_or_field=serializers.JSONField())
+    @swagger_serializer_method(serializer_or_field=serializers.DictField())
     def get_publisher(self, post) -> dict:
         """Returns uploader info
         :return {'username':current user name, 'url': user-profile link}
@@ -105,15 +91,21 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         return {'username': post.author.username,
                 'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author_id]))}
 
-    @swagger_serializer_method(serializer_or_field=serializers.JSONField())
+    @swagger_serializer_method(serializer_or_field=serializers.DictField())
     def get_react_counts(self, post) -> dict:
         """Returns all reactions:count map for this post
         :return: {'WOW':10, 'HAHA':4}
         """
-        return PostReact.objects.reacts_count_map(post_id=post.id)
+        # To skip db hit obj ref is used to query
+        rset = {}
+        for q in post.postreact_set.exclude(react=Reacts.NONE).values('react').annotate(
+                count=Count('user')).values_list('react', 'count'):
+            rset[Reacts.REACT_NAMES[q[0]]] = q[1]
+        return rset
 
     @swagger_serializer_method(
-        serializer_or_field=serializers.StringRelatedField(help_text="name of reaction of current user"))
+        serializer_or_field=ChoiceField(choices=Reacts.react_choices(),
+                                        help_text="name of reaction of current user"))
     def get_react_user(self, post):
         """Returns current user's reaction on this posts
         :return: reaction-name or null if no reaction from the user
