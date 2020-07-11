@@ -122,6 +122,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
     pagination_class = StandardResultsSetPagination
 
     @swagger_auto_schema(operation_summary="Current user Profile",
+                         manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
                          responses={status.HTTP_401_UNAUTHORIZED: 'User is not authenticated'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='current', url_name='current')
@@ -153,6 +154,7 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
         return qs
 
     @swagger_auto_schema(method='get', operation_summary="Current user's reaction on the post",
+                         manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
                          responses={status.HTTP_404_NOT_FOUND: 'Post/Reaction Not found'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='user', url_name='user')
@@ -192,11 +194,17 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
 
 @method_decorator(name='retrieve',
                   decorator=swagger_auto_schema(operation_summary='Moderation specific details of a post',
+                                                manual_parameters=[
+                                                    query_params.REQUIRED_MODERATION_AUTHORIZATION_PARAMETER],
                                                 responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 @method_decorator(name='list',
-                  decorator=swagger_auto_schema(operation_summary='List of posts for moderation'))
+                  decorator=swagger_auto_schema(operation_summary='List of posts for moderation',
+                                                manual_parameters=[
+                                                    query_params.REQUIRED_MODERATION_AUTHORIZATION_PARAMETER]))
 @method_decorator(name='update',
                   decorator=swagger_auto_schema(operation_summary='Update Post Moderation Status/Detail',
+                                                manual_parameters=[
+                                                    query_params.REQUIRED_MODERATION_AUTHORIZATION_PARAMETER],
                                                 responses={status.HTTP_404_NOT_FOUND: 'Post not found'}))
 class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
                             viewsets.GenericViewSet):

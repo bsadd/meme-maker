@@ -32,6 +32,16 @@ def get_authorization_param(required):
     )
 
 
+def get_moderation_authorization_param(required):
+    return openapi.Parameter(
+        name='Authorization',
+        description='Moderator/Admin only. Token Authentication format: "Token <token-key>"',
+        required=required,
+        type=openapi.TYPE_STRING,
+        in_=openapi.IN_HEADER
+    )
+
+
 POST_LIST_QUERY_PARAMS = [
     get_query_param_array('keyword', 'list of keywords (optional)', openapi.TYPE_STRING),
     get_query_param_array('uploader', 'uploader ids (optional)', openapi.TYPE_INTEGER),
@@ -46,5 +56,6 @@ POST_LIST_QUERY_PARAMS = [
                           openapi.TYPE_STRING),
 ]
 
+REQUIRED_MODERATION_AUTHORIZATION_PARAMETER = get_moderation_authorization_param(required=True)
 REQUIRED_AUTHORIZATION_PARAMETER = get_authorization_param(required=True)
 OPTIONAL_AUTHORIZATION_PARAMETER = get_authorization_param(required=False)
