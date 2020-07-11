@@ -16,7 +16,7 @@ class ChoiceField(serializers.ChoiceField):
         raise serializers.ValidationError("Acceptable values are {0}.".format(list(self._choices.values())))
 
 
-class ImageBase64HybridFileField(extra_fields.Base64ImageField):
+class ImageBase64HybridFileField(extra_fields.HybridImageField):
     class Meta:
         swagger_schema_fields = {
             'type': 'string',

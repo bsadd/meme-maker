@@ -7,6 +7,7 @@ from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 from coreapp.models import *
 from accounts.serializers import UserSerializer
 from coreapp.serializer_fields import ChoiceField, ImageBase64HybridFileField
+from coreapp.swagger.serializer_fields import *
 
 
 class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
@@ -83,7 +84,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             'configuration_tail': {'write_only': True},
         }
 
-    @swagger_serializer_method(serializer_or_field=serializers.DictField())
+    @swagger_serializer_method(serializer_or_field=Post_publisher)
     def get_publisher(self, post) -> dict:
         """Returns uploader info
         :return {'username':current user name, 'url': user-profile link}
@@ -91,7 +92,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         return {'username': post.author.username,
                 'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author_id]))}
 
-    @swagger_serializer_method(serializer_or_field=serializers.DictField())
+    @swagger_serializer_method(serializer_or_field=Post_react_counts)
     def get_react_counts(self, post) -> dict:
         """Returns all reactions:count map for this post
         :return: {'WOW':10, 'HAHA':4}
