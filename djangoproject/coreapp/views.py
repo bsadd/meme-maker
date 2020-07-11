@@ -6,12 +6,12 @@ from rest_framework import viewsets, status, permissions, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from accounts.serializers import UserSerializer
 from coreapp.pagination import StandardResultsSetPagination
 from coreapp.permissions import IsModerator
 from coreapp.filters import *
 from coreapp.serializers import *
 from coreapp.swagger import query_params
-from coreapp.swagger.schema import PostReactCreateSchema
 from coreapp.swagger.serializers import PostReactRequestBodySerializer, PostReactResponseBodySerializer
 from coreapp.utils import to_bool
 from coreapp.validators import post_query_schema
@@ -206,5 +206,5 @@ class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixi
     pagination_class = StandardResultsSetPagination
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)
-    queryset = Post.objects.prefetch_related('reacts', 'author').all()
+    queryset = Post.objects.prefetch_related('reacts', 'author', 'moderator').all()
     http_method_names = ('get', 'post', 'put')

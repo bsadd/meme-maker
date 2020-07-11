@@ -5,8 +5,9 @@ from rest_framework import serializers, exceptions
 from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 
 from coreapp.models import *
-from accounts.serializers import UserSerializer
+from accounts.serializers import UserRefSerializer
 from coreapp.serializer_fields import ChoiceField, ImageBase64HybridFileField
+from coreapp.swagger.schema import UserRefSerializerSchema
 from coreapp.swagger.serializer_fields import *
 
 
@@ -84,13 +85,9 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             'configuration_tail': {'write_only': True},
         }
 
-    @swagger_serializer_method(serializer_or_field=Post_publisher)
-    def get_publisher(self, post) -> dict:
-        """Returns uploader info
-        :return {'username':current user name, 'url': user-profile link}
-        """
-        return {'username': post.author.username,
-                'url': self.context['request'].build_absolute_uri(reverse('api:user-detail', args=[post.author_id]))}
+    @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
+    def get_publisher(self, post) -> UserRefSerializer:
+        return UserRefSerializer(post.author, context={'request': getattr(self.context, 'request', None)}).data
 
     @swagger_serializer_method(serializer_or_field=Post_react_counts)
     def get_react_counts(self, post) -> dict:
@@ -134,15 +131,26 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
 
 class PostModerationSerializer(serializers.ModelSerializer):
-    author = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
+    author = serializers.SerializerMethodField()
     moderator = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
-    # current_moderator = UserRefSerializer(source='moderator', read_only=True)
-    current_moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
+    current_moderator = serializers.SerializerMethodField()
     approval_at = serializers.HiddenField(default=timezone.now())
     moderated_at = serializers.DateTimeField(source='approval_at', read_only=True)
     approval_status = ChoiceField(choices=ApprovalStatus.choices)
     keywords = KeywordSerializer(many=True, read_only=True)
     template = serializers.HyperlinkedRelatedField(view_name='api:post-detail', read_only=True)
+
+    @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
+    def get_current_moderator(self, post):
+        """TODO: need a better way
+        https://github.com/axnsan12/drf-yasg/issues/343
+        https://github.com/axnsan12/drf-yasg/issues/344
+        """
+        return UserRefSerializer(post.author, context={'request': getattr(self.context, 'request', None)}).data
+
+    @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
+    def get_author(self, post):
+        return UserRefSerializer(post.moderator, context={'request': getattr(self.context, 'request', None)}).data
 
     class Meta:
         model = Post
@@ -151,5 +159,5 @@ class PostModerationSerializer(serializers.ModelSerializer):
                   'current_moderator', 'moderator',
                   'template', 'author', 'keywords', ]
         read_only_fields = (
-            'caption', 'image', 'nviews', 'author', 'uploaded_at', 'current_moderator', 'keywords', 'moderated_at',)
+            'caption', 'image', 'nviews', 'author', 'uploaded_at', 'keywords', 'moderated_at',)
         extra_kwargs = {}

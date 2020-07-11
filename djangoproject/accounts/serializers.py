@@ -1,6 +1,19 @@
+from drf_yasg import openapi
 from rest_framework import serializers
 
 from accounts.models import User
+
+
+class UserRefSerializer(serializers.HyperlinkedModelSerializer):
+    """
+    User Account Reference serializer
+    """
+    url = serializers.HyperlinkedIdentityField('api:user-detail', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['username', 'url', 'avatar']
+        read_only_fields = fields
 
 
 class UserSerializer(serializers.HyperlinkedModelSerializer):
