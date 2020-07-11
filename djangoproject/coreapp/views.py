@@ -18,13 +18,17 @@ from coreapp.validators import post_query_schema
 
 
 @method_decorator(name='retrieve',
-                  decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
+                  decorator=swagger_auto_schema(operation_summary='Details of a post',
+                                                responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 @method_decorator(name='list',
-                  decorator=swagger_auto_schema(manual_parameters=query_params.POST_LIST_QUERY_PARAMS))
+                  decorator=swagger_auto_schema(operation_summary='List of posts',
+                                                manual_parameters=query_params.POST_LIST_QUERY_PARAMS))
 @method_decorator(name='create',
-                  decorator=swagger_auto_schema(manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER]))
+                  decorator=swagger_auto_schema(operation_summary='Uploads a new post',
+                                                manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER]))
 @method_decorator(name='update',
-                  decorator=swagger_auto_schema(manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
+                  decorator=swagger_auto_schema(operation_summary='Modifies a post',
+                                                manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
                                                 responses={status.HTTP_404_NOT_FOUND: 'Post not found'}))
 class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
@@ -81,6 +85,7 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
         return self.serializer_classes.get(self.action, self.serializer_class)
 
     @swagger_auto_schema(method='get',
+                         operation_summary='List of related posts',
                          operation_description="Returns list of posts made on the same template of post=pk",
                          responses={status.HTTP_404_NOT_FOUND: 'No such post exists with provided pk'},
                          manual_parameters=query_params.POST_LIST_QUERY_PARAMS)
@@ -103,6 +108,10 @@ class KeywordViewSet(viewsets.ModelViewSet):
     http_method_names = ['get', 'post']
 
 
+@method_decorator(name='list',
+                  decorator=swagger_auto_schema(operation_summary="List of users"))
+@method_decorator(name='retrieve',
+                  decorator=swagger_auto_schema(operation_summary="Details of a user"))
 class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
                   viewsets.GenericViewSet):
     """
@@ -112,7 +121,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
     serializer_class = UserSerializer
     pagination_class = StandardResultsSetPagination
 
-    @swagger_auto_schema(operation_description="Returns current user profile's detail",
+    @swagger_auto_schema(operation_summary="Current user Profile",
                          responses={status.HTTP_401_UNAUTHORIZED: 'User is not authenticated'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='current', url_name='current')
@@ -121,7 +130,14 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
 
 
 @method_decorator(name='list',
-                  decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
+                  decorator=swagger_auto_schema(operation_summary="All reactions on a post",
+                                                operation_description="All reactions on the post with post_id=post_pk",
+                                                responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
+@method_decorator(name='retrieve',
+                  decorator=swagger_auto_schema(operation_summary="Details of a reaction on a post",
+                                                operation_description='Details of a reaction with reaction_id=id'
+                                                                      ' on the post with post_id=post_pk',
+                                                responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
                        viewsets.GenericViewSet):
     """
@@ -136,13 +152,13 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
             qs = qs.of_post(self.kwargs['post_pk'])
         return qs
 
-    @swagger_auto_schema(method='get', operation_description="Returns current user's reaction on the post",
+    @swagger_auto_schema(method='get', operation_summary="Current user's reaction on the post",
                          responses={status.HTTP_404_NOT_FOUND: 'Post/Reaction Not found'})
     @action(detail=False, methods=['GET'], permission_classes=[permissions.IsAuthenticated],
             url_path='user', url_name='user')
     def user(self, request, post_pk=None):
         """
-        currently authenticated user's react only
+        currently authenticated user's react only on post with id=post_pk
         """
         try:
             post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
@@ -155,7 +171,7 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
             raise exceptions.NotFound(detail="No react on the post from this user")
 
     @swagger_auto_schema(request_body=PostReactRequestBodySerializer,
-                         operation_description="Create/Change/Remove current user's reaction on the post",
+                         operation_summary="Create/Change/Remove current user's reaction on the post by post-ID",
                          manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
                          responses={status.HTTP_201_CREATED: PostReactResponseBodySerializer,
                                     status.HTTP_401_UNAUTHORIZED: 'User not authorized',
@@ -175,11 +191,12 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
 
 
 @method_decorator(name='retrieve',
-                  decorator=swagger_auto_schema(responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
+                  decorator=swagger_auto_schema(operation_summary='Moderation specific details of a post',
+                                                responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 @method_decorator(name='list',
-                  decorator=swagger_auto_schema(operation_description='List of all posts'))
+                  decorator=swagger_auto_schema(operation_summary='List of posts for moderation'))
 @method_decorator(name='update',
-                  decorator=swagger_auto_schema(operation_description='Update Post Detail',
+                  decorator=swagger_auto_schema(operation_summary='Update Post Moderation Status/Detail',
                                                 responses={status.HTTP_404_NOT_FOUND: 'Post not found'}))
 class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixins.RetrieveModelMixin,
                             viewsets.GenericViewSet):
@@ -190,3 +207,4 @@ class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixi
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)
     queryset = Post.objects.prefetch_related('reacts', 'author').all()
+    http_method_names = ('get', 'post', 'put')

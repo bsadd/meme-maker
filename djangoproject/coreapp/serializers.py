@@ -134,18 +134,22 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
 
 class PostModerationSerializer(serializers.ModelSerializer):
-    author = UserSerializer(read_only=True)
-    moderator = UserSerializer(default=serializers.CurrentUserDefault())
-    approval_at = serializers.DateTimeField(default=timezone.now())
+    author = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
+    moderator = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
+    # current_moderator = UserRefSerializer(source='moderator', read_only=True)
+    current_moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
+    approval_at = serializers.HiddenField(default=timezone.now())
+    moderated_at = serializers.DateTimeField(source='approval_at', read_only=True)
     approval_status = ChoiceField(choices=ApprovalStatus.choices)
     keywords = KeywordSerializer(many=True, read_only=True)
-    template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
-                                                   required=False)
+    template = serializers.HyperlinkedRelatedField(view_name='api:post-detail', read_only=True)
 
     class Meta:
         model = Post
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'author',
-                  'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
+                  'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderated_at',
+                  'current_moderator', 'moderator',
                   'template', 'author', 'keywords', ]
-        read_only_fields = ('caption', 'image', 'nviews', 'author', 'uploaded_at', 'moderator', 'keywords',)
+        read_only_fields = (
+            'caption', 'image', 'nviews', 'author', 'uploaded_at', 'current_moderator', 'keywords', 'moderated_at',)
         extra_kwargs = {}
