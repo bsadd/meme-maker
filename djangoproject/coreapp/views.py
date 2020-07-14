@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 from accounts.serializers import UserSerializer
 from coreapp.pagination import StandardResultsSetPagination
-from coreapp.permissions import IsModerator
+from coreapp.permissions import IsModerator, IsAuthenticatedCreateOrOwnerModifyOrReadOnly
 from coreapp.filters import *
 from coreapp.serializers import *
 from coreapp.swagger import query_params
@@ -70,7 +70,7 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
         'pending': PostModerationSerializer,
     }
 
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedCreateOrOwnerModifyOrReadOnly,)
     http_method_names = ['get', 'post', 'put']
 
     def get_queryset(self):
