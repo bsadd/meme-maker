@@ -66,7 +66,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['publisher']['username'], 'user0')
+        self.assertEqual(response.data['author']['username'], 'user0')
         self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -82,7 +82,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['author']['username'], 'user1')
         self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -95,7 +95,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['author']['username'], 'user1')
         self.assertEqual(response.data['approval_status'], 'Pending')
         payload['keywords'] = []
         payload['template'] = None
@@ -123,7 +123,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['publisher']['username'], 'user0')
+        self.assertEqual(response.data['author']['username'], 'user0')
         self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -140,7 +140,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['author']['username'], 'user1')
         self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -212,7 +212,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['publisher']['username'], 'user1')
+        self.assertEqual(response.data['author']['username'], 'user1')
         self.assertEqual(response.data['template'], template_post_url)
 
     def test_update(self):

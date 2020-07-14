@@ -114,6 +114,7 @@ class PostReactQuerySet(models.QuerySet):
 
 
 class PostReactManager(models.Manager):
+    """create is modified to support update or create by default"""
     def __init__(self, post_id=None, *args, **kwargs):
         self.post_id = post_id
         super().__init__(*args, **kwargs)

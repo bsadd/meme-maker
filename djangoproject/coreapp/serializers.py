@@ -2,6 +2,7 @@ from django.utils import timezone
 from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers, exceptions
+from rest_framework.utils.serializer_helpers import ReturnDict
 from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 
 from coreapp.models import *
@@ -35,7 +36,7 @@ class PostReactSerializer(serializers.ModelSerializer):
         fields = ['react', 'user', 'post', 'url']
 
     def get_unique_together_validators(self):
-        """disable unique together checks for (user, post) for get_or_create operation in create"""
+        """disable unique together checks for (user, post) for get_or_create operation in manager.create"""
         return []
 
 
@@ -45,8 +46,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     TODO:https://github.com/beda-software/drf-writable-nested/issues/46#issuecomment-415632868
     TODO: generic https://github.com/Ian-Foote/rest-framework-generic-relations
     """
-    author = serializers.HiddenField(default=serializers.CurrentUserDefault())
-    publisher = serializers.SerializerMethodField()
+    author = serializers.SerializerMethodField(read_only=True)
 
     approval_status = ChoiceField(choices=ApprovalStatus.choices, read_only=True)
     moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
@@ -72,7 +72,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent',
                   'configuration_head', 'configuration_over', 'configuration_tail',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
-                  'author', 'publisher', 'url',
+                  'author', 'url',
                   'template', 'is_template', 'react_counts', 'react_user',  # , 'reacts'
                   'keywords', 'reacts',
                   ]
@@ -86,7 +86,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         }
 
     @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
-    def get_publisher(self, post) -> UserRefSerializer:
+    def get_author(self, post) -> ReturnDict:
         return UserRefSerializer(post.author, context={'request': getattr(self.context, 'request', None)}).data
 
     @swagger_serializer_method(serializer_or_field=Post_react_counts)
@@ -125,23 +125,21 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             keyword_names_saved = sorted({keyword.name for keyword in keywords})
             if keyword_names_given != keyword_names_saved:
                 raise exceptions.APIException(detail='could not save keyword in the database')
-            return Post.objects.create(**validated_data, keywords=keywords)
+            return Post.objects.create(**validated_data, keywords=keywords, author=self.context['request'].user)
         except KeyError:
-            return Post.objects.create(**validated_data)
+            return Post.objects.create(**validated_data, author=self.context['request'].user)
 
 
 class PostModerationSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField()
-    moderator = serializers.HiddenField(default=serializers.CurrentUserDefault(), write_only=True)
-    current_moderator = serializers.SerializerMethodField()
-    approval_at = serializers.HiddenField(default=timezone.now())
-    moderated_at = serializers.DateTimeField(source='approval_at', read_only=True)
+    author = serializers.SerializerMethodField(read_only=True)
+    moderator = serializers.SerializerMethodField(read_only=True)
+    approval_at = serializers.DateTimeField(read_only=True)
     approval_status = ChoiceField(choices=ApprovalStatus.choices)
     keywords = KeywordSerializer(many=True, read_only=True)
     template = serializers.HyperlinkedRelatedField(view_name='api:post-detail', read_only=True)
 
     @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
-    def get_current_moderator(self, post):
+    def get_moderator(self, post):
         """TODO: need a better way
         https://github.com/axnsan12/drf-yasg/issues/343
         https://github.com/axnsan12/drf-yasg/issues/344
@@ -155,9 +153,14 @@ class PostModerationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'author',
-                  'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderated_at',
-                  'current_moderator', 'moderator',
+                  'uploaded_at', 'approval_status', 'approval_details', 'approval_at',
+                  'moderator',
                   'template', 'author', 'keywords', ]
         read_only_fields = (
             'caption', 'image', 'nviews', 'author', 'uploaded_at', 'keywords', 'moderated_at',)
         extra_kwargs = {}
+
+    def update(self, instance, validated_data):
+        instance.moderator = self.context['request'].user
+        instance.approval_at = timezone.now()
+        return super().update(instance, validated_data)
