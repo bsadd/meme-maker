@@ -1,4 +1,3 @@
-from drf_yasg import openapi
 from rest_framework import serializers
 
 from accounts.models import User

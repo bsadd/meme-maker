@@ -8,11 +8,11 @@ from rest_framework.response import Response
 
 from accounts.serializers import UserSerializer
 from coreapp.pagination import StandardResultsSetPagination
-from coreapp.permissions import IsModerator
+from coreapp.permissions import IsModerator, IsAuthenticatedCreateOrOwnerModifyOrReadOnly
 from coreapp.filters import *
 from coreapp.serializers import *
 from coreapp.swagger import query_params
-from coreapp.swagger.serializers import PostReactRequestBodySerializer, PostReactResponseBodySerializer
+from coreapp.swagger.serializers import PostReactionRequestBodySerializer, PostReactionResponseBodySerializer
 from coreapp.utils import to_bool
 from coreapp.validators import post_query_schema
 
@@ -70,16 +70,16 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
         'pending': PostModerationSerializer,
     }
 
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (IsAuthenticatedCreateOrOwnerModifyOrReadOnly,)
     http_method_names = ['get', 'post', 'put']
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return Post.objects.all()
         if self.action == 'related':
-            return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reacts',
+            return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reactions',
                                                                                                         'author')
-        return Post.objects.prefetch_related('reacts', 'author').all()
+        return Post.objects.prefetch_related('reactions', 'author').all()
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.serializer_class)
@@ -139,16 +139,16 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
                                                 operation_description='Details of a reaction with reaction_id=id'
                                                                       ' on the post with post_id=post_pk',
                                                 responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
-class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
-                       viewsets.GenericViewSet):
+class PostReactionViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
+                          viewsets.GenericViewSet):
     """
     API endpoint that allows users to react or view reactions on approved posts.
     """
-    serializer_class = PostReactSerializer
+    serializer_class = PostReactionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        qs = PostReact.objects.all().of_approved_posts()
+        qs = PostReaction.objects.all().of_approved_posts()
         if 'post_pk' in self.kwargs:
             qs = qs.of_post(self.kwargs['post_pk'])
         return qs
@@ -160,22 +160,22 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
             url_path='user', url_name='user')
     def user(self, request, post_pk=None):
         """
-        currently authenticated user's react only on post with id=post_pk
+        currently authenticated user's reaction only on post with id=post_pk
         """
         try:
             post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
-            return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user),
-                                                context={'request': request}).data,
+            return Response(PostReactionSerializer(PostReaction.objects.get(post=post, user=request.user),
+                                                   context={'request': request}).data,
                             status=status.HTTP_200_OK)
         except Post.DoesNotExist:
             raise exceptions.NotFound(detail="No such react-able post exists with this id")
-        except PostReact.DoesNotExist:
-            raise exceptions.NotFound(detail="No react on the post from this user")
+        except PostReaction.DoesNotExist:
+            raise exceptions.NotFound(detail="No reaction on the post from this user")
 
-    @swagger_auto_schema(request_body=PostReactRequestBodySerializer,
+    @swagger_auto_schema(request_body=PostReactionRequestBodySerializer,
                          operation_summary="Create/Change/Remove current user's reaction on the post by post-ID",
                          manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
-                         responses={status.HTTP_201_CREATED: PostReactResponseBodySerializer,
+                         responses={status.HTTP_201_CREATED: PostReactionResponseBodySerializer,
                                     status.HTTP_401_UNAUTHORIZED: 'User not authorized',
                                     status.HTTP_400_BAD_REQUEST: 'post/user passed in request body',
                                     status.HTTP_404_NOT_FOUND: 'Post Not found'})
@@ -185,7 +185,7 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
             request.data._mutable = True
         if getattr(request.data, 'user', None) or getattr(request.data, 'post', None):
             raise exceptions.ValidationError(detail="Invalid body parameters: post/user cannot be specified")
-        request.data['react'] = str(request.data['react'])
+        request.data['reaction'] = str(request.data['reaction'])
         request.data['post'] = reverse('api:post-detail', args=[kwargs['post_pk']])
         if not is_mutable:
             request.data._mutable = False
@@ -214,5 +214,5 @@ class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixi
     pagination_class = StandardResultsSetPagination
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)
-    queryset = Post.objects.prefetch_related('reacts', 'author', 'moderator').all()
+    queryset = Post.objects.prefetch_related('reactions', 'author', 'moderator').all()
     http_method_names = ('get', 'post', 'put')

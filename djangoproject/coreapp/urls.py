@@ -11,10 +11,8 @@ router.register(r'moderation/post', views.PostModerationViewSet, basename='moder
 router.register(r'user', views.UserViewSet, basename='user')
 
 post_router = routers.NestedSimpleRouter(router, r'post', lookup='post')
-post_router.register(r'react', views.PostReactViewSet, basename='post-react')
+post_router.register(r'reaction', views.PostReactionViewSet, basename='post-reaction')
 
-# Wire up our API using automatic URL routing.
-# Additionally, we include login URLs for the browsable API.
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(post_router.urls)),

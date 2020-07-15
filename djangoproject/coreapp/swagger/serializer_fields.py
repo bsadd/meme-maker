@@ -2,7 +2,7 @@ from drf_yasg import openapi
 from rest_framework import serializers
 
 
-class Post_react_counts(serializers.JSONField):
+class Post_reaction_counts(serializers.JSONField):
     class Meta:
         swagger_schema_fields = {
             "type": openapi.TYPE_OBJECT,
