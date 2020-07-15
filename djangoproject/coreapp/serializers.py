@@ -88,7 +88,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
     def get_author(self, post) -> ReturnDict:
-        return UserRefSerializer(post.author, context={'request': getattr(self.context, 'request', None)}).data
+        return UserRefSerializer(post.author, context=self.context).data
 
     @swagger_serializer_method(serializer_or_field=Post_reaction_counts)
     def get_reaction_counts(self, post) -> dict:
@@ -145,11 +145,11 @@ class PostModerationSerializer(serializers.ModelSerializer):
         https://github.com/axnsan12/drf-yasg/issues/343
         https://github.com/axnsan12/drf-yasg/issues/344
         """
-        return UserRefSerializer(post.author, context={'request': getattr(self.context, 'request', None)}).data
+        return UserRefSerializer(post.author, context=self.context).data
 
     @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
     def get_author(self, post):
-        return UserRefSerializer(post.moderator, context={'request': getattr(self.context, 'request', None)}).data
+        return UserRefSerializer(post.moderator, context=self.context).data
 
     class Meta:
         model = Post
