@@ -11,7 +11,7 @@ router.register(r'moderation/post', views.PostModerationViewSet, basename='moder
 router.register(r'user', views.UserViewSet, basename='user')
 
 post_router = routers.NestedSimpleRouter(router, r'post', lookup='post')
-post_router.register(r'react', views.PostReactionViewSet, basename='post-reaction')
+post_router.register(r'reaction', views.PostReactionViewSet, basename='post-reaction')
 
 urlpatterns = [
     path('', include(router.urls)),
