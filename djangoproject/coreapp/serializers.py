@@ -21,7 +21,7 @@ class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
     #     return value.name
 
 
-class PostReactSerializer(serializers.ModelSerializer):
+class PostReactionSerializer(serializers.ModelSerializer):
     user = serializers.HyperlinkedRelatedField(queryset=User.objects.all(),
                                                view_name='api:user-detail',
                                                default=serializers.CurrentUserDefault())
@@ -32,7 +32,7 @@ class PostReactSerializer(serializers.ModelSerializer):
                                          label="reaction's view url")
 
     class Meta:
-        model = PostReact
+        model = PostReaction
         fields = ['react', 'user', 'post', 'url']
 
     def get_unique_together_validators(self):
@@ -90,14 +90,14 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     def get_author(self, post) -> ReturnDict:
         return UserRefSerializer(post.author, context={'request': getattr(self.context, 'request', None)}).data
 
-    @swagger_serializer_method(serializer_or_field=Post_react_counts)
+    @swagger_serializer_method(serializer_or_field=Post_reaction_counts)
     def get_react_counts(self, post) -> dict:
         """Returns all reactions:count map for this post
         :return: {'WOW':10, 'HAHA':4}
         """
         # To skip db hit obj ref is used to query
         rset = {}
-        for q in post.postreact_set.exclude(react=Reaction.NONE).values('react').annotate(
+        for q in post.postreaction_set.exclude(react=Reaction.NONE).values('react').annotate(
                 count=Count('user')).values_list('react', 'count'):
             rset[Reaction(q[0]).label] = q[1]
         return rset
@@ -110,9 +110,9 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         """
         try:
             request = self.context['request']
-            post_react = post.postreact_set.all().without_removed_reacts().get(user_id=request.user.id)
+            post_react = post.postreaction_set.all().without_removed_reacts().get(user_id=request.user.id)
             return post_react.react_name()
-        except (PostReact.DoesNotExist, KeyError, TypeError):  # TypeError for Anonymous User
+        except (PostReaction.DoesNotExist, KeyError, TypeError):  # TypeError for Anonymous User
             return None
 
     @transaction.atomic

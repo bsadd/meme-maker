@@ -29,7 +29,7 @@ class PostQuerySet(models.QuerySet):
         return self.filter(moderator_id=moderator_id)
 
     def with_reaction_count(self):
-        return self.annotate(react_count=Count(Case(When(postreact__react=0, then=0), default=1)))
+        return self.annotate(react_count=Count(Case(When(postreaction__react=0, then=0), default=1)))
 
     def with_comments_count(self):
         return self.annotate(comment_count=Count('postcomment'))
@@ -78,7 +78,7 @@ class PostManager(models.Manager):
         return obj
 
 
-class PostReactQuerySet(models.QuerySet):
+class PostReactionQuerySet(models.QuerySet):
     def like(self):
         return self.filter(react=Reaction.LIKE)
 
@@ -113,14 +113,14 @@ class PostReactQuerySet(models.QuerySet):
         return self.filter(post__approval_status=ApprovalStatus.APPROVED)
 
 
-class PostReactManager(models.Manager):
+class PostReactionManager(models.Manager):
     """create is modified to support update or create by default"""
     def __init__(self, post_id=None, *args, **kwargs):
         self.post_id = post_id
         super().__init__(*args, **kwargs)
 
     def get_queryset(self):
-        qs = PostReactQuerySet(model=self.model, using=self._db)
+        qs = PostReactionQuerySet(model=self.model, using=self._db)
         if self.post_id is not None:
             qs = qs.filter(post_id=self.post_id)
         return qs

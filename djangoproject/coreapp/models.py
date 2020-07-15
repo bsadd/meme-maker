@@ -49,7 +49,7 @@ class Post(models.Model):
 
     keywords = models.ManyToManyField(Keyword, through='coreapp.KeywordList', related_name='post_keywords')
 
-    reactions = models.ManyToManyField(User, through='coreapp.PostReact', related_name='post_react_user')
+    reactions = models.ManyToManyField(User, through='coreapp.PostReaction', related_name='post_react_user')
     comments = models.ManyToManyField(User, through='coreapp.PostComment', related_name='post_comment_user')
 
     objects = PostManager()
@@ -95,11 +95,11 @@ class KeywordList(models.Model):
         unique_together = [['post', 'keyword']]
 
 
-def factory_manager_for_postreact(post_id):
-    return PostReactManager.factory(model=PostReact, post_id=post_id)
+def factory_manager_for_postreaction(post_id):
+    return PostReactionManager.factory(model=PostReaction, post_id=post_id)
 
 
-class PostReact(models.Model):
+class PostReaction(models.Model):
     """
     Like, Dislike reactions of viewers on a post
     """
@@ -109,8 +109,8 @@ class PostReact(models.Model):
 
     react = models.IntegerField(verbose_name="React", choices=Reaction.choices, default=Reaction.NONE)
 
-    objects = PostReactManager()
-    of_post = factory_manager_for_postreact
+    objects = PostReactionManager()
+    of_post = factory_manager_for_postreaction
 
     class Meta:
         verbose_name = "Post Reaction"

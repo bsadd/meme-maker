@@ -12,7 +12,7 @@ from coreapp.permissions import IsModerator, IsAuthenticatedCreateOrOwnerModifyO
 from coreapp.filters import *
 from coreapp.serializers import *
 from coreapp.swagger import query_params
-from coreapp.swagger.serializers import PostReactRequestBodySerializer, PostReactResponseBodySerializer
+from coreapp.swagger.serializers import PostReactionRequestBodySerializer, PostReactionResponseBodySerializer
 from coreapp.utils import to_bool
 from coreapp.validators import post_query_schema
 
@@ -139,16 +139,16 @@ class UserViewSet(mixins.ListModelMixin, mixins.RetrieveModelMixin,
                                                 operation_description='Details of a reaction with reaction_id=id'
                                                                       ' on the post with post_id=post_pk',
                                                 responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
-class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
-                       viewsets.GenericViewSet):
+class PostReactionViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.RetrieveModelMixin,
+                          viewsets.GenericViewSet):
     """
     API endpoint that allows users to react or view reactions on approved posts.
     """
-    serializer_class = PostReactSerializer
+    serializer_class = PostReactionSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
     def get_queryset(self):
-        qs = PostReact.objects.all().of_approved_posts()
+        qs = PostReaction.objects.all().of_approved_posts()
         if 'post_pk' in self.kwargs:
             qs = qs.of_post(self.kwargs['post_pk'])
         return qs
@@ -164,18 +164,18 @@ class PostReactViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins.Re
         """
         try:
             post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
-            return Response(PostReactSerializer(PostReact.objects.get(post=post, user=request.user),
-                                                context={'request': request}).data,
+            return Response(PostReactionSerializer(PostReaction.objects.get(post=post, user=request.user),
+                                                   context={'request': request}).data,
                             status=status.HTTP_200_OK)
         except Post.DoesNotExist:
             raise exceptions.NotFound(detail="No such react-able post exists with this id")
-        except PostReact.DoesNotExist:
+        except PostReaction.DoesNotExist:
             raise exceptions.NotFound(detail="No react on the post from this user")
 
-    @swagger_auto_schema(request_body=PostReactRequestBodySerializer,
+    @swagger_auto_schema(request_body=PostReactionRequestBodySerializer,
                          operation_summary="Create/Change/Remove current user's reaction on the post by post-ID",
                          manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
-                         responses={status.HTTP_201_CREATED: PostReactResponseBodySerializer,
+                         responses={status.HTTP_201_CREATED: PostReactionResponseBodySerializer,
                                     status.HTTP_401_UNAUTHORIZED: 'User not authorized',
                                     status.HTTP_400_BAD_REQUEST: 'post/user passed in request body',
                                     status.HTTP_404_NOT_FOUND: 'Post Not found'})

@@ -277,7 +277,7 @@ class PostTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
 
-class PostReactTests(APITestCase):
+class PostReactionTests(APITestCase):
     def setUp(self):
         self.admin = User.objects.create_superuser(username='admin', password='admin', email='admin@localhost')
         self.moderator = User.objects.create_user(username='moderator', password='moderator', email='admin@localhost')
