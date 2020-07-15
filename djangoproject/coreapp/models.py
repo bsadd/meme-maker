@@ -49,7 +49,7 @@ class Post(models.Model):
 
     keywords = models.ManyToManyField(Keyword, through='coreapp.KeywordList', related_name='post_keywords')
 
-    reacts = models.ManyToManyField(User, through='coreapp.PostReact', related_name='post_react_user')
+    reactions = models.ManyToManyField(User, through='coreapp.PostReact', related_name='post_react_user')
     comments = models.ManyToManyField(User, through='coreapp.PostComment', related_name='post_comment_user')
 
     objects = PostManager()
@@ -101,7 +101,7 @@ def factory_manager_for_postreact(post_id):
 
 class PostReact(models.Model):
     """
-    Like, Dislike reacts of viewers on a post
+    Like, Dislike reactions of viewers on a post
     """
 
     post = models.ForeignKey(Post, on_delete=models.CASCADE)  # , validators=[__is_approved_post]
@@ -113,8 +113,8 @@ class PostReact(models.Model):
     of_post = factory_manager_for_postreact
 
     class Meta:
-        verbose_name = "Post React"
-        verbose_name_plural = "Post Reaction"
+        verbose_name = "Post Reaction"
+        verbose_name_plural = "Post Reactions"
         unique_together = [['post', 'user']]
 
     def react_name(self):
@@ -142,7 +142,7 @@ class PostComment(models.Model):
 
 class PostCommentReact(models.Model):
     """
-    Like, Dislike reacts of viewers for others comment on a post
+    Like, Dislike reactions of viewers for others comment on a post
     """
     post = models.ForeignKey(PostComment, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

@@ -77,9 +77,9 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
         if getattr(self, 'swagger_fake_view', False):
             return Post.objects.all()
         if self.action == 'related':
-            return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reacts',
+            return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reactions',
                                                                                                         'author')
-        return Post.objects.prefetch_related('reacts', 'author').all()
+        return Post.objects.prefetch_related('reactions', 'author').all()
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.serializer_class)
@@ -214,5 +214,5 @@ class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixi
     pagination_class = StandardResultsSetPagination
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)
-    queryset = Post.objects.prefetch_related('reacts', 'author', 'moderator').all()
+    queryset = Post.objects.prefetch_related('reactions', 'author', 'moderator').all()
     http_method_names = ('get', 'post', 'put')

@@ -54,8 +54,9 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     keywords = KeywordSerializer(many=True, required=False)
     image = ImageBase64HybridFileField()  # image file / base64
 
-    reacts = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-react-list',
-                                                  lookup_url_kwarg='post_pk', help_text="all reactions for this post")
+    reactions = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-react-list',
+                                                     lookup_url_kwarg='post_pk',
+                                                     help_text="all reactions for this post")
 
     template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
                                                    required=False)  # Post.approved restricts unapproved as template ref
@@ -73,8 +74,8 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                   'configuration_head', 'configuration_over', 'configuration_tail',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
                   'author', 'url',
-                  'template', 'is_template', 'react_counts', 'react_user',  # , 'reacts'
-                  'keywords', 'reacts',
+                  'template', 'is_template', 'react_counts', 'react_user',
+                  'keywords', 'reactions',
                   ]
         read_only_fields = ('nviews', 'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {

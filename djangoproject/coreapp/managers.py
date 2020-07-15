@@ -28,7 +28,7 @@ class PostQuerySet(models.QuerySet):
     def rejected_by(self, moderator_id: int) -> QuerySet:
         return self.filter(moderator_id=moderator_id)
 
-    def with_reacts_count(self):
+    def with_reaction_count(self):
         return self.annotate(react_count=Count(Case(When(postreact__react=0, then=0), default=1)))
 
     def with_comments_count(self):
