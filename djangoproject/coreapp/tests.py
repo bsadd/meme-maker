@@ -308,35 +308,35 @@ class PostReactionTests(APITestCase):
         post_approved = Post.objects.create(caption='approved_post', approval_status=ApprovalStatus.APPROVED,
                                             author=User.objects.get(username='user2'))
         ## Anonymous user
-        url = reverse('api:post-react-list', args=[post_approved.id])
+        url = reverse('api:post-reaction-list', args=[post_approved.id])
         payload = {'react': 'love'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
         ## user0 invalid react
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-list', args=[post_approved.id])
+        url = reverse('api:post-reaction-list', args=[post_approved.id])
         payload = {'react': 'liked'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         ## user0 react on unapproved post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-list', args=[self.post_unapproved.id])
+        url = reverse('api:post-reaction-list', args=[self.post_unapproved.id])
         payload = {'react': 'like'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         ## user0 react on invalid post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-list', args=[100])
+        url = reverse('api:post-reaction-list', args=[100])
         payload = {'react': 'like'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         ## user0 - react LOVE
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-list', args=[post_approved.id])
+        url = reverse('api:post-reaction-list', args=[post_approved.id])
         payload = {'react': 'love'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -344,14 +344,14 @@ class PostReactionTests(APITestCase):
 
         ## user0 - check react LOVE
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-user', args=[post_approved.id])
+        url = reverse('api:post-reaction-user', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['react'], 'Love')
 
         ## user0 change react to HAHA
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-list', args=[post_approved.id])
+        url = reverse('api:post-reaction-list', args=[post_approved.id])
         payload = {'react': 'haha'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -359,7 +359,7 @@ class PostReactionTests(APITestCase):
 
         ## user0 - check react HAHA
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-user', args=[post_approved.id])
+        url = reverse('api:post-reaction-user', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data['react'], 'Haha')
@@ -380,13 +380,13 @@ class PostReactionTests(APITestCase):
 
         ## user0 - react LOVE - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-list', args=[post_approved.id])
+        url = reverse('api:post-reaction-list', args=[post_approved.id])
         response = self.client.post(url, data={'react': 'love'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         ## user0 - react LIKE - post2
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-list', args=[post_approved_2.id])
+        url = reverse('api:post-reaction-list', args=[post_approved_2.id])
         response = self.client.post(url, data={'react': 'like'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -397,7 +397,7 @@ class PostReactionTests(APITestCase):
 
         ## user1 - react LOVE - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
-        url = reverse('api:post-react-list', args=[post_approved.id])
+        url = reverse('api:post-reaction-list', args=[post_approved.id])
         response = self.client.post(url, data={'react': 'love'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -408,7 +408,7 @@ class PostReactionTests(APITestCase):
 
         ## user2 - react HAHA - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])
-        url = reverse('api:post-react-list', args=[post_approved.id])
+        url = reverse('api:post-reaction-list', args=[post_approved.id])
         response = self.client.post(url, data={'react': 'haha'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -419,7 +419,7 @@ class PostReactionTests(APITestCase):
 
         ## user0 - unreact LOVE - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
-        url = reverse('api:post-react-list', args=[post_approved.id])
+        url = reverse('api:post-reaction-list', args=[post_approved.id])
         response = self.client.post(url, data={'react': 'none'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 

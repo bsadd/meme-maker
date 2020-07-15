@@ -27,7 +27,7 @@ class PostReactionSerializer(serializers.ModelSerializer):
                                                default=serializers.CurrentUserDefault())
     post = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail', required=True)
     react = ChoiceField(choices=Reaction.choices, required=True)
-    url = NestedHyperlinkedIdentityField(view_name='api:post-react-detail',
+    url = NestedHyperlinkedIdentityField(view_name='api:post-reaction-detail',
                                          parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True,
                                          label="reaction's view url")
 
@@ -54,7 +54,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     keywords = KeywordSerializer(many=True, required=False)
     image = ImageBase64HybridFileField()  # image file / base64
 
-    reactions = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-react-list',
+    reactions = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-reaction-list',
                                                      lookup_url_kwarg='post_pk',
                                                      help_text="all reactions for this post")
 

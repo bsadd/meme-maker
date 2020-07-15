@@ -18,7 +18,7 @@ class PostReactionResponseBodySerializer(serializers.ModelSerializer):
     user = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
     post = serializers.HyperlinkedRelatedField(view_name='api:post-detail', read_only=True)
     react = ChoiceField(choices=Reaction.choices, read_only=True)
-    url = NestedHyperlinkedIdentityField(view_name='api:post-react-detail',
+    url = NestedHyperlinkedIdentityField(view_name='api:post-reaction-detail',
                                          parent_lookup_kwargs={'post_pk': 'post_id'},
                                          label="reaction's view url")
 
