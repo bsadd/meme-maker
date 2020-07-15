@@ -26,14 +26,14 @@ class PostReactionSerializer(serializers.ModelSerializer):
                                                view_name='api:user-detail',
                                                default=serializers.CurrentUserDefault())
     post = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail', required=True)
-    react = ChoiceField(choices=Reaction.choices, required=True)
+    reaction = ChoiceField(choices=Reaction.choices, required=True)
     url = NestedHyperlinkedIdentityField(view_name='api:post-reaction-detail',
                                          parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True,
                                          label="reaction's view url")
 
     class Meta:
         model = PostReaction
-        fields = ['react', 'user', 'post', 'url']
+        fields = ['reaction', 'user', 'post', 'url']
 
     def get_unique_together_validators(self):
         """disable unique together checks for (user, post) for get_or_create operation in manager.create"""
@@ -42,7 +42,7 @@ class PostReactionSerializer(serializers.ModelSerializer):
 
 class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     """
-    TODO: optimize react count
+    TODO: optimize reaction count
     TODO:https://github.com/beda-software/drf-writable-nested/issues/46#issuecomment-415632868
     TODO: generic https://github.com/Ian-Foote/rest-framework-generic-relations
     """
@@ -64,9 +64,9 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     is_template = serializers.BooleanField(source='is_template_post', read_only=True)
 
-    react_counts = serializers.SerializerMethodField()
+    reaction_counts = serializers.SerializerMethodField()
 
-    react_user = serializers.SerializerMethodField()
+    reaction_user = serializers.SerializerMethodField()
 
     class Meta:
         model = Post
@@ -74,7 +74,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                   'configuration_head', 'configuration_over', 'configuration_tail',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
                   'author', 'url',
-                  'template', 'is_template', 'react_counts', 'react_user',
+                  'template', 'is_template', 'reaction_counts', 'reaction_user',
                   'keywords', 'reactions',
                   ]
         read_only_fields = ('nviews', 'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
@@ -91,27 +91,27 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         return UserRefSerializer(post.author, context={'request': getattr(self.context, 'request', None)}).data
 
     @swagger_serializer_method(serializer_or_field=Post_reaction_counts)
-    def get_react_counts(self, post) -> dict:
+    def get_reaction_counts(self, post) -> dict:
         """Returns all reactions:count map for this post
         :return: {'WOW':10, 'HAHA':4}
         """
         # To skip db hit obj ref is used to query
         rset = {}
-        for q in post.postreaction_set.exclude(react=Reaction.NONE).values('react').annotate(
-                count=Count('user')).values_list('react', 'count'):
+        for q in post.postreaction_set.exclude(reaction=Reaction.NONE).values('reaction').annotate(
+                count=Count('user')).values_list('reaction', 'count'):
             rset[Reaction(q[0]).label] = q[1]
         return rset
 
     @swagger_serializer_method(serializer_or_field=ChoiceField(choices=Reaction.choices,
                                                                help_text="name of reaction of current user"))
-    def get_react_user(self, post):
+    def get_reaction_user(self, post):
         """Returns current user's reaction on this posts
         :return: reaction-name or null if no reaction from the user
         """
         try:
             request = self.context['request']
-            post_react = post.postreaction_set.all().without_removed_reacts().get(user_id=request.user.id)
-            return post_react.react_name()
+            post_reaction = post.postreaction_set.all().without_removed_reactions().get(user_id=request.user.id)
+            return post_reaction.reaction_name()
         except (PostReaction.DoesNotExist, KeyError, TypeError):  # TypeError for Anonymous User
             return None
 

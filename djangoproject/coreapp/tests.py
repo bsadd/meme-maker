@@ -301,129 +301,129 @@ class PostReactionTests(APITestCase):
         self.post_unapproved = Post.objects.create(caption='unapproved_post',
                                                    author=User.objects.get(username='user2'))
 
-    def test_react(self):
+    def test_reaction(self):
         """
-        Ensure only authenticated user can react on an existing approved post object only
+        Ensure only authenticated user can reaction on an existing approved post object only
         """
         post_approved = Post.objects.create(caption='approved_post', approval_status=ApprovalStatus.APPROVED,
                                             author=User.objects.get(username='user2'))
         ## Anonymous user
         url = reverse('api:post-reaction-list', args=[post_approved.id])
-        payload = {'react': 'love'}
+        payload = {'reaction': 'love'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
-        ## user0 invalid react
+        ## user0 invalid reaction
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-list', args=[post_approved.id])
-        payload = {'react': 'liked'}
+        payload = {'reaction': 'liked'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         ## user0 react on unapproved post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-list', args=[self.post_unapproved.id])
-        payload = {'react': 'like'}
+        payload = {'reaction': 'like'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         ## user0 react on invalid post
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-list', args=[100])
-        payload = {'react': 'like'}
+        payload = {'reaction': 'like'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         ## user0 - react LOVE
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-list', args=[post_approved.id])
-        payload = {'react': 'love'}
+        payload = {'reaction': 'love'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['react'], 'Love')
+        self.assertEqual(response.data['reaction'], 'Love')
 
-        ## user0 - check react LOVE
+        ## user0 - check reaction LOVE
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-user', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['react'], 'Love')
+        self.assertEqual(response.data['reaction'], 'Love')
 
-        ## user0 change react to HAHA
+        ## user0 change reaction to HAHA
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-list', args=[post_approved.id])
-        payload = {'react': 'haha'}
+        payload = {'reaction': 'haha'}
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['react'], 'Haha')
+        self.assertEqual(response.data['reaction'], 'Haha')
 
-        ## user0 - check react HAHA
+        ## user0 - check reaction HAHA
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-user', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.data['react'], 'Haha')
+        self.assertEqual(response.data['reaction'], 'Haha')
 
-    def test_reactCount(self):
+    def test_reactionCount(self):
         """
-        Ensure react count only increases/decreases with authenticated user's react
+        Ensure reaction count only increases/decreases with authenticated user's reaction
         """
         post_approved = Post.objects.create(caption='approved_post', approval_status=ApprovalStatus.APPROVED,
                                             author=User.objects.get(username='user2'))
         post_approved_2 = Post.objects.create(caption='approved_post_2', approval_status=ApprovalStatus.APPROVED,
                                               author=User.objects.get(username='user2'))
-        ## initially no react
+        ## initially no reaction
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {})
+        self.assertDictEqual(response.data['reaction_counts'], {})
 
         ## user0 - react LOVE - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-list', args=[post_approved.id])
-        response = self.client.post(url, data={'react': 'love'}, format='json')
+        response = self.client.post(url, data={'reaction': 'love'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         ## user0 - react LIKE - post2
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-list', args=[post_approved_2.id])
-        response = self.client.post(url, data={'react': 'like'}, format='json')
+        response = self.client.post(url, data={'reaction': 'like'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {'Love': 1})
+        self.assertDictEqual(response.data['reaction_counts'], {'Love': 1})
 
         ## user1 - react LOVE - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
         url = reverse('api:post-reaction-list', args=[post_approved.id])
-        response = self.client.post(url, data={'react': 'love'}, format='json')
+        response = self.client.post(url, data={'reaction': 'love'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {'Love': 2})
+        self.assertDictEqual(response.data['reaction_counts'], {'Love': 2})
 
         ## user2 - react HAHA - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[2])
         url = reverse('api:post-reaction-list', args=[post_approved.id])
-        response = self.client.post(url, data={'react': 'haha'}, format='json')
+        response = self.client.post(url, data={'reaction': 'haha'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {'Love': 2, 'Haha': 1})
+        self.assertDictEqual(response.data['reaction_counts'], {'Love': 2, 'Haha': 1})
 
         ## user0 - unreact LOVE - post1
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[0])
         url = reverse('api:post-reaction-list', args=[post_approved.id])
-        response = self.client.post(url, data={'react': 'none'}, format='json')
+        response = self.client.post(url, data={'reaction': 'none'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertDictEqual(response.data['react_counts'], {'Love': 1, 'Haha': 1})
+        self.assertDictEqual(response.data['reaction_counts'], {'Love': 1, 'Haha': 1})

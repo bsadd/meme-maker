@@ -160,7 +160,7 @@ class PostReactionViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins
             url_path='user', url_name='user')
     def user(self, request, post_pk=None):
         """
-        currently authenticated user's react only on post with id=post_pk
+        currently authenticated user's reaction only on post with id=post_pk
         """
         try:
             post = Post.objects.get(id=post_pk, approval_status=ApprovalStatus.APPROVED)
@@ -170,7 +170,7 @@ class PostReactionViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins
         except Post.DoesNotExist:
             raise exceptions.NotFound(detail="No such react-able post exists with this id")
         except PostReaction.DoesNotExist:
-            raise exceptions.NotFound(detail="No react on the post from this user")
+            raise exceptions.NotFound(detail="No reaction on the post from this user")
 
     @swagger_auto_schema(request_body=PostReactionRequestBodySerializer,
                          operation_summary="Create/Change/Remove current user's reaction on the post by post-ID",
@@ -185,7 +185,7 @@ class PostReactionViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, mixins
             request.data._mutable = True
         if getattr(request.data, 'user', None) or getattr(request.data, 'post', None):
             raise exceptions.ValidationError(detail="Invalid body parameters: post/user cannot be specified")
-        request.data['react'] = str(request.data['react'])
+        request.data['reaction'] = str(request.data['reaction'])
         request.data['post'] = reverse('api:post-detail', args=[kwargs['post_pk']])
         if not is_mutable:
             request.data._mutable = False

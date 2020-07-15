@@ -49,7 +49,7 @@ class Post(models.Model):
 
     keywords = models.ManyToManyField(Keyword, through='coreapp.KeywordList', related_name='post_keywords')
 
-    reactions = models.ManyToManyField(User, through='coreapp.PostReaction', related_name='post_react_user')
+    reactions = models.ManyToManyField(User, through='coreapp.PostReaction', related_name='post_reaction_user')
     comments = models.ManyToManyField(User, through='coreapp.PostComment', related_name='post_comment_user')
 
     objects = PostManager()
@@ -107,7 +107,7 @@ class PostReaction(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)  # , validators=[__is_approved_post]
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # , validators=[__is_allowed_user]
 
-    react = models.IntegerField(verbose_name="React", choices=Reaction.choices, default=Reaction.NONE)
+    reaction = models.IntegerField(verbose_name="Reaction", choices=Reaction.choices, default=Reaction.NONE)
 
     objects = PostReactionManager()
     of_post = factory_manager_for_postreaction
@@ -117,11 +117,11 @@ class PostReaction(models.Model):
         verbose_name_plural = "Post Reactions"
         unique_together = [['post', 'user']]
 
-    def react_name(self):
-        return Reaction(self.react).label
+    def reaction_name(self):
+        return Reaction(self.reaction).label
 
     def __str__(self):
-        return "%s %s %s" % (str(self.user), self.react_name(), str(self.post))
+        return "%s %s %s" % (str(self.user), self.reaction_name(), str(self.post))
 
 
 class PostComment(models.Model):
