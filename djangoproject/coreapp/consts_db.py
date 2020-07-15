@@ -4,7 +4,7 @@ Contains constants/wrapper classes for database model's fields like CHOICE_FIELD
 from django.db import models
 
 
-class Reacts(models.IntegerChoices):
+class Reaction(models.IntegerChoices):
     NONE, LIKE, LOVE, HAHA, WOW, SAD, ANGRY = range(0, 7)
 
 

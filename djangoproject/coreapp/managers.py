@@ -80,22 +80,22 @@ class PostManager(models.Manager):
 
 class PostReactQuerySet(models.QuerySet):
     def like(self):
-        return self.filter(react=Reacts.LIKE)
+        return self.filter(react=Reaction.LIKE)
 
     def love(self):
-        return self.filter(react=Reacts.LOVE)
+        return self.filter(react=Reaction.LOVE)
 
     def haha(self):
-        return self.filter(react=Reacts.HAHA)
+        return self.filter(react=Reaction.HAHA)
 
     def angry(self):
-        return self.filter(react=Reacts.ANGRY)
+        return self.filter(react=Reaction.ANGRY)
 
     def sad(self):
-        return self.filter(react=Reacts.SAD)
+        return self.filter(react=Reaction.SAD)
 
     def unreacted(self):
-        return self.filter(react=Reacts.NONE)
+        return self.filter(react=Reaction.NONE)
 
     def of_user(self, user_id):
         return self.filter(user_id=user_id)
@@ -104,7 +104,7 @@ class PostReactQuerySet(models.QuerySet):
         return self.filter(post_id=post_id)
 
     def without_removed_reacts(self):
-        return self.exclude(react=Reacts.NONE)
+        return self.exclude(react=Reaction.NONE)
 
     def react_counts(self):
         return self.values('react').annotate(count=Count('user'))
@@ -138,7 +138,7 @@ class PostReactManager(models.Manager):
         rset = {}
         for q in self.get_queryset().of_post(post_id).without_removed_reacts().react_counts().values_list('react',
                                                                                                           'count'):
-            rset[Reacts(q[0]).label] = q[1]
+            rset[Reaction(q[0]).label] = q[1]
         return rset
 
     def react_user(self, post_id: int, user_id: int) -> QuerySet:

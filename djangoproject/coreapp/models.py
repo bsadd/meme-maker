@@ -1,7 +1,7 @@
 from django.urls import reverse
 
 from accounts.models import User
-from coreapp.consts_db import Reacts, ApprovalStatus
+from coreapp.consts_db import Reaction, ApprovalStatus
 from coreapp.managers import *
 from coreapp import validators
 
@@ -107,18 +107,18 @@ class PostReact(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)  # , validators=[__is_approved_post]
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # , validators=[__is_allowed_user]
 
-    react = models.IntegerField(verbose_name="React", choices=Reacts.choices, default=Reacts.NONE)
+    react = models.IntegerField(verbose_name="React", choices=Reaction.choices, default=Reaction.NONE)
 
     objects = PostReactManager()
     of_post = factory_manager_for_postreact
 
     class Meta:
         verbose_name = "Post React"
-        verbose_name_plural = "Post Reacts"
+        verbose_name_plural = "Post Reaction"
         unique_together = [['post', 'user']]
 
     def react_name(self):
-        return Reacts(self.react).label
+        return Reaction(self.react).label
 
     def __str__(self):
         return "%s %s %s" % (str(self.user), self.react_name(), str(self.post))
@@ -147,9 +147,9 @@ class PostCommentReact(models.Model):
     post = models.ForeignKey(PostComment, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    react = models.IntegerField(verbose_name="React", choices=Reacts.choices, default=Reacts.NONE)
+    react = models.IntegerField(verbose_name="React", choices=Reaction.choices, default=Reaction.NONE)
 
     class Meta:
         verbose_name = "Comment's React"
-        verbose_name_plural = "Comment's Reacts"
+        verbose_name_plural = "Comment's Reaction"
         unique_together = [['post', 'user']]

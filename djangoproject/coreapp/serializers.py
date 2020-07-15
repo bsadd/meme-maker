@@ -26,7 +26,7 @@ class PostReactSerializer(serializers.ModelSerializer):
                                                view_name='api:user-detail',
                                                default=serializers.CurrentUserDefault())
     post = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail', required=True)
-    react = ChoiceField(choices=Reacts.choices, required=True)
+    react = ChoiceField(choices=Reaction.choices, required=True)
     url = NestedHyperlinkedIdentityField(view_name='api:post-react-detail',
                                          parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True,
                                          label="reaction's view url")
@@ -96,12 +96,12 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         """
         # To skip db hit obj ref is used to query
         rset = {}
-        for q in post.postreact_set.exclude(react=Reacts.NONE).values('react').annotate(
+        for q in post.postreact_set.exclude(react=Reaction.NONE).values('react').annotate(
                 count=Count('user')).values_list('react', 'count'):
-            rset[Reacts(q[0]).label] = q[1]
+            rset[Reaction(q[0]).label] = q[1]
         return rset
 
-    @swagger_serializer_method(serializer_or_field=ChoiceField(choices=Reacts.choices,
+    @swagger_serializer_method(serializer_or_field=ChoiceField(choices=Reaction.choices,
                                                                help_text="name of reaction of current user"))
     def get_react_user(self, post):
         """Returns current user's reaction on this posts
