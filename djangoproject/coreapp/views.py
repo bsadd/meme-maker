@@ -34,7 +34,6 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
     API endpoint that allows Post to be created/viewed/edited.
     TODO: validation using models
-    TODO: enforce author edit only
     TODO: check timezone
     TODO: uploader=me
     """
@@ -75,7 +74,7 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
-            return Post.objects.all()
+            return Post.objects.all().first()
         if self.action == 'related':
             return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reactions',
                                                                                                         'author')
