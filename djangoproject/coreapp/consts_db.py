@@ -9,6 +9,6 @@ class Reaction(models.IntegerChoices):
 
 
 class ApprovalStatus(models.TextChoices):
-    PENDING = 'p'
-    APPROVED = 'a'
-    REJECTED = 'r'
+    PENDING = 'pending'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'

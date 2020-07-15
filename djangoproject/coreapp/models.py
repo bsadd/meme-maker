@@ -36,7 +36,7 @@ class Post(models.Model):
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
-    approval_status = models.CharField(max_length=2, verbose_name="Approval Status",
+    approval_status = models.CharField(max_length=8, verbose_name="Approval Status",
                                        choices=ApprovalStatus.choices, default=ApprovalStatus.PENDING)
     approval_details = models.CharField(max_length=200, verbose_name="Approval Verdict Reason", default='')
     approval_at = models.DateTimeField(null=True, blank=True)
