@@ -35,6 +35,7 @@ class Post(models.Model):
     configuration_tail = models.CharField(max_length=100, default='', verbose_name='Text-Boxes below of image')
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     approval_status = models.CharField(max_length=8, verbose_name="Approval Status",
                                        choices=ApprovalStatus.choices, default=ApprovalStatus.PENDING)
@@ -108,6 +109,7 @@ class PostReaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # , validators=[__is_allowed_user]
 
     reaction = models.IntegerField(verbose_name="Reaction", choices=Reaction.choices, default=Reaction.NONE)
+    modified_at = models.DateTimeField(auto_now=True)
 
     objects = PostReactionManager()
     of_post = factory_manager_for_postreaction
