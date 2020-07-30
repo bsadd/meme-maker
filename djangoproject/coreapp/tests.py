@@ -61,7 +61,7 @@ class PostTests(APITestCase):
         payload = {'caption': 'new_post',
                    'is_adult': True,
                    'is_violent': False,
-                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'keywords': ['me', 'me2'],
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    }
         response = self.client.post(url, data=payload, format='json')
@@ -77,7 +77,7 @@ class PostTests(APITestCase):
         payload = {'caption': 'new_post',
                    'is_adult': True,
                    'is_violent': False,
-                   'keywords': [{'name': 'me'}, {'name': 'me3'}],
+                   'keywords': ['me', 'me3'],
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    }
         response = self.client.post(url, data=payload, format='json')
@@ -117,7 +117,7 @@ class PostTests(APITestCase):
         payload = {'caption': 'from_template_post',
                    'is_adult': True,
                    'is_violent': False,
-                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'keywords': ['me', 'me2'],
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    'template': template_post_url,
                    }
@@ -134,7 +134,7 @@ class PostTests(APITestCase):
         payload = {'caption': 'from_template_post2',
                    'is_adult': True,
                    'is_violent': False,
-                   'keywords': [{'name': 'me'}, {'name': 'me3'}],
+                   'keywords': ['me', 'me3'],
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    'template': template_post_url,
                    }
@@ -151,7 +151,7 @@ class PostTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
         url = reverse('api:post-list')
         payload = {'caption': 'from_template_post2',
-                   'keywords': [{'name': 'me'}, {'name': 'me1'}],
+                   'keywords': ['me', 'me1'],
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    'template': template_post_url,
                    }
@@ -164,7 +164,7 @@ class PostTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.keys[1])
         url = reverse('api:post-list')
         payload = {'caption': 'from_template_post2',
-                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'keywords': ['me', 'me2'],
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    'template': template_post_url,
                    }
@@ -192,7 +192,7 @@ class PostTests(APITestCase):
         payload = {'caption': 'from_generated_post',
                    'is_adult': True,
                    'is_violent': False,
-                   'keywords': [{'name': 'me'}, {'name': 'me2'}],
+                   'keywords': ['me', 'me2'],
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    'template': generated_post_url,
                    }
@@ -206,7 +206,7 @@ class PostTests(APITestCase):
         payload = {'caption': 'from_generated_post2',
                    'is_adult': True,
                    'is_violent': False,
-                   'keywords': [{'name': 'me'}, {'name': 'me3'}],
+                   'keywords': ['me', 'me3'],
                    'image': base64.b64encode(self.generate_photo_file().read()),
                    'template': generated_post_url,
                    }

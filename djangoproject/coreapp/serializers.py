@@ -17,8 +17,15 @@ class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
         model = Keyword
         fields = ('name',)  # '__all__'
 
-    # def to_representation(self, value):
-    #     return value.name
+    def to_representation(self, value):
+        """overridden to support returning of plain json array like [key1, key2]"""
+        return value.name
+
+    def to_internal_value(self, data):
+        """overridden to also support parsing of plain json array like [key1, key2]"""
+        if type(data) == str:
+            return super().to_internal_value(data={'name': data})
+        return super().to_internal_value(data)
 
 
 class PostReactionSerializer(serializers.ModelSerializer):
@@ -51,7 +58,9 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     approval_status = ChoiceField(choices=ApprovalStatus.choices, read_only=True)
     moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
 
-    keywords = KeywordSerializer(many=True, required=False)
+    keywords = KeywordSerializer(many=True, required=False,
+                                 help_text='Returns plain json array like, `keywords: ["key1", "key2"]` '
+                                           'but parses either `keywords: ["key1"]` or `keywords: [{"name": "key1"}]`')
     image = ImageBase64HybridFileField()  # image file / base64
 
     reactions = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-reaction-list',
@@ -117,6 +126,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        """create is overridden to support update_or_create for list of keywords"""
         try:
             keywords_data = validated_data.pop('keywords')
             keyword_names_given = [keyword['name'].lower() for keyword in keywords_data if keyword['name'] != '']
@@ -162,6 +172,7 @@ class PostModerationSerializer(serializers.ModelSerializer):
         extra_kwargs = {}
 
     def update(self, instance, validated_data):
+        """update is overridden to set moderator and approval modification time"""
         instance.moderator = self.context['request'].user
         instance.approval_at = timezone.now()
         return super().update(instance, validated_data)
