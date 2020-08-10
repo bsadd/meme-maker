@@ -158,3 +158,11 @@ class PostModerationSerializer(serializers.ModelSerializer):
                   'template', 'author', 'keywords', ]
         read_only_fields = ('caption', 'image', 'nviews', 'author', 'uploaded_at', 'moderator', 'keywords',)
         extra_kwargs = {}
+
+
+class PostCommentSerializer(serializers.ModelSerializer):
+    
+    reacts = ChoiceField(choices=Reacts.react_choices(), required=True, many=True)
+    class Meta:
+        model = PostComment
+        fields = ['comment', 'time', 'user', 'reacts']

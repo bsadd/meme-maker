@@ -167,3 +167,9 @@ class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixi
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)
     queryset = Post.objects.prefetch_related('reacts', 'author').all()
+
+
+class PostCommentViewSet(viewsets.ModelViewSet):
+    serializer_class = PostCommentSerializer
+    queryset = PostComment.objects.all()
+

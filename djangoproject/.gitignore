@@ -22,4 +22,7 @@ node_modules/
 __temp__/
 venv/
 
+env/
+
+.vscode/
 
