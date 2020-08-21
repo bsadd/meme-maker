@@ -1,3 +1,5 @@
+import uuid
+
 from django.urls import reverse
 
 from accounts.models import User
@@ -130,6 +132,7 @@ class PostComment(models.Model):
     """
     Comments of users for a post
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     comment = models.CharField('User Comment', max_length=250, blank=False, null=False)
     created_at = models.DateTimeField(verbose_name="Comment Time", auto_now=False, auto_now_add=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
