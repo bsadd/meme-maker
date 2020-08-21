@@ -131,27 +131,28 @@ class PostComment(models.Model):
     Comments of users for a post
     """
     comment = models.CharField('User Comment', max_length=250, blank=False, null=False)
-    time = models.DateTimeField(verbose_name="Post Time", auto_now=True, auto_now_add=False)
+    created_at = models.DateTimeField(verbose_name="Comment Time", auto_now=False, auto_now_add=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_comment_author_user')
-    reacts = models.ManyToManyField(User, through='coreapp.PostCommentReact', related_name='comment_react_user')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+
+    reactions = models.ManyToManyField(User, through='coreapp.PostCommentReaction', related_name='comment_react_user')
 
     class Meta:
         verbose_name = "Post's Comment"
         verbose_name_plural = "Post's Comments"
-        unique_together = [['post', 'user']]
 
 
-class PostCommentReact(models.Model):
+class PostCommentReaction(models.Model):
     """
     Like, Dislike reactions of viewers for others comment on a post
     """
-    post = models.ForeignKey(PostComment, on_delete=models.CASCADE)
+    postcomment = models.ForeignKey(PostComment, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    react = models.IntegerField(verbose_name="React", choices=Reaction.choices, default=Reaction.NONE)
+    reaction = models.IntegerField(verbose_name="Reaction", choices=Reaction.choices, default=Reaction.NONE)
 
     class Meta:
         verbose_name = "Comment's React"
         verbose_name_plural = "Comment's Reaction"
-        unique_together = [['post', 'user']]
+        unique_together = [['postcomment', 'user']]

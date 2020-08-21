@@ -176,3 +176,35 @@ class PostModerationSerializer(serializers.ModelSerializer):
         instance.moderator = self.context['request'].user
         instance.approval_at = timezone.now()
         return super().update(instance, validated_data)
+
+
+class PostCommentSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PostComment
+
+    @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
+    def get_user(self, postcomment) -> ReturnDict:
+        return UserRefSerializer(postcomment.user, context=self.context).data
+
+    def create(self, validated_data):
+        return PostComment.objects.create(**validated_data, user=self.context['request'].user)
+
+
+class PostCommentCreateSerializer(PostCommentSerializer):
+    post = serializers.PrimaryKeyRelatedField(queryset=Post.approved.all(), write_only=True, required=True)
+
+    class Meta(PostCommentSerializer.Meta):
+        fields = ('id', 'comment', 'created_at', 'parent',
+                  'user', 'post')
+        read_only_fields = (
+            'created_at', 'user',)
+
+
+class PostCommentUpdateSerializer(PostCommentSerializer):
+    class Meta(PostCommentSerializer.Meta):
+        fields = ('id', 'comment', 'created_at', 'parent',
+                  'user')
+        read_only_fields = (
+            'created_at', 'user', 'parent',)
