@@ -5,8 +5,8 @@ from coreapp.consts_db import *
 
 
 class PostQuerySet(models.QuerySet):
-    def uploaded_by(self, author_id: int) -> QuerySet:
-        return self.filter(author_id=author_id)
+    def uploaded_by(self, user_id: int) -> QuerySet:
+        return self.filter(user_id=user_id)
 
     def moderated_by(self, moderator_id: int) -> QuerySet:
         return self.filter(moderator_id=moderator_id)

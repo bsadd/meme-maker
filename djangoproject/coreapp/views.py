@@ -39,7 +39,7 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
     filter_backends = (PostCategoryFilter, PostSearchFilter, filters.OrderingFilter)
     filter_mappings = {
-        'uploader': 'author_id__in',
+        'uploader': 'user_id__in',
         'violent': 'is_violent',
         'adult': 'is_adult',
         'keyword': 'keywordlist__keyword__name__in',
@@ -77,8 +77,8 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
             return Post.objects.all().first()
         if self.action == 'related':
             return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reactions',
-                                                                                                        'author')
-        return Post.objects.prefetch_related('reactions', 'author').all()
+                                                                                                        'user')
+        return Post.objects.prefetch_related('reactions', 'user').all()
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.serializer_class)
@@ -213,7 +213,7 @@ class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixi
     pagination_class = StandardResultsSetPagination
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)
-    queryset = Post.objects.prefetch_related('reactions', 'author', 'moderator').all()
+    queryset = Post.objects.prefetch_related('reactions', 'user', 'moderator').all()
     http_method_names = ('get', 'post', 'put')
 
 

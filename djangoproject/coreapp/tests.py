@@ -40,7 +40,7 @@ class PostTests(APITestCase):
         self.tmp_file = SimpleUploadedFile("file.jpg", b"file_content", content_type="image/jpg")
 
         self.post_unapproved = Post.objects.create(caption='unapproved_post',
-                                                   author=User.objects.get(username='user2'))
+                                                   user=User.objects.get(username='user2'))
 
     def generate_photo_file(self):
         file = io.BytesIO()
@@ -66,7 +66,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user0')
+        self.assertEqual(response.data['user']['username'], 'user0')
         self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -82,7 +82,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user1')
+        self.assertEqual(response.data['user']['username'], 'user1')
         self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -95,7 +95,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user1')
+        self.assertEqual(response.data['user']['username'], 'user1')
         self.assertEqual(response.data['approval_status'], 'Pending')
         payload['keywords'] = []
         payload['template'] = None
@@ -107,7 +107,7 @@ class PostTests(APITestCase):
         """
         Ensure we can create a post object from a template.
         """
-        template_post = Post.objects.create(caption="template_approved_post", author=User.objects.get(username='user0'),
+        template_post = Post.objects.create(caption="template_approved_post", user=User.objects.get(username='user0'),
                                             moderator=self.moderator, approval_status=ApprovalStatus.APPROVED)
         template_post_url = self.client.get(reverse('api:post-detail', args=[template_post.id])).data['url']
 
@@ -123,7 +123,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user0')
+        self.assertEqual(response.data['user']['username'], 'user0')
         self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -140,7 +140,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user1')
+        self.assertEqual(response.data['user']['username'], 'user1')
         self.assertEqual(response.data['approval_status'], 'Pending')
         self.assertTrue(
             all(payload[k] == response.data[k] for k in payload.keys() & response.data.keys() if k != 'image'))
@@ -176,11 +176,11 @@ class PostTests(APITestCase):
         Ensure base template reference is maintained when we create a post object from another post which is itself created from a template.
         """
         base_template = Post.objects.create(caption="template_approved_post",
-                                            author=User.objects.get(username='user0'),
+                                            user=User.objects.get(username='user0'),
                                             moderator=self.moderator, approval_status=ApprovalStatus.APPROVED,
                                             template_id=None)
         generated_post = Post.objects.create(caption="template_approved_post",
-                                             author=User.objects.get(username='user0'),
+                                             user=User.objects.get(username='user0'),
                                              moderator=self.moderator, approval_status=ApprovalStatus.APPROVED,
                                              template=base_template)
         template_post_url = self.client.get(reverse('api:post-detail', args=[base_template.id])).data['url']
@@ -212,7 +212,7 @@ class PostTests(APITestCase):
                    }
         response = self.client.post(url, data=payload, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['author']['username'], 'user1')
+        self.assertEqual(response.data['user']['username'], 'user1')
         self.assertEqual(response.data['template'], template_post_url)
 
     def test_update(self):
@@ -299,14 +299,14 @@ class PostReactionTests(APITestCase):
             self.keys.append(str(response.data['key']))
 
         self.post_unapproved = Post.objects.create(caption='unapproved_post',
-                                                   author=User.objects.get(username='user2'))
+                                                   user=User.objects.get(username='user2'))
 
     def test_reaction(self):
         """
         Ensure only authenticated user can reaction on an existing approved post object only
         """
         post_approved = Post.objects.create(caption='approved_post', approval_status=ApprovalStatus.APPROVED,
-                                            author=User.objects.get(username='user2'))
+                                            user=User.objects.get(username='user2'))
         ## Anonymous user
         url = reverse('api:post-reaction-list', args=[post_approved.id])
         payload = {'reaction': 'love'}
@@ -369,9 +369,9 @@ class PostReactionTests(APITestCase):
         Ensure reaction count only increases/decreases with authenticated user's reaction
         """
         post_approved = Post.objects.create(caption='approved_post', approval_status=ApprovalStatus.APPROVED,
-                                            author=User.objects.get(username='user2'))
+                                            user=User.objects.get(username='user2'))
         post_approved_2 = Post.objects.create(caption='approved_post_2', approval_status=ApprovalStatus.APPROVED,
-                                              author=User.objects.get(username='user2'))
+                                              user=User.objects.get(username='user2'))
         ## initially no reaction
         url = reverse('api:post-detail', args=[post_approved.id])
         response = self.client.get(url, format='json')

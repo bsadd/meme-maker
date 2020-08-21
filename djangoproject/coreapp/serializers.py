@@ -53,7 +53,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     TODO:https://github.com/beda-software/drf-writable-nested/issues/46#issuecomment-415632868
     TODO: generic https://github.com/Ian-Foote/rest-framework-generic-relations
     """
-    author = serializers.SerializerMethodField(read_only=True)
+    user = serializers.SerializerMethodField(read_only=True)
 
     approval_status = ChoiceField(choices=ApprovalStatus.choices, read_only=True)
     moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
@@ -82,7 +82,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent',
                   'configuration_head', 'configuration_over', 'configuration_tail',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
-                  'author', 'url',
+                  'user', 'url',
                   'template', 'is_template', 'reaction_counts', 'reaction_user',
                   'keywords', 'reactions',
                   ]
@@ -96,8 +96,8 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         }
 
     @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
-    def get_author(self, post) -> ReturnDict:
-        return UserRefSerializer(post.author, context=self.context).data
+    def get_user(self, post) -> ReturnDict:
+        return UserRefSerializer(post.user, context=self.context).data
 
     @swagger_serializer_method(serializer_or_field=Post_reaction_counts)
     def get_reaction_counts(self, post) -> dict:
@@ -136,13 +136,13 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             keyword_names_saved = sorted({keyword.name for keyword in keywords})
             if keyword_names_given != keyword_names_saved:
                 raise exceptions.APIException(detail='could not save keyword in the database')
-            return Post.objects.create(**validated_data, keywords=keywords, author=self.context['request'].user)
+            return Post.objects.create(**validated_data, keywords=keywords, user=self.context['request'].user)
         except KeyError:
-            return Post.objects.create(**validated_data, author=self.context['request'].user)
+            return Post.objects.create(**validated_data, user=self.context['request'].user)
 
 
 class PostModerationSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField(read_only=True)
+    user = serializers.SerializerMethodField(read_only=True)
     moderator = serializers.SerializerMethodField(read_only=True)
     approval_at = serializers.DateTimeField(read_only=True)
     approval_status = ChoiceField(choices=ApprovalStatus.choices)
@@ -155,20 +155,20 @@ class PostModerationSerializer(serializers.ModelSerializer):
         https://github.com/axnsan12/drf-yasg/issues/343
         https://github.com/axnsan12/drf-yasg/issues/344
         """
-        return UserRefSerializer(post.author, context=self.context).data
+        return UserRefSerializer(post.user, context=self.context).data
 
     @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
-    def get_author(self, post):
+    def get_user(self, post):
         return UserRefSerializer(post.moderator, context=self.context).data
 
     class Meta:
         model = Post
-        fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'author',
+        fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'user',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at',
                   'moderator',
-                  'template', 'author', 'keywords', ]
+                  'template', 'user', 'keywords', ]
         read_only_fields = (
-            'caption', 'image', 'nviews', 'author', 'uploaded_at', 'keywords', 'moderated_at',)
+            'caption', 'image', 'nviews', 'user', 'uploaded_at', 'keywords', 'moderated_at',)
         extra_kwargs = {}
 
     def update(self, instance, validated_data):

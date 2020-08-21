@@ -15,7 +15,7 @@ def insert_post_path(caption, keyword_list, image_path, is_adult, user_id):
     """
     from coreapp.models import Post
     from coreapp.utils import trim_replace_wsp
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), user_id=user_id)
     post.is_adult = is_adult
     for gen in keyword_list:
         from coreapp.models import Keyword, KeywordList
@@ -44,7 +44,7 @@ def insert_post(caption, user_id, image_base64, keyword_list=None, is_adult=Fals
     from coreapp.utils import trim_replace_wsp
     if template_id:
         template_id = Post.objects.get(id=template_id).get_template_id()
-    post = Post.objects.create(caption=trim_replace_wsp(caption), author_id=user_id, template_id=template_id)
+    post = Post.objects.create(caption=trim_replace_wsp(caption), user_id=user_id, template_id=template_id)
     post.is_adult = is_adult
     post.is_violent = is_violent
     for key in keyword_list:
