@@ -65,7 +65,11 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     reactions = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-reaction-list',
                                                      lookup_url_kwarg='post_pk',
-                                                     help_text="all reactions for this post")
+                                                     help_text="all reactions on this post")
+
+    comments = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-comment-list',
+                                                    lookup_url_kwarg='post_pk',
+                                                    help_text="all comments on this post")
 
     template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
                                                    required=False)  # Post.approved restricts unapproved as template ref
@@ -84,7 +88,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
                   'user', 'url',
                   'template', 'is_template', 'reaction_counts', 'reaction_user',
-                  'keywords', 'reactions',
+                  'keywords', 'reactions', 'comments'
                   ]
         read_only_fields = ('nviews', 'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {

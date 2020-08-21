@@ -138,6 +138,8 @@ class PostComment(models.Model):
 
     reactions = models.ManyToManyField(User, through='coreapp.PostCommentReaction', related_name='comment_react_user')
 
+    objects = PostCommentManager()
+
     class Meta:
         verbose_name = "Post's Comment"
         verbose_name_plural = "Post's Comments"
