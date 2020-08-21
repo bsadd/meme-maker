@@ -221,20 +221,19 @@ class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixi
                   decorator=swagger_auto_schema(operation_summary='Details of a comment',
                                                 responses={status.HTTP_404_NOT_FOUND: 'Comment not found'}))
 @method_decorator(name='create',
-                  decorator=swagger_auto_schema(operation_summary='Adds a comment to the post',
+                  decorator=swagger_auto_schema(operation_summary='New comment on the post',
                                                 manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
                                                 responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
 @method_decorator(name='update',
-                  decorator=swagger_auto_schema(operation_summary='Edit User Comment',
+                  decorator=swagger_auto_schema(operation_summary='Modify an existing User Comment by owner',
                                                 manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
                                                 responses={status.HTTP_404_NOT_FOUND: 'Post/Comment not found'}))
 class CommentViewSet(mixins.RetrieveModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin,
                      viewsets.GenericViewSet):
-    pagination_class = StandardResultsSetPagination
     serializer_classes = {'retrieve': PostCommentCreateSerializer,
                           'create': PostCommentCreateSerializer,
                           'update': PostCommentUpdateSerializer, }
-    # permission_classes = (IsAuthenticatedCreateOrOwnerModifyOrReadOnly,)
+    permission_classes = (IsAuthenticatedCreateOrOwnerModifyOrReadOnly,)
     queryset = PostComment.objects.prefetch_related('user').all()
     http_method_names = ('get', 'post', 'put')
 
