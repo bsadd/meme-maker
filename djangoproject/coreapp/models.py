@@ -46,7 +46,7 @@ class Post(models.Model):
 
     template = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
 
     keywords = models.ManyToManyField(Keyword, through='coreapp.KeywordList', related_name='post_keywords')
 
@@ -62,7 +62,7 @@ class Post(models.Model):
         verbose_name_plural = "Posts"
 
     def __str__(self):
-        return "%s %s" % (self.caption, self.author)
+        return "%s %s" % (self.caption, self.user)
 
     def get_template_id(self):
         """Blank Template id for an image. Own id if itself is a template"""
