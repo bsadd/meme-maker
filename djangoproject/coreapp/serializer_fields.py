@@ -22,5 +22,6 @@ class ImageBase64HybridFileField(extra_fields.HybridImageField):
             'type': 'string',
             'title': 'Image Base64 Content',
             'description': 'Content of the image as base64 encoded string or file itself',
+            'help_text': 'Parses base64 encoded string of an image but returns image url',
             'read_only': False  # <-- FIX
         }
