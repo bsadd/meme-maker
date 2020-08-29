@@ -12,7 +12,7 @@ class IsModerator(permissions.IsAuthenticated):
 
 class IsAuthenticatedCreateOrOwnerModifyOrReadOnly(permissions.IsAuthenticatedOrReadOnly):
 
-    def __init__(self, owner_var_name='author'):
+    def __init__(self, owner_var_name='user'):
         self.owner_var_name = owner_var_name
 
     def has_object_permission(self, request, view, obj):

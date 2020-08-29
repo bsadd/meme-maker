@@ -1,3 +1,5 @@
+import uuid
+
 from django.urls import reverse
 
 from accounts.models import User
@@ -35,6 +37,7 @@ class Post(models.Model):
     configuration_tail = models.CharField(max_length=100, default='', verbose_name='Text-Boxes below of image')
 
     uploaded_at = models.DateTimeField(auto_now_add=True)
+    modified_at = models.DateTimeField(auto_now=True)
 
     approval_status = models.CharField(max_length=8, verbose_name="Approval Status",
                                        choices=ApprovalStatus.choices, default=ApprovalStatus.PENDING)
@@ -45,7 +48,7 @@ class Post(models.Model):
 
     template = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
 
-    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='author')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
 
     keywords = models.ManyToManyField(Keyword, through='coreapp.KeywordList', related_name='post_keywords')
 
@@ -61,7 +64,7 @@ class Post(models.Model):
         verbose_name_plural = "Posts"
 
     def __str__(self):
-        return "%s %s" % (self.caption, self.author)
+        return "%s %s" % (self.caption, self.user)
 
     def get_template_id(self):
         """Blank Template id for an image. Own id if itself is a template"""
@@ -108,6 +111,7 @@ class PostReaction(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # , validators=[__is_allowed_user]
 
     reaction = models.IntegerField(verbose_name="Reaction", choices=Reaction.choices, default=Reaction.NONE)
+    modified_at = models.DateTimeField(auto_now=True)
 
     objects = PostReactionManager()
     of_post = factory_manager_for_postreaction
@@ -128,28 +132,32 @@ class PostComment(models.Model):
     """
     Comments of users for a post
     """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     comment = models.CharField('User Comment', max_length=250, blank=False, null=False)
-    time = models.DateTimeField(verbose_name="Post Time", auto_now=True, auto_now_add=False)
+    created_at = models.DateTimeField(verbose_name="Comment Time", auto_now=False, auto_now_add=True)
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='post_comment_author_user')
-    reacts = models.ManyToManyField(User, through='coreapp.PostCommentReact', related_name='comment_react_user')
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True)
+
+    reactions = models.ManyToManyField(User, through='coreapp.PostCommentReaction', related_name='comment_react_user')
+
+    objects = PostCommentManager()
 
     class Meta:
         verbose_name = "Post's Comment"
         verbose_name_plural = "Post's Comments"
-        unique_together = [['post', 'user']]
 
 
-class PostCommentReact(models.Model):
+class PostCommentReaction(models.Model):
     """
     Like, Dislike reactions of viewers for others comment on a post
     """
-    post = models.ForeignKey(PostComment, on_delete=models.CASCADE)
+    postcomment = models.ForeignKey(PostComment, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-    react = models.IntegerField(verbose_name="React", choices=Reaction.choices, default=Reaction.NONE)
+    reaction = models.IntegerField(verbose_name="Reaction", choices=Reaction.choices, default=Reaction.NONE)
 
     class Meta:
         verbose_name = "Comment's React"
         verbose_name_plural = "Comment's Reaction"
-        unique_together = [['post', 'user']]
+        unique_together = [['postcomment', 'user']]

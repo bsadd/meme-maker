@@ -39,7 +39,7 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
     """
     filter_backends = (PostCategoryFilter, PostSearchFilter, filters.OrderingFilter)
     filter_mappings = {
-        'uploader': 'author_id__in',
+        'uploader': 'user_id__in',
         'violent': 'is_violent',
         'adult': 'is_adult',
         'keyword': 'keywordlist__keyword__name__in',
@@ -77,8 +77,8 @@ class PostViewSet(FiltersMixin, viewsets.ModelViewSet):
             return Post.objects.all().first()
         if self.action == 'related':
             return Post.objects.get_related_posts(post_id=self.kwargs.get('pk', None)).prefetch_related('reactions',
-                                                                                                        'author')
-        return Post.objects.prefetch_related('reactions', 'author').all()
+                                                                                                        'user')
+        return Post.objects.prefetch_related('reactions', 'user').all()
 
     def get_serializer_class(self):
         return self.serializer_classes.get(self.action, self.serializer_class)
@@ -213,5 +213,44 @@ class PostModerationViewSet(mixins.ListModelMixin, mixins.UpdateModelMixin, mixi
     pagination_class = StandardResultsSetPagination
     serializer_class = PostModerationSerializer
     permission_classes = (IsModerator,)
-    queryset = Post.objects.prefetch_related('reactions', 'author', 'moderator').all()
+    queryset = Post.objects.prefetch_related('reactions', 'user', 'moderator').all()
     http_method_names = ('get', 'post', 'put')
+
+
+@method_decorator(name='retrieve',
+                  decorator=swagger_auto_schema(operation_summary='Details of a comment',
+                                                responses={status.HTTP_404_NOT_FOUND: 'Comment not found'}))
+@method_decorator(name='create',
+                  decorator=swagger_auto_schema(operation_summary='New comment on the post',
+                                                manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
+                                                responses={status.HTTP_404_NOT_FOUND: 'Post not found/approved'}))
+@method_decorator(name='update',
+                  decorator=swagger_auto_schema(operation_summary='Modify an existing User Comment by owner',
+                                                manual_parameters=[query_params.REQUIRED_AUTHORIZATION_PARAMETER],
+                                                responses={status.HTTP_404_NOT_FOUND: 'Post/Comment not found'}))
+class CommentViewSet(mixins.RetrieveModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin,
+                     viewsets.GenericViewSet):
+    serializer_classes = {'retrieve': PostCommentCreateSerializer,
+                          'create': PostCommentCreateSerializer,
+                          'update': PostCommentUpdateSerializer, }
+    permission_classes = (IsAuthenticatedCreateOrOwnerModifyOrReadOnly,)
+    queryset = PostComment.objects.prefetch_related('user').all()
+    http_method_names = ('get', 'post', 'put')
+
+    def get_serializer_class(self):
+        return self.serializer_classes.get(self.action, PostCommentCreateSerializer)
+
+
+class PostCommentViewSet(mixins.ListModelMixin,
+                         viewsets.GenericViewSet):
+    """
+    API endpoint to list comments on an approved posts.
+    """
+    pagination_class = StandardResultsSetPagination
+    serializer_class = PostCommentCreateSerializer
+
+    def get_queryset(self):
+        qs = PostComment.objects.all().of_approved_posts()
+        if 'post_pk' in self.kwargs:
+            qs = qs.of_post(self.kwargs['post_pk'])
+        return qs

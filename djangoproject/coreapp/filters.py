@@ -29,7 +29,7 @@ class PostCategoryFilter(filters.BaseFilterBackend):
 
         if current_user_only:  # ?my-only=true
             if request.user.is_authenticated:
-                queryset = queryset.filter(author=request.user)
+                queryset = queryset.filter(user=request.user)
             else:
                 raise exceptions.NotAuthenticated(detail='Must be authenticated to fetch my-only=true')
 
