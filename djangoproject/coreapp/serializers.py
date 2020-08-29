@@ -17,8 +17,15 @@ class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
         model = Keyword
         fields = ('name',)  # '__all__'
 
-    # def to_representation(self, value):
-    #     return value.name
+    def to_representation(self, value):
+        """overridden to support returning of plain json array like [key1, key2]"""
+        return value.name
+
+    def to_internal_value(self, data):
+        """overridden to also support parsing of plain json array like [key1, key2]"""
+        if type(data) == str:
+            return super().to_internal_value(data={'name': data})
+        return super().to_internal_value(data)
 
 
 class PostReactionSerializer(serializers.ModelSerializer):
@@ -46,17 +53,23 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
     TODO:https://github.com/beda-software/drf-writable-nested/issues/46#issuecomment-415632868
     TODO: generic https://github.com/Ian-Foote/rest-framework-generic-relations
     """
-    author = serializers.SerializerMethodField(read_only=True)
+    user = serializers.SerializerMethodField(read_only=True)
 
     approval_status = ChoiceField(choices=ApprovalStatus.choices, read_only=True)
     moderator = serializers.HyperlinkedRelatedField(view_name='api:user-detail', read_only=True)
 
-    keywords = KeywordSerializer(many=True, required=False)
+    keywords = KeywordSerializer(many=True, required=False,
+                                 help_text='Returns plain json array like, `keywords: ["key1", "key2"]` '
+                                           'but parses either `keywords: ["key1"]` or `keywords: [{"name": "key1"}]`')
     image = ImageBase64HybridFileField()  # image file / base64
 
     reactions = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-reaction-list',
                                                      lookup_url_kwarg='post_pk',
-                                                     help_text="all reactions for this post")
+                                                     help_text="all reactions on this post")
+
+    comments = serializers.HyperlinkedIdentityField(read_only=True, view_name='api:post-comment-list',
+                                                    lookup_url_kwarg='post_pk',
+                                                    help_text="all comments on this post")
 
     template = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail',
                                                    required=False)  # Post.approved restricts unapproved as template ref
@@ -73,9 +86,9 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent',
                   'configuration_head', 'configuration_over', 'configuration_tail',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',
-                  'author', 'url',
+                  'user', 'url',
                   'template', 'is_template', 'reaction_counts', 'reaction_user',
-                  'keywords', 'reactions',
+                  'keywords', 'reactions', 'comments'
                   ]
         read_only_fields = ('nviews', 'uploaded_at', 'approval_status', 'approval_details', 'approval_at', 'moderator',)
         extra_kwargs = {
@@ -87,8 +100,8 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
         }
 
     @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
-    def get_author(self, post) -> ReturnDict:
-        return UserRefSerializer(post.author, context=self.context).data
+    def get_user(self, post) -> ReturnDict:
+        return UserRefSerializer(post.user, context=self.context).data
 
     @swagger_serializer_method(serializer_or_field=Post_reaction_counts)
     def get_reaction_counts(self, post) -> dict:
@@ -117,6 +130,7 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
 
     @transaction.atomic
     def create(self, validated_data):
+        """create is overridden to support update_or_create for list of keywords"""
         try:
             keywords_data = validated_data.pop('keywords')
             keyword_names_given = [keyword['name'].lower() for keyword in keywords_data if keyword['name'] != '']
@@ -126,13 +140,13 @@ class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
             keyword_names_saved = sorted({keyword.name for keyword in keywords})
             if keyword_names_given != keyword_names_saved:
                 raise exceptions.APIException(detail='could not save keyword in the database')
-            return Post.objects.create(**validated_data, keywords=keywords, author=self.context['request'].user)
+            return Post.objects.create(**validated_data, keywords=keywords, user=self.context['request'].user)
         except KeyError:
-            return Post.objects.create(**validated_data, author=self.context['request'].user)
+            return Post.objects.create(**validated_data, user=self.context['request'].user)
 
 
 class PostModerationSerializer(serializers.ModelSerializer):
-    author = serializers.SerializerMethodField(read_only=True)
+    user = serializers.SerializerMethodField(read_only=True)
     moderator = serializers.SerializerMethodField(read_only=True)
     approval_at = serializers.DateTimeField(read_only=True)
     approval_status = ChoiceField(choices=ApprovalStatus.choices)
@@ -145,23 +159,56 @@ class PostModerationSerializer(serializers.ModelSerializer):
         https://github.com/axnsan12/drf-yasg/issues/343
         https://github.com/axnsan12/drf-yasg/issues/344
         """
-        return UserRefSerializer(post.author, context=self.context).data
+        return UserRefSerializer(post.user, context=self.context).data
 
     @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
-    def get_author(self, post):
+    def get_user(self, post):
         return UserRefSerializer(post.moderator, context=self.context).data
 
     class Meta:
         model = Post
-        fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'author',
+        fields = ['id', 'caption', 'image', 'nviews', 'is_adult', 'is_violent', 'user',
                   'uploaded_at', 'approval_status', 'approval_details', 'approval_at',
                   'moderator',
-                  'template', 'author', 'keywords', ]
+                  'template', 'user', 'keywords', ]
         read_only_fields = (
-            'caption', 'image', 'nviews', 'author', 'uploaded_at', 'keywords', 'moderated_at',)
+            'caption', 'image', 'nviews', 'user', 'uploaded_at', 'keywords', 'moderated_at',)
         extra_kwargs = {}
 
     def update(self, instance, validated_data):
+        """update is overridden to set moderator and approval modification time"""
         instance.moderator = self.context['request'].user
         instance.approval_at = timezone.now()
         return super().update(instance, validated_data)
+
+
+class PostCommentSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PostComment
+
+    @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
+    def get_user(self, postcomment) -> ReturnDict:
+        return UserRefSerializer(postcomment.user, context=self.context).data
+
+    def create(self, validated_data):
+        return PostComment.objects.create(**validated_data, user=self.context['request'].user)
+
+
+class PostCommentCreateSerializer(PostCommentSerializer):
+    post = serializers.PrimaryKeyRelatedField(queryset=Post.approved.all(), write_only=True, required=True)
+
+    class Meta(PostCommentSerializer.Meta):
+        fields = ('id', 'comment', 'created_at', 'parent',
+                  'user', 'post')
+        read_only_fields = (
+            'created_at', 'user',)
+
+
+class PostCommentUpdateSerializer(PostCommentSerializer):
+    class Meta(PostCommentSerializer.Meta):
+        fields = ('id', 'comment', 'created_at', 'parent',
+                  'user')
+        read_only_fields = (
+            'created_at', 'user', 'parent',)

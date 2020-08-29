@@ -42,7 +42,7 @@ urlpatterns = [
     path(r'accounts/', include('accounts.urls'), name="accounts"),
     path('accounts/', include('allauth.urls')),
 
-    path('api/', include(('coreapp.urls', 'coreapp'), namespace='api')),
+    path('', include(('coreapp.urls', 'coreapp'), namespace='api')),
     path(r'rest-auth/', include(('rest_auth.urls', 'rest_auth'), namespace='rest-auth')),  # rest_login
     path(r'rest-auth/registration/', include(('rest_auth.registration.urls', 'rest_auth'),
                                              namespace='rest-auth-registration')),

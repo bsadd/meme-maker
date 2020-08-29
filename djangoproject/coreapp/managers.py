@@ -5,8 +5,8 @@ from coreapp.consts_db import *
 
 
 class PostQuerySet(models.QuerySet):
-    def uploaded_by(self, author_id: int) -> QuerySet:
-        return self.filter(author_id=author_id)
+    def uploaded_by(self, user_id: int) -> QuerySet:
+        return self.filter(user_id=user_id)
 
     def moderated_by(self, moderator_id: int) -> QuerySet:
         return self.filter(moderator_id=moderator_id)
@@ -152,3 +152,26 @@ class PostReactionManager(models.Manager):
             defaults={'reaction': reaction},
         )
         return obj
+
+
+class PostCommentQuerySet(models.QuerySet):
+    def of_user(self, user_id):
+        return self.filter(user_id=user_id)
+
+    def of_post(self, post_id):
+        return self.filter(post_id=post_id)
+
+    def of_approved_posts(self):
+        return self.filter(post__approval_status=ApprovalStatus.APPROVED)
+
+
+class PostCommentManager(models.Manager):
+    def __init__(self, post_id=None, *args, **kwargs):
+        self.post_id = post_id
+        super().__init__(*args, **kwargs)
+
+    def get_queryset(self):
+        qs = PostCommentQuerySet(model=self.model, using=self._db)
+        if self.post_id is not None:
+            qs = qs.filter(post_id=self.post_id)
+        return qs
