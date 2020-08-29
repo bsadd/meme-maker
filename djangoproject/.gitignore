@@ -11,15 +11,12 @@ __pycache__/
 
 *.sqlite3
 
-db2.json
-
-initdb2.json
-
 *.pyc
 
 node_modules/
 
 __temp__/
+
 venv/
 
 

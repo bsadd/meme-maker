@@ -28,8 +28,8 @@ class PostQuerySet(models.QuerySet):
     def rejected_by(self, moderator_id: int) -> QuerySet:
         return self.filter(moderator_id=moderator_id)
 
-    def with_reacts_count(self):
-        return self.annotate(react_count=Count(Case(When(postreact__react=0, then=0), default=1)))
+    def with_reaction_counts(self):
+        return self.annotate(reaction_count=Count(Case(When(postreaction__reaction=0, then=0), default=1)))
 
     def with_comments_count(self):
         return self.annotate(comment_count=Count('postcomment'))
@@ -78,24 +78,24 @@ class PostManager(models.Manager):
         return obj
 
 
-class PostReactQuerySet(models.QuerySet):
+class PostReactionQuerySet(models.QuerySet):
     def like(self):
-        return self.filter(react=Reacts.LIKE)
+        return self.filter(reaction=Reaction.LIKE)
 
     def love(self):
-        return self.filter(react=Reacts.LOVE)
+        return self.filter(reaction=Reaction.LOVE)
 
     def haha(self):
-        return self.filter(react=Reacts.HAHA)
+        return self.filter(reaction=Reaction.HAHA)
 
     def angry(self):
-        return self.filter(react=Reacts.ANGRY)
+        return self.filter(reaction=Reaction.ANGRY)
 
     def sad(self):
-        return self.filter(react=Reacts.SAD)
+        return self.filter(reaction=Reaction.SAD)
 
     def unreacted(self):
-        return self.filter(react=Reacts.NONE)
+        return self.filter(reaction=Reaction.NONE)
 
     def of_user(self, user_id):
         return self.filter(user_id=user_id)
@@ -103,23 +103,25 @@ class PostReactQuerySet(models.QuerySet):
     def of_post(self, post_id):
         return self.filter(post_id=post_id)
 
-    def without_removed_reacts(self):
-        return self.exclude(react=Reacts.NONE)
+    def without_removed_reactions(self):
+        return self.exclude(reaction=Reaction.NONE)
 
-    def react_counts(self):
-        return self.values('react').annotate(count=Count('user'))
+    def reaction_counts(self):
+        return self.values('reaction').annotate(count=Count('user'))
 
     def of_approved_posts(self):
         return self.filter(post__approval_status=ApprovalStatus.APPROVED)
 
 
-class PostReactManager(models.Manager):
+class PostReactionManager(models.Manager):
+    """create is modified to support update or create by default"""
+
     def __init__(self, post_id=None, *args, **kwargs):
         self.post_id = post_id
         super().__init__(*args, **kwargs)
 
     def get_queryset(self):
-        qs = PostReactQuerySet(model=self.model, using=self._db)
+        qs = PostReactionQuerySet(model=self.model, using=self._db)
         if self.post_id is not None:
             qs = qs.filter(post_id=self.post_id)
         return qs
@@ -130,23 +132,23 @@ class PostReactManager(models.Manager):
         manager.model = model
         return manager
 
-    def reacts_count_map(self, post_id: int) -> dict:
+    def reaction_counts_map(self, post_id: int) -> dict:
         """
         :returns a dict with as ({'WOW': 1})
         """
         rset = {}
-        for q in self.get_queryset().of_post(post_id).without_removed_reacts().react_counts().values_list('react',
-                                                                                                          'count'):
-            rset[Reacts.REACT_NAMES[q[0]]] = q[1]
+        for q in self.get_queryset().of_post(post_id).without_removed_reactions().reaction_counts().values_list(
+                'reaction', 'count'):
+            rset[Reaction(q[0]).label] = q[1]
         return rset
 
-    def react_user(self, post_id: int, user_id: int) -> QuerySet:
-        return self.get_queryset().of_post(post_id).all().without_removed_reacts().of_user(user_id=user_id)
+    def reaction_user(self, post_id: int, user_id: int) -> QuerySet:
+        return self.get_queryset().of_post(post_id).all().without_removed_reactions().of_user(user_id=user_id)
 
     def create(self, **kwargs):
-        react = kwargs.pop('react')
+        reaction = kwargs.pop('reaction')
         obj, created = super().update_or_create(
             **kwargs,
-            defaults={'react': react},
+            defaults={'reaction': reaction},
         )
         return obj

@@ -1,7 +1,6 @@
 from rest_framework import filters, exceptions
 
 from coreapp.consts_db import ApprovalStatus
-from coreapp.models import Post
 from coreapp.utils import to_bool
 
 
@@ -42,7 +41,7 @@ class PostCategoryFilter(filters.BaseFilterBackend):
                 approval_status = [ApprovalStatus.PENDING, ApprovalStatus.APPROVED, ApprovalStatus.REJECTED]
             else:
                 try:
-                    approval_status = [ApprovalStatus.STATUS_VALUE[v.upper()] for v in approval_status]
+                    approval_status = [ApprovalStatus[v.upper()] for v in approval_status]
                 except KeyError:
                     raise exceptions.ValidationError(detail='Invalid requested approval-status')
             queryset = queryset.filter(approval_status__in=approval_status)

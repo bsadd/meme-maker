@@ -8,11 +8,6 @@ from filters.validations import (
     DatetimeWithTZ
 )
 
-
-def is_valid_react(react):
-    return Reacts.is_valid_react(react)
-
-
 post_query_schema = base_query_params_schema.extend(
     {
         'uploader': CSVofIntegers(),
