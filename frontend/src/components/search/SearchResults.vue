@@ -3,7 +3,7 @@
         <card-loading v-if="loading"></card-loading>
         <v-list v-else>
             <v-list-item
-            v-for="(post, index) in search_results"
+            v-for="(post, index) in post_list"
             :key="index"
             >
                 <profile-card
@@ -11,6 +11,7 @@
                 :username="post.user.username"
                 :caption="post.caption"
                 :image="post.image"
+                :nviews="post.nviews"
                 ></profile-card>
             </v-list-item>
         </v-list>
@@ -24,7 +25,7 @@ export default {
     computed: {
         ...mapState('newsfeed', [
             'loading',
-            'search_results'
+            'post_list'
         ])
     },
     components: {

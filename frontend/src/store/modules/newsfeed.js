@@ -10,7 +10,7 @@ const state = {
     loading: false,
     query_string: null,
     tab: 'All',
-    search_results: null
+    post_list: null
 }
 
 const actions = {
@@ -34,12 +34,12 @@ const mutations = {
         state.loading = true;
     },
     [RECEIVE_SEARCH_RESULTS_SUCCESS](state, results) {
-        state.search_results = results;
+        state.post_list = results;
         state.loading = false;
         console.log(results);
     },
     [RECEIVE_SEARCH_RESULTS_FAILURE](state, error) {
-        state.search_results = null;
+        state.post_list = null;
         state.loading = false;
         console.log(error);
     }

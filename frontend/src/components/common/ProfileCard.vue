@@ -15,6 +15,7 @@
         height="400"
         contain
         />
+        <v-card-text class="py-0">{{ nviews }} people viewed this</v-card-text>
     </v-card>
 </template>
 
@@ -24,7 +25,8 @@ export default {
         'id',
         'username',
         'caption',
-        'image'
+        'image',
+        'nviews'
     ],
     computed: {
         
