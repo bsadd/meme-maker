@@ -4,7 +4,7 @@ from rest_framework import status, mixins, viewsets
 
 from coreapp.models import PostComment
 from coreapp.permissions import IsAuthenticatedCreateOrOwnerModifyOrReadOnly
-from coreapp.serializers import PostCommentCreateSerializer, PostCommentUpdateSerializer
+from coreapp.serializers.PostCommentSerializers import PostCommentCreateSerializer, PostCommentUpdateSerializer
 from coreapp.swagger import query_params
 
 

@@ -8,7 +8,7 @@ from coreapp.filters import PostCategoryFilter, PostSearchFilter
 from coreapp.models import Post
 from coreapp.pagination import StandardResultsSetPagination
 from coreapp.permissions import IsAuthenticatedCreateOrOwnerModifyOrReadOnly
-from coreapp.serializers import PostSerializer, PostModerationSerializer
+from coreapp.serializers.PostSerializers import PostSerializer, PostModerationSerializer
 from coreapp.swagger import query_params
 from coreapp.utils import to_bool
 from coreapp.validators import post_query_schema

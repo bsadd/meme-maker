@@ -5,7 +5,7 @@ from rest_framework import status, mixins, viewsets
 from coreapp.models import Post
 from coreapp.pagination import StandardResultsSetPagination
 from coreapp.permissions import IsModerator
-from coreapp.serializers import PostModerationSerializer
+from coreapp.serializers.PostSerializers import PostModerationSerializer
 from coreapp.swagger import query_params
 
 

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 
 from coreapp.consts_db import ApprovalStatus
 from coreapp.models import PostReaction, Post
-from coreapp.serializers import PostReactionSerializer
+from coreapp.serializers.PostReactionSerializer import PostReactionSerializer
 from coreapp.swagger import query_params
 from coreapp.swagger.serializers import PostReactionRequestBodySerializer, PostReactionResponseBodySerializer
 

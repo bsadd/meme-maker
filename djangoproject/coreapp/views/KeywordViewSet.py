@@ -1,7 +1,7 @@
 from rest_framework import viewsets, permissions
 
 from coreapp.models import Keyword
-from coreapp.serializers import KeywordSerializer
+from coreapp.serializers.KeywordSerializer import KeywordSerializer
 
 
 class KeywordViewSet(viewsets.ModelViewSet):

@@ -2,7 +2,7 @@ from rest_framework import mixins, viewsets
 
 from coreapp.models import PostComment
 from coreapp.pagination import StandardResultsSetPagination
-from coreapp.serializers import PostCommentCreateSerializer
+from coreapp.serializers.PostCommentSerializers import PostCommentCreateSerializer
 
 
 class PostCommentViewSet(mixins.ListModelMixin,

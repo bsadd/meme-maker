@@ -3,7 +3,7 @@ from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 
 from coreapp.consts_db import Reaction
 from coreapp.models import PostReaction
-from coreapp.serializer_fields import ChoiceField
+from coreapp.serializers.serializer_fields import ChoiceField
 
 
 class PostReactionRequestBodySerializer(serializers.ModelSerializer):
