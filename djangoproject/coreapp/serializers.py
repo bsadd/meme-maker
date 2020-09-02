@@ -192,18 +192,28 @@ class PostCommentSerializer(serializers.ModelSerializer):
     def get_user(self, postcomment) -> ReturnDict:
         return UserRefSerializer(postcomment.user, context=self.context).data
 
-    def create(self, validated_data):
-        return PostComment.objects.create(**validated_data, user=self.context['request'].user)
-
 
 class PostCommentCreateSerializer(PostCommentSerializer):
-    post = serializers.PrimaryKeyRelatedField(queryset=Post.approved.all(), write_only=True, required=True)
+    post = serializers.PrimaryKeyRelatedField(queryset=Post.approved.all(), write_only=True, required=False)
 
     class Meta(PostCommentSerializer.Meta):
         fields = ('id', 'comment', 'created_at', 'parent',
                   'user', 'post')
         read_only_fields = (
             'created_at', 'user',)
+
+    def create(self, validated_data):
+        post = validated_data.get('post', None)
+        parent = validated_data.get('parent', None)
+        if post and parent:
+            raise exceptions.ValidationError(detail='Only one of `post` or `parent` field can be passed')
+        elif parent:
+            post_id = parent.post_id
+            return PostComment.objects.create(**validated_data, post_id=post_id, user=self.context['request'].user)
+        elif post:
+            return PostComment.objects.create(**validated_data, user=self.context['request'].user)
+        else:
+            raise exceptions.ValidationError(detail='Either `post` or `parent` field must be passed')
 
 
 class PostCommentUpdateSerializer(PostCommentSerializer):
