@@ -1,50 +1,18 @@
+from django.db import transaction
+from django.db.models import Count
 from django.utils import timezone
-from drf_writable_nested import UniqueFieldsMixin, NestedUpdateMixin
+from drf_writable_nested import NestedUpdateMixin
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers, exceptions
 from rest_framework.utils.serializer_helpers import ReturnDict
-from rest_framework_nested.relations import NestedHyperlinkedIdentityField
 
-from coreapp.models import *
 from accounts.serializers import UserRefSerializer
-from coreapp.serializer_fields import ChoiceField, ImageBase64HybridFileField
+from coreapp.consts_db import ApprovalStatus, Reaction
+from coreapp.models import Post, PostReaction, Keyword
+from coreapp.serializers.KeywordSerializer import KeywordSerializer
+from coreapp.serializers.serializer_fields import ChoiceField, ImageBase64HybridFileField
 from coreapp.swagger.schema import UserRefSerializerSchema
-from coreapp.swagger.serializer_fields import *
-
-
-class KeywordSerializer(UniqueFieldsMixin, serializers.ModelSerializer):
-    class Meta:
-        model = Keyword
-        fields = ('name',)  # '__all__'
-
-    def to_representation(self, value):
-        """overridden to support returning of plain json array like [key1, key2]"""
-        return value.name
-
-    def to_internal_value(self, data):
-        """overridden to also support parsing of plain json array like [key1, key2]"""
-        if type(data) == str:
-            return super().to_internal_value(data={'name': data})
-        return super().to_internal_value(data)
-
-
-class PostReactionSerializer(serializers.ModelSerializer):
-    user = serializers.HyperlinkedRelatedField(queryset=User.objects.all(),
-                                               view_name='api:user-detail',
-                                               default=serializers.CurrentUserDefault())
-    post = serializers.HyperlinkedRelatedField(queryset=Post.approved.all(), view_name='api:post-detail', required=True)
-    reaction = ChoiceField(choices=Reaction.choices, required=True)
-    url = NestedHyperlinkedIdentityField(view_name='api:post-reaction-detail',
-                                         parent_lookup_kwargs={'post_pk': 'post_id'}, read_only=True,
-                                         label="reaction's view url")
-
-    class Meta:
-        model = PostReaction
-        fields = ['reaction', 'user', 'post', 'url']
-
-    def get_unique_together_validators(self):
-        """disable unique together checks for (user, post) for get_or_create operation in manager.create"""
-        return []
+from coreapp.swagger.serializer_fields import Post_reaction_counts
 
 
 class PostSerializer(NestedUpdateMixin, serializers.ModelSerializer):
@@ -180,35 +148,3 @@ class PostModerationSerializer(serializers.ModelSerializer):
         instance.moderator = self.context['request'].user
         instance.approval_at = timezone.now()
         return super().update(instance, validated_data)
-
-
-class PostCommentSerializer(serializers.ModelSerializer):
-    user = serializers.SerializerMethodField()
-
-    class Meta:
-        model = PostComment
-
-    @swagger_serializer_method(serializer_or_field=UserRefSerializerSchema)
-    def get_user(self, postcomment) -> ReturnDict:
-        return UserRefSerializer(postcomment.user, context=self.context).data
-
-    def create(self, validated_data):
-        return PostComment.objects.create(**validated_data, user=self.context['request'].user)
-
-
-class PostCommentCreateSerializer(PostCommentSerializer):
-    post = serializers.PrimaryKeyRelatedField(queryset=Post.approved.all(), write_only=True, required=True)
-
-    class Meta(PostCommentSerializer.Meta):
-        fields = ('id', 'comment', 'created_at', 'parent',
-                  'user', 'post')
-        read_only_fields = (
-            'created_at', 'user',)
-
-
-class PostCommentUpdateSerializer(PostCommentSerializer):
-    class Meta(PostCommentSerializer.Meta):
-        fields = ('id', 'comment', 'created_at', 'parent',
-                  'user')
-        read_only_fields = (
-            'created_at', 'user', 'parent',)
