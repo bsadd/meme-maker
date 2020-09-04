@@ -4,7 +4,7 @@
             <side-panel></side-panel>
         </v-col>
         <v-col cols="12" sm="9" md="6">
-            <search-results></search-results>
+            <post-list></post-list>
         </v-col>
         <v-col cols="12" sm="3">
             <ad-section></ad-section>
@@ -19,7 +19,7 @@
 export default {
     components: {
         "side-panel": () => import("@/components/home/SidePanel"),
-        "search-results": () => import("@/components/search/SearchResults"),
+        "post-list": () => import("@/components/search/NewsFeed"),
         "ad-section": () => import("../components/search/AdSection")
     },
     methods: {

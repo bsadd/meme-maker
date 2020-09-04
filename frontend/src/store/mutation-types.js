@@ -20,3 +20,8 @@ export const SET_FILTER_DATA = 'SET_FILTER_DATA'
 // mutations for error module
 export const SET_ERROR = 'SET_ERROR'
 export const RESET_ERROR = 'RESET_ERROR'
+
+//mutations for newsfeed module
+export const REQUEST_MEMES = 'REQUEST_MEMES'
+export const RECEIVE_MEMES_SUCCESS = 'RECEIVE_MEMES_SUCCESS'
+export const RECEIVE_MEMES_FAILURE = 'RECEIVE_MEMES_FAILURE'
