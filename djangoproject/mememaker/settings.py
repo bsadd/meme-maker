@@ -22,7 +22,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = os.environ.get('SECRET_KEY', '3jjb4s6f!6x@l+g%oga7&k9i^ipj45x@!5*t2_bnd(-7afckw(')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = bool(int(os.environ.get('DEBUG', 0)))
+DEBUG = bool(int(os.environ.get('DEBUG', 1)))
 
 ALLOWED_HOSTS = ['*']
 
@@ -97,8 +97,12 @@ WSGI_APPLICATION = 'mememaker.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
+DATABASE_CONFIGS = {
+    'sqlite': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    },
+    'postgres': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ.get('POSTGRES_DB', 'postgres'),
         'USER': os.environ.get('POSTGRES_USER', 'postgres'),
@@ -106,6 +110,10 @@ DATABASES = {
         'HOST': os.environ.get('DB_HOST', 'db'),
         'PORT': os.environ.get('DB_PORT', '5432'),
     }
+}
+
+DATABASES = {
+    'default': DATABASE_CONFIGS['postgres'] if bool(int(os.environ.get('CONTAINER', 0))) else DATABASE_CONFIGS['sqlite']
 }
 
 # Password validation
@@ -174,4 +182,4 @@ STATIC_URL = '/static/'
 STATIC_ROOT = '/vol/web/static' if bool(int(os.environ.get('CONTAINER', 0))) else os.path.join(BASE_DIR, 'static')
 STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'static'),
-)
+) if bool(int(os.environ.get('CONTAINER', 0))) else ()

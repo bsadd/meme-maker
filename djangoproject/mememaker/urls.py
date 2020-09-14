@@ -50,7 +50,7 @@ urlpatterns = [
     url(r'^rest-auth/facebook-connect/$', FacebookConnect.as_view(), name='rest-auth-facebook-connect'),
     url(r'^rest-auth/google/$', GoogleLogin.as_view(), name='rest-auth-google-login'),
     url(r'^rest-auth/google-connect/$', GoogleConnect.as_view(), name='rest-auth-google-connect'),
-    # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
