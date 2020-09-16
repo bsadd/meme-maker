@@ -67,4 +67,13 @@ RUN chmod -R 755 /vol/web
 
 #USER user
 
+
+RUN find . -path "*/migrations/*.py" -not -name "__init__.py" -delete && \
+	find . -path "*/migrations/*.pyc"  -delete
+
+RUN python manage.py makemigrations && \
+    python manage.py migrate
+
+RUN python manage.py collectstatic --no-input
+
 CMD ["entrypoint.sh"]
