@@ -18,5 +18,4 @@ post_router.register(r'comment', views.PostCommentViewSet, basename='post-commen
 urlpatterns = [
     path('', include(router.urls)),
     path('', include(post_router.urls)),
-    # path('auth/', include('rest_framework.urls', namespace='rest_framework')),
 ]

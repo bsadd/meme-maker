@@ -50,12 +50,12 @@ urlpatterns = [
     url(r'^rest-auth/facebook-connect/$', FacebookConnect.as_view(), name='rest-auth-facebook-connect'),
     url(r'^rest-auth/google/$', GoogleLogin.as_view(), name='rest-auth-google-login'),
     url(r'^rest-auth/google-connect/$', GoogleConnect.as_view(), name='rest-auth-google-connect'),
-    # path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
+    path('auth/', include('rest_framework.urls', namespace='rest_framework')),
 
     url(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     url(r'^swagger/$', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     url(r'^redoc/$', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
