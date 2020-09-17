@@ -19,7 +19,8 @@ services:
       context: .
       dockerfile: djangoproject/Dockerfile
       cache_from:
-        - mememaker_web:latest
+        - subangkar/mememaker:initial
+    image: subangkar/mememaker:initial
     volumes:
       - static_data:/vol/web
     ports:

@@ -183,5 +183,5 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/vol/web/static' if bool(int(os.environ.get('CONTAINER', 0))) else os.path.join(BASE_DIR, 'static')
 STATIC_ROOT = os.environ.get('STATIC_PATH', os.path.join(BASE_DIR, 'static'))
 # STATICFILES_DIRS = (
-#     os.path.join(BASE_DIR, 'static'),
+#     STATIC_ROOT,
 # ) if bool(int(os.environ.get('CONTAINER', 0))) else ()
