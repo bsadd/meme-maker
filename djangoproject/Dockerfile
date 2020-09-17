@@ -30,6 +30,11 @@ ENV PYTHONDONTWRITEBYTECODE 1 # Prevents Python from writing pyc files to disc
 ENV PYTHONUNBUFFERED 1 # Prevents Python from buffering stdout and stderr
 
 ENV PATH="/scripts:${PATH}"
+ENV CONTAINER=1
+
+ENV STATIC_PATH=/vol/web/static
+ENV MEDIA_PATH=/vol/web/media
+
 
 # RUN mkdir /app
 ADD djangoproject /app
@@ -37,16 +42,15 @@ WORKDIR /app
 
 
 RUN apt-get update \
-    &&  apt-get install gcc libc-dev g++ libffi-dev libxml2 libffi-dev unixodbc-dev -y \
+    && apt-get install gcc libc-dev g++ libffi-dev libxml2 libffi-dev unixodbc-dev -y \
     && rm -rf /var/lib/apt/lists/*
 
 
-RUN pip install --upgrade pip
-
-
 COPY djangoproject/requirements.txt /app/
-RUN pip install -r  requirements.txt
-RUN pip install uwsgi==2.0.19
+
+RUN pip install --upgrade pip && \
+    pip install -r  requirements.txt && \
+    pip install uwsgi==2.0.19
 RUN apt-get purge -y --auto-remove gcc
 
 
@@ -54,16 +58,16 @@ COPY scripts /scripts
 RUN chmod +x /scripts/*
 
 
+COPY .env /app/
 COPY djangoproject /app/
 
 
-RUN mkdir -p /vol/web/media
-RUN mkdir -p /vol/web/static
+RUN mkdir -p /vol/web/media /vol/web/static
 
 RUN adduser --disabled-password user
 
-RUN chown -R user:user /vol
-RUN chmod -R 755 /vol/web
+RUN chown -R user:user /vol && \
+    chmod -R 755 /vol/web
 
 #USER user
 

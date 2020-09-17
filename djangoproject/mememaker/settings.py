@@ -172,14 +172,16 @@ CORS_ORIGIN_REGEX_WHITELIST = [
     'http://localhost:8080',
 ]
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/vol/web/media' if bool(int(os.environ.get('CONTAINER', 0))) else os.path.join(BASE_DIR, 'media')
+# MEDIA_ROOT = '/vol/web/media' if bool(int(os.environ.get('CONTAINER', 0))) else os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.environ.get('MEDIA_PATH', os.path.join(BASE_DIR, 'media')) 
 SITE_ID = 4
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
-STATIC_ROOT = '/vol/web/static' if bool(int(os.environ.get('CONTAINER', 0))) else os.path.join(BASE_DIR, 'static')
-STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-) if bool(int(os.environ.get('CONTAINER', 0))) else ()
+# STATIC_ROOT = '/vol/web/static' if bool(int(os.environ.get('CONTAINER', 0))) else os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.environ.get('STATIC_PATH', os.path.join(BASE_DIR, 'static'))
+# STATICFILES_DIRS = (
+#     os.path.join(BASE_DIR, 'static'),
+# ) if bool(int(os.environ.get('CONTAINER', 0))) else ()
